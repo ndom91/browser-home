@@ -67,8 +67,9 @@ function Comment({ comment, op, now }: { comment: HNComment; op: string; now: nu
   const [collapsed, setCollapsed] = useState(false)
   const toggle = () => setCollapsed((c) => !c)
 
+  // Body stays mounted so collapse can animate its height. inert keeps hidden links out of the tab order.
   return (
-    <li className={`hn-c${collapsed ? " is-collapsed" : ""}`}>
+    <li className={`hn-c t-acc${collapsed ? " is-collapsed" : ""}`} data-open={!collapsed}>
       <p className="hn-c-meta">
         <span className={`hn-c-author${comment.author === op ? " is-op" : ""}`}>{comment.author}</span>
         <a className="hn-c-age" href={itemUrl(comment.id)} target="_blank" rel="noreferrer">
@@ -78,8 +79,8 @@ function Comment({ comment, op, now }: { comment: HNComment; op: string; now: nu
           {collapsed ? `[+${1 + countComments(comment.children)}]` : "[–]"}
         </button>
       </p>
-      {!collapsed && (
-        <>
+      <div className="t-acc-panel">
+        <div className="t-acc-panel-inner" inert={collapsed}>
           <Html className="hn-c-text" html={comment.html} />
           {comment.children.length > 0 && (
             <div className="hn-c-replies">
@@ -97,8 +98,8 @@ function Comment({ comment, op, now }: { comment: HNComment; op: string; now: nu
               </ul>
             </div>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </li>
   )
 }

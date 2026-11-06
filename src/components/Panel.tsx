@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react"
+import type { ReactNode } from "react"
 
 interface PanelProps {
   id: string
@@ -8,10 +8,9 @@ interface PanelProps {
   titleSuffix?: ReactNode
   meta?: ReactNode
   children: ReactNode
-  bodyRef?: Ref<HTMLDivElement>
 }
 
-export function Panel({ id, icon, title, titleSuffix, meta, children, bodyRef }: PanelProps) {
+export function Panel({ id, icon, title, titleSuffix, meta, children }: PanelProps) {
   return (
     <section className="panel" id={id} aria-labelledby={`${id}-title`}>
       <header className="panel-head">
@@ -20,9 +19,7 @@ export function Panel({ id, icon, title, titleSuffix, meta, children, bodyRef }:
         {titleSuffix}
         {meta != null && <span className="panel-meta">{meta}</span>}
       </header>
-      <div className="panel-body" ref={bodyRef}>
-        {children}
-      </div>
+      <div className="panel-body">{children}</div>
     </section>
   )
 }
@@ -38,5 +35,11 @@ export function PanelError({ error }: { error: unknown }) {
 }
 
 export function PanelLoading() {
-  return <p className="panel-empty">Loading…</p>
+  return (
+    <p className="panel-empty">
+      <span className="t-shimmer" data-text="Loading…">
+        Loading…
+      </span>
+    </p>
+  )
 }
