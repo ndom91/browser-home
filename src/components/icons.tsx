@@ -1,4 +1,5 @@
 import type { SVGProps } from "react"
+import type { WeatherKind } from "../lib/weather"
 
 type IconProps = SVGProps<SVGSVGElement>
 
@@ -81,6 +82,59 @@ export function PullRequestIcon({ draft, ...props }: IconProps & { draft?: boole
         strokeDasharray={draft ? "2.2 2" : undefined}
       />
       <circle cx="8" cy="8" r="1.75" fill="currentColor" />
+    </svg>
+  )
+}
+
+const CLOUD = "M4.6 13h6.9a2.6 2.6 0 0 0 .35-5.18A3.6 3.6 0 0 0 4.9 8.3 2.35 2.35 0 0 0 4.6 13z"
+const CLOUD_HIGH = "M4.6 10.5h6.9a2.6 2.6 0 0 0 .35-5.18A3.6 3.6 0 0 0 4.9 5.8 2.35 2.35 0 0 0 4.6 10.5z"
+const line = { stroke: "currentColor", strokeWidth: 1.3, strokeLinecap: "round", strokeLinejoin: "round" } as const
+
+export function WeatherIcon({ kind, ...props }: IconProps & { kind: WeatherKind }) {
+  return (
+    <svg aria-hidden="true" {...base} width={16} height={16} {...props}>
+      {kind === "clear" && (
+        <>
+          <circle cx="8" cy="8" r="2.9" stroke="var(--weather-sun)" strokeWidth="1.3" />
+          <path
+            d="M8 1.6v1.3M8 13.1v1.3M1.6 8h1.3M13.1 8h1.3M3.5 3.5l.9.9M11.6 11.6l.9.9M3.5 12.5l.9-.9M11.6 4.4l.9-.9"
+            {...line}
+            stroke="var(--weather-sun)"
+          />
+        </>
+      )}
+      {kind === "partly" && (
+        <>
+          <circle cx="5.6" cy="5.4" r="2.1" stroke="var(--weather-sun)" strokeWidth="1.3" />
+          <path d="M5.6 1.4v.8M1.6 5.4h.8M2.8 2.6l.55.55M8.4 2.6l-.55.55" {...line} stroke="var(--weather-sun)" />
+          {/* Filled with the page color, so the cloud hides the sun behind it. */}
+          <path d={CLOUD} {...line} fill="var(--bg)" />
+        </>
+      )}
+      {kind === "cloudy" && <path d={CLOUD} {...line} />}
+      {kind === "fog" && <path d="M2.5 5.5h11M1.5 8.5h13M3.5 11.5h9" {...line} />}
+      {kind === "rain" && (
+        <>
+          <path d={CLOUD_HIGH} {...line} />
+          <path d="M5.5 12.5l-.6 1.6M8.5 12.5l-.6 1.6M11.5 12.5l-.6 1.6" {...line} stroke="var(--weather-rain)" />
+        </>
+      )}
+      {kind === "snow" && (
+        <>
+          <path d={CLOUD_HIGH} {...line} />
+          <g fill="currentColor">
+            <circle cx="5.2" cy="13.2" r=".8" />
+            <circle cx="8.2" cy="14.2" r=".8" />
+            <circle cx="11.2" cy="13.2" r=".8" />
+          </g>
+        </>
+      )}
+      {kind === "storm" && (
+        <>
+          <path d={CLOUD_HIGH} {...line} />
+          <path d="M8.6 10.8l-1.8 2.4h2.2l-1.6 2.3" {...line} stroke="var(--weather-sun)" />
+        </>
+      )}
     </svg>
   )
 }

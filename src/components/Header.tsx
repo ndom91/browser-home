@@ -1,7 +1,9 @@
 import { type FormEvent, useEffect, useRef } from "react"
 import { clock, firstName, greeting, longDay } from "../lib/format"
+import type { Weather } from "../lib/types"
 import { useNow } from "../lib/useNow"
-import { SearchIcon } from "./icons"
+import { weatherKind } from "../lib/weather"
+import { SearchIcon, WeatherIcon } from "./icons"
 
 // "example.com", "localhost:3000/x", "192.168.1.1" — anything URL-shaped without spaces.
 const HOSTLIKE = /^(localhost|[\w-]+(\.[\w-]+)+|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/\S*)?$/i
@@ -13,7 +15,7 @@ function destination(input: string) {
   return `https://kagi.com/search?q=${encodeURIComponent(q)}`
 }
 
-export function Header({ name }: { name: string | null }) {
+export function Header({ name, weather }: { name: string | null; weather: Weather | undefined }) {
   const now = useNow()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -44,20 +46,43 @@ export function Header({ name }: { name: string | null }) {
           {longDay(now)} · {clock(now)}
         </span>
       </h1>
-      {/* biome-ignore lint/a11y/useSemanticElements: role="search" on the form is valid, and a <search> wrapper would break the .search flex layout. */}
-      <form className="search" role="search" onSubmit={onSubmit}>
-        <SearchIcon className="search-icon" />
-        <input
-          ref={inputRef}
-          type="text"
-          name="q"
-          placeholder="Search or type a URL"
-          autoComplete="off"
-          spellCheck={false}
-          aria-label="Search or type a URL"
-        />
-        <kbd>⌘K</kbd>
-      </form>
+      <div className="top-right">
+        {weather && <WeatherBadge weather={weather} />}
+        {/* biome-ignore lint/a11y/useSemanticElements: role="search" on the form is valid, and a <search> wrapper would break the .search flex layout. */}
+        <form className="search" role="search" onSubmit={onSubmit}>
+          <SearchIcon className="search-icon" />
+          <input
+            ref={inputRef}
+            type="text"
+            name="q"
+            placeholder="Search or type a URL"
+            autoComplete="off"
+            spellCheck={false}
+            aria-label="Search or type a URL"
+          />
+          <kbd>⌘K</kbd>
+        </form>
+      </div>
     </header>
+  )
+}
+
+function WeatherBadge({ weather }: { weather: Weather }) {
+  const { kind, label } = weatherKind(weather.code)
+  const summary = `Today in Berlin: ${label}, high ${weather.max}°, low ${weather.min}°`
+  return (
+    <div className="weather" title={summary}>
+      <WeatherIcon kind={kind} />
+      <span className="weather-max" aria-hidden="true">
+        {weather.max}°
+      </span>
+      <span className="weather-sep" aria-hidden="true">
+        /
+      </span>
+      <span className="weather-min" aria-hidden="true">
+        {weather.min}°
+      </span>
+      <span className="sr-only">{summary}</span>
+    </div>
   )
 }

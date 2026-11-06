@@ -69,6 +69,8 @@
 
   --hn-icon-bg: #1c1c21;
   --hn-icon-fg: #ffffff;
+  --weather-sun: #e0a100;
+  --weather-rain: #4a7fd6;
 
   --radius: 10px;
 }
@@ -133,6 +135,8 @@
 
     --hn-icon-bg: #ececef;
     --hn-icon-fg: #111113;
+    --weather-sun: #f5b82e;
+    --weather-rain: #6f9cf0;
   }
 }
 
@@ -232,6 +236,54 @@ ul {
   font-variant-numeric: tabular-nums;
 }
 
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+
+/* Hairline divider between the weather and the search box. */
+.weather::after {
+  content: "";
+  width: 1px;
+  height: 18px;
+  margin-left: 10px;
+  background: var(--line);
+}
+
+.weather svg {
+  margin-right: 2px;
+}
+
+.weather-max {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.weather-sep,
+.weather-min {
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .search {
   position: relative;
   display: flex;
@@ -316,8 +368,12 @@ ul {
     flex-direction: column;
     align-items: stretch;
   }
+  .top-right {
+    justify-content: space-between;
+  }
   .search {
-    width: 100%;
+    flex: 1;
+    width: auto;
   }
 }
 

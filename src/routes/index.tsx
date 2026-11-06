@@ -6,7 +6,7 @@ import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
 import { TTL } from "../lib/ttl"
 import { NowContext, useTicker } from "../lib/useNow"
-import { getCalendar, getHN, getPRs, getViewer } from "../server/fns"
+import { getCalendar, getHN, getPRs, getViewer, getWeather } from "../server/fns"
 
 // SSR waits this long per source. Anything slower (a cold GitHub call, a
 // pending calendar permission prompt) loads on the client instead.
@@ -25,13 +25,14 @@ function within<T>(name: string, promise: Promise<T>): Promise<T | undefined> {
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const [calendar, prs, hn, viewer] = await Promise.all([
+    const [calendar, prs, hn, viewer, weather] = await Promise.all([
       within("calendar", getCalendar()),
       within("prs", getPRs()),
       within("hn", getHN()),
       within("viewer", getViewer()),
+      within("weather", getWeather()),
     ])
-    return { now: Date.now(), calendar, prs, hn, viewer }
+    return { now: Date.now(), calendar, prs, hn, viewer, weather }
   },
   staleTime: Infinity,
   component: Home,
@@ -65,6 +66,14 @@ function Home() {
     staleTime: TTL.hn,
     refetchInterval: TTL.hn,
   })
+  const weather = useQuery({
+    queryKey: ["weather"],
+    queryFn: () => getWeather(),
+    initialData: initial.weather,
+    initialDataUpdatedAt: initial.weather?.fetchedAt,
+    staleTime: TTL.weather,
+    refetchInterval: TTL.weather,
+  })
   const viewer = useQuery({
     queryKey: ["viewer"],
     queryFn: () => getViewer(),
@@ -76,7 +85,7 @@ function Home() {
   return (
     <NowContext.Provider value={now}>
       <div className="page">
-        <Header name={viewer.data?.data.name ?? null} />
+        <Header name={viewer.data?.data.name ?? null} weather={weather.data?.data} />
         <main className="grid">
           <CalendarPanel events={calendar.data?.data} error={calendar.error} />
           <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />

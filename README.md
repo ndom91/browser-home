@@ -1,6 +1,6 @@
 # browser-home
 
-A local start page: today's calendar, your GitHub PRs, and Hacker News. It's built with TanStack Start.
+A local start page: today's calendar, your GitHub PRs, Hacker News, and the weather. It's built with TanStack Start.
 
 It runs entirely on your machine at `http://localhost:6464`. It needs no browser extension, no OAuth app, and no cloud service. It reuses auth you already have:
 
@@ -9,6 +9,7 @@ It runs entirely on your machine at `http://localhost:6464`. It needs no browser
 | Calendar      | macOS Calendar store via EventKit | macOS Calendars permission |
 | Pull requests | GitHub GraphQL search             | `gh auth token`            |
 | Hacker News   | Public Firebase API               | none                       |
+| Weather       | Open-Meteo, fixed to Berlin       | none                       |
 
 The server binds to `127.0.0.1` only and rejects non-localhost `Host` headers, so other sites can't read your data.
 

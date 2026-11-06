@@ -51,3 +51,10 @@ export interface Viewer {
   login: string
   name: string | null
 }
+
+export interface Weather {
+  /** WMO weather interpretation code for the day. */
+  code: number
+  max: number
+  min: number
+}

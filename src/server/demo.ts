@@ -1,5 +1,5 @@
 // Fixture data matching the design mockups. Enable with BROWSER_HOME_DEMO=1.
-import type { CalendarEvent, PullRequest, PullRequests, Story, Viewer } from "../lib/types"
+import type { CalendarEvent, PullRequest, PullRequests, Story, Viewer, Weather } from "../lib/types"
 
 export const DEMO = process.env.BROWSER_HOME_DEMO === "1"
 
@@ -223,3 +223,6 @@ export function demoHN(): Array<Story> {
 }
 
 export const demoViewer: Viewer = { login: "alex", name: "Alex" }
+
+// Partly cloudy, as in the mockup.
+export const demoWeather: Weather = { code: 2, max: 14, min: 6 }
