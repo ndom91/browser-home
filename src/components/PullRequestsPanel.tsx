@@ -1,8 +1,11 @@
+import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
+import { repoHue } from "../lib/repoColor"
 import type { PullRequest, PullRequests } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
+import { activeFilterCount, type FilterFacet, FilterMenu, type FilterState } from "./ui/FilterMenu"
 
 interface Props {
   prs: PullRequests | undefined
@@ -19,16 +22,17 @@ export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
       ) : (
         <>
           {error != null && <PanelError error={error} />}
-          <Section title="Review requested" count={prs.reviewTotal} tone="attention">
-            {prs.review.map((pr) => (
-              <Row key={pr.url} pr={pr} now={now} badge={reviewBadge(pr)} showAuthor />
-            ))}
-          </Section>
-          <Section title="Yours" count={prs.mineTotal}>
-            {prs.mine.map((pr) => (
-              <Row key={pr.url} pr={pr} now={now} badge={ownBadge(pr)} />
-            ))}
-          </Section>
+          <Section
+            id="review"
+            title="Review requested"
+            prs={prs.review}
+            total={prs.reviewTotal}
+            badgeFor={reviewBadge}
+            now={now}
+            tone="attention"
+            showAuthor
+          />
+          <Section id="mine" title="Yours" prs={prs.mine} total={prs.mineTotal} badgeFor={ownBadge} now={now} />
         </>
       )}
     </Panel>
@@ -57,25 +61,119 @@ const CHECKS: Record<NonNullable<PullRequest["checks"]>, { label: string; tone: 
 }
 
 function Section({
+  id,
   title,
-  count,
+  prs,
+  total,
+  badgeFor,
+  now,
   tone,
-  children,
+  showAuthor,
 }: {
+  id: string
   title: string
-  count: number
+  prs: Array<PullRequest>
+  total: number
+  badgeFor: (pr: PullRequest) => Badge
+  now: number
   tone?: "attention"
-  children: Array<React.ReactNode>
+  showAuthor?: boolean
 }) {
+  const [filters, setFilters] = useStoredFilters(`prs-filter:${id}`)
+  const facets = useMemo(() => buildFacets(prs, badgeFor), [prs, badgeFor])
+  const effective = useMemo(() => pruneFilters(filters, facets), [filters, facets])
+  const filtering = activeFilterCount(effective) > 0
+  const visible = filtering ? prs.filter((pr) => matches(pr, effective, badgeFor)) : prs
+
   return (
     <div className="pr-section">
       <h3 className="pr-section-head">
         {title}
-        <span className={`count${tone ? ` count-${tone}` : ""}`}>{count}</span>
+        <span className={`count${tone ? ` count-${tone}` : ""}`}>{filtering ? `${visible.length}/${total}` : total}</span>
+        <span className="pr-section-actions">
+          <FilterMenu label={`Filter ${title}`} facets={facets} value={effective} onChange={setFilters} />
+        </span>
       </h3>
-      {children.length ? <ul className="pr-list">{children}</ul> : <p className="panel-empty">Nothing here.</p>}
+      {visible.length ? (
+        <ul className="pr-list">
+          {visible.map((pr) => (
+            <Row key={pr.url} pr={pr} now={now} badge={badgeFor(pr)} showAuthor={showAuthor} />
+          ))}
+        </ul>
+      ) : (
+        <p className="panel-empty">{filtering ? "Nothing matches these filters." : "Nothing here."}</p>
+      )}
     </div>
   )
+}
+
+/** Each facet value as a function of a PR. Options come only from the PRs in the list. */
+const FACETS: Array<{ key: string; label: string; get: (pr: PullRequest, badge: Badge) => string | null }> = [
+  { key: "repo", label: "Repository", get: (pr) => pr.repoFull },
+  { key: "author", label: "Author", get: (pr) => pr.author },
+  { key: "status", label: "Status", get: (_, badge) => badge.label },
+  { key: "checks", label: "Checks", get: (pr) => (pr.checks ? CHECKS[pr.checks].label : "No checks") },
+]
+
+function buildFacets(prs: Array<PullRequest>, badgeFor: (pr: PullRequest) => Badge): Array<FilterFacet> {
+  return FACETS.map(({ key, label, get }) => {
+    const values = [...new Set(prs.map((pr) => get(pr, badgeFor(pr))).filter((v) => v != null))].sort()
+    return {
+      key,
+      label,
+      options: values.map((value) => ({
+        value,
+        label: key === "repo" ? shortRepo(value, values) : value,
+        leading: key === "repo" ? <i className="repo-swatch" style={hueStyle(value)} /> : undefined,
+      })),
+    }
+  }).filter((f) => f.options.length > 1 || f.key === "repo")
+}
+
+function matches(pr: PullRequest, filters: FilterState, badgeFor: (pr: PullRequest) => Badge) {
+  const badge = badgeFor(pr)
+  return FACETS.every(({ key, get }) => {
+    const wanted = filters[key]
+    if (!wanted?.length) return true
+    const v = get(pr, badge)
+    return v != null && wanted.includes(v)
+  })
+}
+
+/** Drop saved values that are no longer in the list, so a merged PR can't leave the section empty. */
+function pruneFilters(filters: FilterState, facets: Array<FilterFacet>): FilterState {
+  const out: FilterState = {}
+  for (const f of facets) {
+    const kept = (filters[f.key] ?? []).filter((v) => f.options.some((o) => o.value === v))
+    if (kept.length) out[f.key] = kept
+  }
+  return out
+}
+
+/** "org/repo" -> "repo", unless two orgs share that repo name. */
+function shortRepo(full: string, all: Array<string>) {
+  const name = full.split("/").pop() ?? full
+  return all.filter((v) => v.endsWith(`/${name}`)).length > 1 ? full : name
+}
+
+function hueStyle(repoFull: string) {
+  return { "--repo-h": repoHue(repoFull) } as CSSProperties
+}
+
+/** Filters survive reloads. Read after mount so server and client render the same first frame. */
+function useStoredFilters(key: string) {
+  const [value, setValue] = useState<FilterState>({})
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw) setValue(JSON.parse(raw))
+    } catch {}
+  }, [key])
+  const set = (next: FilterState) => {
+    setValue(next)
+    localStorage.setItem(key, JSON.stringify(next))
+  }
+  return [value, set] as const
 }
 
 function Row({ pr, now, badge, showAuthor }: { pr: PullRequest; now: number; badge: Badge; showAuthor?: boolean }) {
@@ -87,7 +185,7 @@ function Row({ pr, now, badge, showAuthor }: { pr: PullRequest; now: number; bad
         <span className="pr-main">
           <span className="pr-title">{pr.title}</span>
           <span className="pr-meta">
-            <span className="mono">
+            <span className="repo-badge mono" style={hueStyle(pr.repoFull)}>
               {pr.repo}#{pr.number}
             </span>
             {showAuthor && pr.author && <span className="mono">{pr.author}</span>}

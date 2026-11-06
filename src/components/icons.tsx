@@ -196,3 +196,31 @@ export function ChevronDownIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function MoreIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <g fill="currentColor">
+        <circle cx="3.5" cy="8" r="1.25" />
+        <circle cx="8" cy="8" r="1.25" />
+        <circle cx="12.5" cy="8" r="1.25" />
+      </g>
+    </svg>
+  )
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+      <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}

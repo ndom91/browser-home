@@ -1471,3 +1471,164 @@ ul {
 .chat-send.is-stop {
   color: var(--text);
 }
+
+/* ---------- pull requests: repo badges + filters ---------- */
+
+/* --repo-h comes from a hash of the repo name. Fixed lightness keeps every hue readable. */
+.repo-badge {
+  padding: 0 5px;
+  border-radius: 4px;
+  line-height: 17px;
+  background: oklch(0.95 0.035 var(--repo-h));
+  color: oklch(0.46 0.12 var(--repo-h));
+}
+
+.repo-swatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: oklch(0.68 0.14 var(--repo-h));
+}
+
+@media (prefers-color-scheme: dark) {
+  .repo-badge {
+    background: oklch(0.3 0.05 var(--repo-h));
+    color: oklch(0.86 0.09 var(--repo-h));
+  }
+  .repo-swatch {
+    background: oklch(0.72 0.13 var(--repo-h));
+  }
+}
+
+.pr-section-actions {
+  margin-left: auto;
+  margin-right: -6px;
+  display: flex;
+}
+
+/* ---------- menu (Base UI) ---------- */
+
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 21px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.menu-trigger:hover,
+.menu-trigger[data-popup-open] {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.menu-trigger.is-active {
+  color: var(--b-blue-fg);
+}
+
+.menu-trigger-count {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-positioner {
+  z-index: 20;
+  outline: 0;
+}
+
+.menu-popup {
+  min-width: 170px;
+  max-height: min(var(--available-height), 340px);
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow:
+    0 8px 24px rgb(20 20 30 / 0.12),
+    0 1px 3px rgb(20 20 30 / 0.06);
+  font-size: 12.5px;
+  color: var(--text);
+  outline: 0;
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.menu-popup[data-starting-style],
+.menu-popup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu-popup {
+    box-shadow:
+      0 10px 30px rgb(0 0 0 / 0.5),
+      0 1px 3px rgb(0 0 0 / 0.4);
+  }
+}
+
+.menu-label {
+  padding: 5px 8px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 5px;
+  cursor: default;
+  user-select: none;
+  outline: 0;
+}
+
+.menu-item[data-highlighted],
+.menu-item[data-popup-open] {
+  background: var(--hover);
+}
+
+.menu-item[data-disabled] {
+  color: var(--muted);
+}
+
+.menu-item-label {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.menu-item-hint {
+  font-size: 11px;
+  color: var(--b-blue-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-item-chevron {
+  color: var(--muted);
+}
+
+.menu-check {
+  display: inline-flex;
+  width: 12px;
+  color: var(--text);
+}
+
+.menu-separator {
+  height: 1px;
+  margin: 4px -4px;
+  background: var(--line-soft);
+}
