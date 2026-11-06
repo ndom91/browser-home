@@ -1387,44 +1387,6 @@ ul {
   color: var(--muted);
 }
 
-.chat-dots {
-  display: inline-flex;
-  gap: 3px;
-}
-
-.chat-dots i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: chat-dot 1.2s ease-in-out infinite;
-}
-
-.chat-dots i:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.chat-dots i:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes chat-dot {
-  0%,
-  80%,
-  100% {
-    opacity: 0.35;
-  }
-  40% {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .chat-dots i {
-    animation: none;
-  }
-}
-
 .chat-error {
   align-self: flex-start;
   display: inline-flex;
@@ -1715,6 +1677,7 @@ ul {
   }
 }
 
+/* biome-ignore-start lint/complexity/noImportantStyles: each reduced-motion guard must beat the more specific open-state rules above it. */
 /* ==========================================================================
    Motion (transitions.dev). Snippets are kept close to upstream so they can
    be re-synced; app-specific wiring sits next to each one.
@@ -1775,6 +1738,20 @@ ul {
   --tt-out-ease: ease-out;
   --tt-bg: var(--text);
   --tt-fg: var(--panel);
+  /* Thinking states. Hold is longer than upstream: the one swap means "this is taking a while". */
+  --think-hold: 4000ms;
+  --think-swap: 150ms;
+  --think-gap: 50ms;
+  --think-distance: 8px;
+  --think-blur: 2px;
+  --think-shimmer: 2000ms;
+  --think-base: var(--muted);
+  --think-highlight: var(--text);
+  --think-ease: ease-in-out;
+  /* Streaming text */
+  --stream-fade: 350ms;
+  --stream-blur: 1px;
+  --stream-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ---------- page side-by-side: HN list <-> thread ---------- */
@@ -2083,3 +2060,111 @@ ul {
     transition: none !important;
   }
 }
+
+/* ---------- thinking states: chat ---------- */
+
+.t-think {
+  position: relative;
+  display: inline-block;
+  text-align: left;
+}
+.t-think-sizer {
+  display: block;
+  visibility: hidden;
+  white-space: nowrap;
+}
+.t-think-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  color: var(--think-base);
+  white-space: nowrap;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--think-swap) var(--think-ease),
+    filter var(--think-swap) var(--think-ease),
+    opacity var(--think-swap) var(--think-ease);
+  will-change: transform, filter, opacity;
+}
+.t-think-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--think-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-think-shimmer var(--think-shimmer) linear infinite;
+}
+@keyframes t-think-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+.t-think-text.is-exit {
+  transform: translateY(calc(var(--think-distance) * -1));
+  filter: blur(var(--think-blur));
+  opacity: 0;
+}
+.t-think-text.is-enter-start {
+  transition: none;
+  transform: translateY(var(--think-distance));
+  filter: blur(var(--think-blur));
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-think-text {
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .t-think-text::before {
+    display: none !important;
+  }
+}
+
+/* ---------- streaming text: chat replies ----------
+   Upstream drives this with JS (.is-in per word on a timer). Here React mounts
+   each word as it arrives, so a mount animation gives the same resolve and
+   the stream itself sets the pace. */
+
+.t-stream-w {
+  animation: t-stream-in var(--stream-fade) var(--stream-ease) both;
+}
+@keyframes t-stream-in {
+  from {
+    opacity: 0;
+    filter: blur(var(--stream-blur));
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-stream-w {
+    animation: none !important;
+  }
+}
+
+/* biome-ignore-end lint/complexity/noImportantStyles: end of motion section. */

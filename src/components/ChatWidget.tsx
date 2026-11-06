@@ -3,6 +3,7 @@ import { streamingMarkdownExtension } from "@tanstack/markdown/extensions/stream
 import { Markdown } from "@tanstack/markdown/react"
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ArrowUpIcon, ChevronDownIcon, SparkHexIcon, StopIcon } from "./icons"
+import { STREAMING_COMPONENTS, ThinkingLine } from "./ui/motion"
 
 const connection = fetchServerSentEvents("/api/ask")
 // Created once: the extension keeps half-written Markdown stable while it streams.
@@ -94,7 +95,13 @@ export function ChatWidget() {
               <ChevronDownIcon />
             </button>
           </header>
-          <Thread messages={visible} thinking={thinking} failed={status === "error"} onRetry={() => void reload()} />
+          <Thread
+            messages={visible}
+            thinking={thinking}
+            streaming={isLoading}
+            failed={status === "error"}
+            onRetry={() => void reload()}
+          />
         </>
       )}
 
@@ -132,11 +139,13 @@ export function ChatWidget() {
 function Thread({
   messages,
   thinking,
+  streaming,
   failed,
   onRetry,
 }: {
   messages: Array<UIMessage>
   thinking: boolean
+  streaming: boolean
   failed: boolean
   onRetry: () => void
 }) {
@@ -170,25 +179,25 @@ function Thread({
           {earlier} earlier {earlier === 1 ? "message" : "messages"}
         </p>
       )}
-      {messages.map((m) =>
+      {messages.map((m, i) =>
         m.role === "user" ? (
           <p key={m.id} className="chat-msg chat-user">
             {textOf(m)}
           </p>
         ) : (
           <div key={m.id} className="chat-msg chat-answer">
-            <Markdown extensions={markdownExtensions}>{textOf(m)}</Markdown>
+            <Markdown
+              extensions={markdownExtensions}
+              components={streaming && i === messages.length - 1 ? STREAMING_COMPONENTS : undefined}
+            >
+              {textOf(m)}
+            </Markdown>
           </div>
         ),
       )}
       {thinking && (
         <p className="chat-thinking" aria-live="polite">
-          <span className="chat-dots" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          Thinking
+          <ThinkingLine />
         </p>
       )}
       {failed && (
