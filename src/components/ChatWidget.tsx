@@ -78,7 +78,7 @@ export function ChatWidget() {
             </button>
             <button
               type="button"
-              className="chat-head-btn chat-collapse"
+              className="chat-head-btn"
               onClick={() => setCollapsed(true)}
               aria-label="Hide conversation"
             >
@@ -146,7 +146,8 @@ function Thread({
   }
 
   // Follow the stream, unless the user scrolled up to read.
-  const lastText = messages.at(-1) ? textOf(messages.at(-1) as UIMessage) : ""
+  const last = messages.at(-1)
+  const lastText = last ? textOf(last) : ""
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on new content, which these values track.
   useLayoutEffect(() => {
     const el = scrollRef.current

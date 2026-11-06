@@ -7,6 +7,7 @@ import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
 import { TTL } from "../lib/ttl"
 import { NowContext, useTicker } from "../lib/useNow"
+import type { Cached } from "../server/cache"
 import { getCalendar, getHN, getPRs, getViewer, getWeather } from "../server/fns"
 
 // SSR waits this long per source. Anything slower (a cold GitHub call, a
@@ -43,45 +44,12 @@ function Home() {
   const initial = Route.useLoaderData()
   const now = useTicker(initial.now)
 
-  const calendar = useQuery({
-    queryKey: ["calendar"],
-    queryFn: () => getCalendar(),
-    initialData: initial.calendar,
-    initialDataUpdatedAt: initial.calendar?.fetchedAt,
-    staleTime: TTL.calendar,
-    refetchInterval: TTL.calendar,
-  })
-  const prs = useQuery({
-    queryKey: ["prs"],
-    queryFn: () => getPRs(),
-    initialData: initial.prs,
-    initialDataUpdatedAt: initial.prs?.fetchedAt,
-    staleTime: TTL.prs,
-    refetchInterval: TTL.prs,
-  })
-  const hn = useQuery({
-    queryKey: ["hn"],
-    queryFn: () => getHN(),
-    initialData: initial.hn,
-    initialDataUpdatedAt: initial.hn?.fetchedAt,
-    staleTime: TTL.hn,
-    refetchInterval: TTL.hn,
-  })
-  const weather = useQuery({
-    queryKey: ["weather"],
-    queryFn: () => getWeather(),
-    initialData: initial.weather,
-    initialDataUpdatedAt: initial.weather?.fetchedAt,
-    staleTime: TTL.weather,
-    refetchInterval: TTL.weather,
-  })
-  const viewer = useQuery({
-    queryKey: ["viewer"],
-    queryFn: () => getViewer(),
-    initialData: initial.viewer,
-    staleTime: Infinity,
-    refetchInterval: false,
-  })
+  const calendar = useSource("calendar", getCalendar, initial.calendar, TTL.calendar)
+  const prs = useSource("prs", getPRs, initial.prs, TTL.prs)
+  const hn = useSource("hn", getHN, initial.hn, TTL.hn)
+  const weather = useSource("weather", getWeather, initial.weather, TTL.weather)
+  // The name barely changes, so it never refetches.
+  const viewer = useSource("viewer", getViewer, initial.viewer, Infinity)
 
   return (
     <NowContext.Provider value={now}>
@@ -96,4 +64,16 @@ function Home() {
       </div>
     </NowContext.Provider>
   )
+}
+
+/** Starts from the server-rendered value and treats it as fresh until its TTL runs out. */
+function useSource<T>(key: string, fetch: () => Promise<Cached<T>>, initial: Cached<T> | undefined, ttl: number) {
+  return useQuery({
+    queryKey: [key],
+    queryFn: () => fetch(),
+    initialData: initial,
+    initialDataUpdatedAt: initial?.fetchedAt,
+    staleTime: ttl,
+    refetchInterval: ttl === Infinity ? false : ttl,
+  })
 }

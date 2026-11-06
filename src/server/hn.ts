@@ -1,8 +1,9 @@
+import { countComments, hostOf, itemUrl } from "../lib/hn"
 import type { HNComment, HNThread, Story } from "../lib/types"
 import { sanitizeHtml } from "./sanitize"
 
 const API = "https://hacker-news.firebaseio.com/v0"
-export const HN_COUNT = 24
+const HN_COUNT = 24
 
 interface RawItem {
   id: number
@@ -27,12 +28,12 @@ export async function fetchHN(): Promise<Array<Story>> {
   return items
     .filter((item): item is RawItem => !!item && !item.deleted && !item.dead)
     .map((item) => {
-      const discussion = `https://news.ycombinator.com/item?id=${item.id}`
+      const discussion = itemUrl(item.id)
       return {
         id: item.id,
         title: item.title,
         url: item.url ?? discussion,
-        domain: item.url ? new URL(item.url).hostname.replace(/^www\./, "") : "news.ycombinator.com",
+        domain: hostOf(item.url ?? discussion),
         points: item.score ?? 0,
         comments: item.descendants ?? 0,
         time: item.time * 1000,
@@ -69,8 +70,6 @@ function toComments(items: Array<AlgoliaItem>): Array<HNComment> {
   )
 }
 
-const countAll = (comments: Array<HNComment>): number => comments.reduce((n, c) => n + 1 + countAll(c.children), 0)
-
 export async function fetchThread(id: number): Promise<HNThread> {
   // Algolia returns the whole tree in one call, but oldest first. HN's own API
   // gives the ranked order of top-level comments, so sort by that.
@@ -86,17 +85,17 @@ export async function fetchThread(id: number): Promise<HNThread> {
   const comments = toComments(tree.children).sort(
     (a, b) => (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
   )
-  const discussion = `https://news.ycombinator.com/item?id=${id}`
+  const url = tree.url ?? itemUrl(id)
   return {
     id,
     title: tree.title ?? "",
-    url: tree.url ?? discussion,
-    domain: tree.url ? new URL(tree.url).hostname.replace(/^www\./, "") : "news.ycombinator.com",
+    url,
+    domain: hostOf(url),
     author: tree.author ?? "[deleted]",
     points: tree.points ?? 0,
     time: tree.created_at_i * 1000,
     html: tree.text ? sanitizeHtml(tree.text) : null,
     comments,
-    total: countAll(comments),
+    total: countComments(comments),
   }
 }

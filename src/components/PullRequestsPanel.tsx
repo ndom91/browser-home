@@ -89,7 +89,9 @@ function Section({
     <div className="pr-section">
       <h3 className="pr-section-head">
         {title}
-        <span className={`count${tone ? ` count-${tone}` : ""}`}>{filtering ? `${visible.length}/${total}` : total}</span>
+        <span className={`count${tone ? ` count-${tone}` : ""}`}>
+          {filtering ? `${visible.length}/${total}` : total}
+        </span>
         <span className="pr-section-actions">
           <FilterMenu label={`Filter ${title}`} facets={facets} value={effective} onChange={setFilters} />
         </span>

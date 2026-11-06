@@ -3,10 +3,18 @@ import { createFileRoute } from "@tanstack/react-router"
 import { llmAdapter, systemPrompt } from "../../server/llm"
 
 const MAX_MESSAGES = 40
-const MAX_BODY_BYTES = 256_000
+const MAX_BODY_CHARS = 256_000
 
 const text = (body: string, status: number) =>
   new Response(body, { status, headers: { "Content-Type": "text/plain; charset=utf-8" } })
+
+const parseJson = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
 
 export const Route = createFileRoute("/api/ask")({
   server: {
@@ -17,8 +25,8 @@ export const Route = createFileRoute("/api/ask")({
         if (request.headers.get("sec-fetch-site") !== "same-origin") return text("forbidden", 403)
 
         const raw = await request.text()
-        if (raw.length > MAX_BODY_BYTES) return text("Conversation too long. Clear it and start over.", 413)
-        const body = JSON.parse(raw || "null") as { messages?: unknown; threadId?: string } | null
+        if (raw.length > MAX_BODY_CHARS) return text("Conversation too long. Clear it and start over.", 413)
+        const body = parseJson(raw) as { messages?: unknown; threadId?: string } | null
         if (!Array.isArray(body?.messages) || body.messages.length === 0 || body.messages.length > MAX_MESSAGES)
           return text("Expected { messages: [...] }", 400)
 

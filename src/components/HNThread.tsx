@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { age, plural } from "../lib/format"
+import { countComments, itemUrl } from "../lib/hn"
 import { TTL } from "../lib/ttl"
 import type { HNComment, Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
@@ -14,17 +15,14 @@ export const threadQuery = (id: number) => ({
   staleTime: TTL.hnThread,
 })
 
-const itemUrl = (id: number) => `https://news.ycombinator.com/item?id=${id}`
-const countAll = (comments: Array<HNComment>): number => comments.reduce((n, c) => n + 1 + countAll(c.children), 0)
-
 /** The comment view that replaces the story list inside the HN panel. */
 export function HNThread({ story, onBack }: { story: Story; onBack: () => void }) {
   const now = useNow()
-  const thread = useQuery({ ...threadQuery(story.id), refetchInterval: false })
+  const thread = useQuery(threadQuery(story.id))
   const data = thread.data?.data
 
   return (
-    <div className="hn-thread">
+    <>
       <nav className="hn-crumbs" aria-label="Breadcrumb">
         <button type="button" className="hn-back" onClick={onBack}>
           <ArrowLeftIcon /> Back
@@ -63,14 +61,13 @@ export function HNThread({ story, onBack }: { story: Story; onBack: () => void }
           ))}
         </ul>
       )}
-    </div>
+    </>
   )
 }
 
 function Comment({ comment, op, now }: { comment: HNComment; op: string; now: number }) {
   const [collapsed, setCollapsed] = useState(false)
   const toggle = () => setCollapsed((c) => !c)
-  const hidden = 1 + countAll(comment.children)
 
   return (
     <li className={`hn-c${collapsed ? " is-collapsed" : ""}`}>
@@ -80,7 +77,7 @@ function Comment({ comment, op, now }: { comment: HNComment; op: string; now: nu
           {age(comment.time, now)}
         </a>
         <button type="button" className="hn-c-toggle" onClick={toggle} aria-expanded={!collapsed}>
-          {collapsed ? `[+${hidden}]` : "[–]"}
+          {collapsed ? `[+${1 + countComments(comment.children)}]` : "[–]"}
         </button>
       </p>
       {!collapsed && (
