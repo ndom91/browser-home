@@ -13,9 +13,9 @@ const base = {
 export function CalendarIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>
-      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M2 6.5h12M5.5 1.75v2.5M10.5 1.75v2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <rect x="4.5" y="8.5" width="2" height="2" rx=".4" fill="currentColor" />
+      <rect x="1.25" y="2.5" width="13.5" height="12.25" rx="2.25" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M1.25 6.25h13.5M5 1v2.75M11 1v2.75" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <rect x="4" y="8.5" width="2.25" height="2.25" rx=".4" fill="currentColor" />
     </svg>
   )
 }

@@ -416,6 +416,12 @@ ul {
   color: var(--muted);
 }
 
+/* One size for every header icon so they match the 14px title. */
+.panel-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 .panel-meta {
   margin-left: auto;
   font-size: 11.5px;
