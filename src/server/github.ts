@@ -131,5 +131,5 @@ export async function fetchPRs(): Promise<PullRequests> {
 
 export async function fetchViewer(): Promise<Viewer> {
   const data = await graphql<{ viewer: { login: string; name: string | null } }>(`query { viewer { login name } }`)
-  return { login: data.viewer.login, name: data.viewer.name }
+  return { login: data.viewer.login, name: process.env.GREETING_NAME?.trim() || data.viewer.name }
 }

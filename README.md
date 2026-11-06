@@ -69,6 +69,7 @@ These also live in `.env`:
 
 | Setting            | Default                            | What it does                                     |
 | ------------------ | ---------------------------------- | ------------------------------------------------ |
+| `GREETING_NAME`    | your GitHub name                   | Name in the greeting                             |
 | `GH_SEARCH_FILTER` | none                               | Extra GitHub search qualifiers, e.g. `org:acme`  |
 | `LINEAR_WORKSPACE` | none                               | Linear workspace slug; links PRs to their issues |
 | `VITE_SEARCH_URL`  | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL |
