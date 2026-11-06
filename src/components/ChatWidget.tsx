@@ -78,7 +78,7 @@ export function ChatWidget() {
             </button>
             <button
               type="button"
-              className="chat-head-btn"
+              className="chat-head-btn is-icon"
               onClick={() => setCollapsed(true)}
               aria-label="Hide conversation"
             >
