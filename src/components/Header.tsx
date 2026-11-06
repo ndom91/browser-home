@@ -10,7 +10,7 @@ function destination(input: string) {
   const q = input.trim()
   if (/^[a-z][\w+.-]*:\/\//i.test(q)) return q
   if (HOSTLIKE.test(q)) return `${q.startsWith("localhost") ? "http" : "https"}://${q}`
-  return `https://www.google.com/search?q=${encodeURIComponent(q)}`
+  return `https://kagi.com/search?q=${encodeURIComponent(q)}`
 }
 
 export function Header({ name }: { name: string | null }) {
