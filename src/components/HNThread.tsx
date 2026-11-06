@@ -3,7 +3,7 @@ import { useState } from "react"
 import { age, plural } from "../lib/format"
 import { countComments, itemUrl } from "../lib/hn"
 import { TTL } from "../lib/ttl"
-import type { HNComment, Story } from "../lib/types"
+import type { HNComment, HNThread as HNThreadData, Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { getHNThread } from "../server/fns"
 import { ArrowLeftIcon, ArrowUpRightIcon } from "./icons"
@@ -46,22 +46,20 @@ export function HNThread({ story, onBack }: { story: Story; onBack: () => void }
         {data?.html && <Html className="hn-story-text" html={data.html} />}
       </header>
 
-      {!data ? (
-        thread.error ? (
-          <PanelError error={thread.error} />
-        ) : (
-          <PanelLoading />
-        )
-      ) : data.comments.length === 0 ? (
-        <p className="panel-empty">No comments yet.</p>
-      ) : (
-        <ul className="hn-comments">
-          {data.comments.map((c) => (
-            <Comment key={c.id} comment={c} op={data.author} now={now} />
-          ))}
-        </ul>
-      )}
+      <Comments thread={data} error={thread.error} now={now} />
     </>
+  )
+}
+
+function Comments({ thread, error, now }: { thread: HNThreadData | undefined; error: unknown; now: number }) {
+  if (!thread) return error ? <PanelError error={error} /> : <PanelLoading />
+  if (thread.comments.length === 0) return <p className="panel-empty">No comments yet.</p>
+  return (
+    <ul className="hn-comments">
+      {thread.comments.map((c) => (
+        <Comment key={c.id} comment={c} op={thread.author} now={now} />
+      ))}
+    </ul>
   )
 }
 

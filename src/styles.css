@@ -71,7 +71,7 @@
   --weather-sun: #e0a100;
   --weather-rain: #4a7fd6;
   --chat-accent: #5b5fe6;
-  --chat-shadow: 0 8px 28px rgb(20 20 30 / 0.12), 0 1px 3px rgb(20 20 30 / 0.06);
+  --shadow-popover: 0 8px 28px rgb(20 20 30 / 0.12), 0 1px 3px rgb(20 20 30 / 0.06);
 
   --radius: 10px;
 }
@@ -138,7 +138,7 @@
     --weather-sun: #f5b82e;
     --weather-rain: #6f9cf0;
     --chat-accent: #8f93ff;
-    --chat-shadow: 0 10px 32px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
+    --shadow-popover: 0 10px 32px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
   }
 }
 
@@ -445,10 +445,6 @@ ul {
   display: none;
 }
 
-.timeline-scroll {
-  padding-bottom: 50px;
-}
-
 .panel-empty,
 .panel-error {
   padding: 12px 15px;
@@ -473,6 +469,7 @@ ul {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  padding-bottom: 50px;
 }
 
 .focus {
@@ -1062,10 +1059,6 @@ ul {
   color: var(--b-blue-fg);
 }
 
-.hn-story-text {
-  margin-top: 8px;
-}
-
 .hn-comments {
   padding: 4px 15px 16px 12px;
 }
@@ -1121,6 +1114,11 @@ ul {
   line-height: 1.5;
   color: var(--text);
   overflow-wrap: anywhere;
+}
+
+/* After the shared rule above, so the story body gets more room than a comment. */
+.hn-story-text {
+  margin-top: 8px;
 }
 
 .hn-c-text p,
@@ -1200,7 +1198,7 @@ ul {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
-  box-shadow: var(--chat-shadow);
+  box-shadow: var(--shadow-popover);
   transition:
     border-color 180ms ease-out,
     box-shadow 180ms ease-out;
@@ -1211,7 +1209,7 @@ ul {
   border-color: var(--chat-accent);
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--chat-accent) 12%, transparent),
-    var(--chat-shadow);
+    var(--shadow-popover);
 }
 
 .chat-icon {
@@ -1608,9 +1606,7 @@ ul {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow:
-    0 8px 24px rgb(20 20 30 / 0.12),
-    0 1px 3px rgb(20 20 30 / 0.06);
+  box-shadow: var(--shadow-popover);
   font-size: 12.5px;
   color: var(--text);
   outline: 0;
@@ -1624,14 +1620,6 @@ ul {
 .menu-popup[data-ending-style] {
   opacity: 0;
   transform: scale(0.97);
-}
-
-@media (prefers-color-scheme: dark) {
-  .menu-popup {
-    box-shadow:
-      0 10px 30px rgb(0 0 0 / 0.5),
-      0 1px 3px rgb(0 0 0 / 0.4);
-  }
 }
 
 .menu-label {
