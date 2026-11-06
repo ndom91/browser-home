@@ -787,6 +787,9 @@ ul {
 }
 
 .pr {
+  position: relative;
+  /* Keeps .pr-linear's z-index from painting over the sticky section head. */
+  isolation: isolate;
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr) auto;
   gap: 10px;
@@ -820,6 +823,40 @@ ul {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.pr-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.pr-link:focus-visible {
+  outline: none;
+}
+
+.pr-link:focus-visible::after {
+  outline: 2px solid var(--b-blue-fg);
+  outline-offset: -2px;
+}
+
+.pr-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+.pr-linear {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.pr-linear:hover {
+  color: var(--text);
 }
 
 .pr-meta {

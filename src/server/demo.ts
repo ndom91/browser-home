@@ -100,6 +100,7 @@ function pr(
     checks: "SUCCESS",
     reviewedByMe: false,
     updatedAt: new Date(Date.now() - hoursAgo * HOUR).toISOString(),
+    linear: null,
     ...p,
   }
 }
@@ -112,6 +113,7 @@ export function demoPRs(): PullRequests {
         title: "Fix SLA timer drift on snoozed threads",
         repo: "support-app",
         author: "mara",
+        linear: { id: "SUP-212", url: "https://linear.app/acme/issue/SUP-212" },
         additions: 86,
         deletions: 12,
       },
@@ -149,6 +151,7 @@ export function demoPRs(): PullRequests {
         title: "Add keyboard shortcuts to thread composer",
         repo: "support-app",
         review: "APPROVED",
+        linear: { id: "SUP-198", url: "https://linear.app/acme/issue/SUP-198" },
         additions: 312,
         deletions: 48,
       },

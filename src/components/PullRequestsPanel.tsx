@@ -182,6 +182,11 @@ function shortRepo(full: string, all: Array<string>) {
   return all.filter((v) => v.endsWith(`/${name}`)).length > 1 ? full : name
 }
 
+/** "CORE-123: Fix it" -> "Fix it", since the ID is shown as its own link. */
+function withoutIssueId(title: string, id: string) {
+  return title.startsWith(id) ? title.slice(id.length).replace(/^[\s:–—-]+/, "") : title
+}
+
 function hueStyle(hue: number | undefined) {
   return { "--repo-h": hue ?? 0 } as CSSProperties
 }
@@ -218,16 +223,26 @@ function Row({
   const checks = pr.checks ? CHECKS[pr.checks] : null
   return (
     <li>
-      <a
-        className={`pr${pr.draft ? " is-draft" : ""}`}
-        href={pr.url}
-        target="_blank"
-        rel="noreferrer"
-        title={pr.repoFull}
-      >
+      {/* Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead. */}
+      <div className={`pr${pr.draft ? " is-draft" : ""}`}>
         <PullRequestIcon className="pr-icon" draft={pr.draft} />
         <span className="pr-main">
-          <span className="pr-title">{pr.title}</span>
+          <span className="pr-head">
+            {pr.linear && (
+              <a
+                className="pr-linear mono"
+                href={pr.linear.url}
+                target="_blank"
+                rel="noreferrer"
+                title={`Open ${pr.linear.id} in Linear`}
+              >
+                {pr.linear.id}
+              </a>
+            )}
+            <a className="pr-title pr-link" href={pr.url} target="_blank" rel="noreferrer" title={pr.repoFull}>
+              {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
+            </a>
+          </span>
           <span className="pr-meta">
             <span className="repo-badge mono" style={hueStyle(hue)}>
               {pr.repo}#{pr.number}
@@ -250,7 +265,7 @@ function Row({
             <span className="size">{prSize(pr.additions, pr.deletions)}</span>
           </span>
         </span>
-      </a>
+      </div>
     </li>
   )
 }

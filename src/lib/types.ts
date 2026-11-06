@@ -27,6 +27,7 @@ export interface PullRequest {
   deletions: number
   reviewedByMe: boolean
   updatedAt: string
+  linear: { id: string; url: string } | null
 }
 
 export interface PullRequests {

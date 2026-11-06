@@ -42,7 +42,7 @@ async function graphql<T>(query: string, retry = true): Promise<T> {
 
 const PR_FIELDS = `
   ... on PullRequest {
-    number title url isDraft reviewDecision updatedAt additions deletions
+    number title body url isDraft reviewDecision updatedAt additions deletions
     author { login }
     repository { name nameWithOwner }
     viewerLatestReview { state }
@@ -52,6 +52,19 @@ const PR_FIELDS = `
 const PAGE_SIZE = 20
 // Extra search qualifiers, e.g. "org:my-company" to hide open-source noise.
 const FILTER = process.env.GH_SEARCH_FILTER?.trim() ?? ""
+
+// Linear issue links need the workspace slug, as in linear.app/<slug>/issue/CORE-123.
+const LINEAR_WORKSPACE = process.env.LINEAR_WORKSPACE?.trim()
+const ISSUE_ID = /\b[A-Z][A-Z0-9]+-\d+\b/
+const LINEAR_URL = /linear\.app\/[\w-]+\/issue\/([A-Z][A-Z0-9]+-\d+)/i
+
+// The title is the reliable source. The body is a fallback: a Linear URL first, then any
+// bare ID, which can misfire on strings like "SHA-256".
+function linearIssue(title: string, body: string): PullRequest["linear"] {
+  if (!LINEAR_WORKSPACE) return null
+  const id = title.match(ISSUE_ID)?.[0] ?? body.match(LINEAR_URL)?.[1]?.toUpperCase() ?? body.match(ISSUE_ID)?.[0]
+  return id ? { id, url: `https://linear.app/${LINEAR_WORKSPACE}/issue/${id}` } : null
+}
 
 const searchQuery = (q: string) => `
   query {
@@ -64,6 +77,7 @@ const searchQuery = (q: string) => `
 interface RawPR {
   number: number
   title: string
+  body: string
   url: string
   isDraft: boolean
   reviewDecision: PullRequest["review"]
@@ -97,6 +111,7 @@ function shape(pr: RawPR): PullRequest {
     // A pending request on a PR you already reviewed means "look again".
     reviewedByMe: pr.viewerLatestReview != null,
     updatedAt: pr.updatedAt,
+    linear: linearIssue(pr.title, pr.body),
   }
 }
 

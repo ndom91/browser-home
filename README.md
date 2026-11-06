@@ -70,6 +70,7 @@ These also live in `.env`:
 | Setting            | Default                            | What it does                                     |
 | ------------------ | ---------------------------------- | ------------------------------------------------ |
 | `GH_SEARCH_FILTER` | none                               | Extra GitHub search qualifiers, e.g. `org:acme`  |
+| `LINEAR_WORKSPACE` | none                               | Linear workspace slug; links PRs to their issues |
 | `VITE_SEARCH_URL`  | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL |
 
 Run `pnpm build` again after changing `VITE_SEARCH_URL`. It is baked into the page at build time.
