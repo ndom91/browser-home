@@ -382,6 +382,10 @@ a:focus-visible,
   .page {
     height: auto;
   }
+  /* In the 2x2 grid the chat box can float over the calendar, so leave room under it. */
+  .timeline-scroll {
+    padding-bottom: 50px;
+  }
   .grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -497,7 +501,6 @@ a:focus-visible,
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: 50px;
 }
 
 .focus {

@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef } from "react"
+import { type CSSProperties, type RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { clock, countdown, hourLabel, people } from "../lib/format"
 import type { CalendarEvent } from "../lib/types"
 import { useNow } from "../lib/useNow"
@@ -160,14 +160,22 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
   dayStart.setHours(0, 0, 0, 0)
   const hourOf = (ms: number) => (ms - dayStart.getTime()) / 3_600_000
 
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const fit = useHoursThatFit(scrollRef)
+
   // Include the current hour, so the now-line stays visible early and late in the day.
   const nowHour = hourOf(now)
-  const firstHour = Math.min(DEFAULT_START, Math.floor(nowHour), ...events.map((e) => Math.floor(hourOf(e.startMs))))
+  let firstHour = Math.min(DEFAULT_START, Math.floor(nowHour), ...events.map((e) => Math.floor(hourOf(e.startMs))))
   // Clamp: an event running past midnight shouldn't grow a "25:00" row.
-  const lastHour = Math.min(
+  let lastHour = Math.min(
     24,
     Math.max(DEFAULT_END, Math.ceil(nowHour), ...events.map((e) => Math.ceil(hourOf(e.endMs)))),
   )
+  // Fill the column: grow later first, then earlier, staying within the day.
+  if (lastHour - firstHour < fit) {
+    lastHour = Math.min(24, firstHour + fit)
+    firstHour = Math.max(0, lastHour - fit)
+  }
   const hours = Array.from({ length: lastHour - firstHour + 1 }, (_, i) => firstHour + i)
   const trackHeight = (lastHour - firstHour) * HOUR_PX
   const y = (ms: number) => (hourOf(ms) - firstHour) * HOUR_PX
@@ -175,13 +183,16 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
   const nowY = y(now)
   const showNow = hourOf(now) >= firstHour && hourOf(now) <= lastHour
 
-  // Bring "now" into view once on load, about a third of the way down.
-  const scrollRef = useRef<HTMLDivElement>(null)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: run on mount only, so a ticking clock never yanks the scroll position.
+  // Bring "now" into view once, about a third of the way down. Waits for the first
+  // measurement, since filling the column can add hours above "now".
+  const scrolled = useRef(false)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run once after measuring, so a ticking clock never yanks the scroll position.
   useEffect(() => {
     const el = scrollRef.current
-    if (el && showNow) el.scrollTop = Math.max(0, nowY - el.clientHeight / 3)
-  }, [])
+    if (!el || fit === 0 || scrolled.current) return
+    scrolled.current = true
+    if (showNow) el.scrollTop = Math.max(0, nowY - el.clientHeight / 3)
+  }, [fit])
 
   return (
     <div className="timeline-scroll" ref={scrollRef}>
@@ -235,4 +246,28 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
       </div>
     </div>
   )
+}
+
+/** How many whole hour rows fit in the timeline's visible height, kept current on resize. 0 until measured. */
+function useHoursThatFit(ref: RefObject<HTMLDivElement | null>) {
+  const [fit, setFit] = useState(0)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => {
+      const timeline = el.firstElementChild
+      const cs = timeline ? getComputedStyle(timeline) : null
+      // Everything around the hour rows: the timeline's margins, its 12px tail, and the scroller's padding.
+      const chrome =
+        (cs ? Number.parseFloat(cs.marginTop) + Number.parseFloat(cs.marginBottom) : 0) +
+        12 +
+        Number.parseFloat(getComputedStyle(el).paddingBottom)
+      setFit(Math.max(0, Math.floor((el.clientHeight - chrome) / HOUR_PX)))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [ref])
+  return fit
 }
