@@ -7,6 +7,7 @@ import { refreshHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
 import { HackerNewsIcon, RefreshIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
+import { SwapText } from "./ui/motion"
 
 interface Props {
   stories: Array<Story> | undefined
@@ -60,7 +61,11 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
           "Comments"
         ) : (
           <span className="hn-sync">
-            {fetchedAt != null && <time dateTime={new Date(fetchedAt).toISOString()}>{clock(fetchedAt)}</time>}
+            {fetchedAt != null && (
+              <time dateTime={new Date(fetchedAt).toISOString()}>
+                <SwapText text={clock(fetchedAt)} />
+              </time>
+            )}
             <button
               type="button"
               className={`icon-btn${refresh.isPending ? " is-spinning" : ""}`}

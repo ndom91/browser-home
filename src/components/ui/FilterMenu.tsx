@@ -70,11 +70,10 @@ export function FilterMenu({ label, facets, value, onChange }: Props) {
                               onCheckedChange={(on) => toggle(facet.key, o.value, on)}
                               closeOnClick={false}
                             >
-                              <span className="menu-check">
-                                <Menu.CheckboxItemIndicator>
-                                  <CheckIcon />
-                                </Menu.CheckboxItemIndicator>
-                              </span>
+                              {/* Kept mounted so the tick can draw in and out (transitions.dev checkbox-check). */}
+                              <Menu.CheckboxItemIndicator className="menu-check t-check" keepMounted>
+                                <CheckIcon />
+                              </Menu.CheckboxItemIndicator>
                               {o.leading}
                               <span className="menu-item-label">{o.label}</span>
                             </Menu.CheckboxItem>

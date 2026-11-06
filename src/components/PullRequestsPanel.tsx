@@ -6,6 +6,7 @@ import { useNow } from "../lib/useNow"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { activeFilterCount, type FilterFacet, FilterMenu, type FilterState } from "./ui/FilterMenu"
+import { PopIn, SwapText } from "./ui/motion"
 
 interface Props {
   prs: PullRequests | undefined
@@ -18,7 +19,7 @@ export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
   // One map for both sections, so a repo has the same color in each.
   const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
-    <Panel id="prs" icon={<GitHubIcon />} title="Pull requests" meta={synced(fetchedAt, now)}>
+    <Panel id="prs" icon={<GitHubIcon />} title="Pull requests" meta={<SwapText text={synced(fetchedAt, now)} />}>
       {!prs ? (
         <PanelFallback error={error} />
       ) : (
@@ -103,7 +104,7 @@ function Section({
       <h3 className="pr-section-head">
         {title}
         <span className={`count${tone ? ` count-${tone}` : ""}`}>
-          {filtering ? `${visible.length}/${total}` : total}
+          <PopIn value={filtering ? `${visible.length}/${total}` : String(total)} />
         </span>
         <span className="pr-section-actions">
           <FilterMenu label={`Filter ${title}`} facets={facets} value={effective} onChange={setFilters} />
