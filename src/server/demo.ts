@@ -18,13 +18,61 @@ export function demoCalendar(): Array<CalendarEvent> {
   const base = { allDay: false, calendar: "Work", color: null, location: null, status: "accepted" as const }
 
   return [
-    { ...base, id: "standup", title: "Platform standup", ...at(-90, 15), attendees: ["Dana", "Lee"], meeting: zoom, provider: "Zoom" },
-    { ...base, id: "design", title: "Design review: queue filters", ...at(0, 30), attendees: ["Priya Patel", "Sam Ortiz", "Mara Lind"], meeting: zoom, provider: "Zoom" },
-    { ...base, id: "priya", title: "1:1 with Priya", ...at(45, 25), attendees: ["Priya Patel"], meeting: zoom, provider: "Zoom" },
+    {
+      ...base,
+      id: "standup",
+      title: "Platform standup",
+      ...at(-90, 15),
+      attendees: ["Dana", "Lee"],
+      meeting: zoom,
+      provider: "Zoom",
+    },
+    {
+      ...base,
+      id: "design",
+      title: "Design review: queue filters",
+      ...at(0, 30),
+      attendees: ["Priya Patel", "Sam Ortiz", "Mara Lind"],
+      meeting: zoom,
+      provider: "Zoom",
+    },
+    {
+      ...base,
+      id: "priya",
+      title: "1:1 with Priya",
+      ...at(45, 25),
+      attendees: ["Priya Patel"],
+      meeting: zoom,
+      provider: "Zoom",
+    },
     { ...base, id: "lunch", title: "Lunch", ...at(90, 60), attendees: [], meeting: null, provider: null },
-    { ...base, id: "acme", title: "Customer call: Acme onboarding", ...at(210, 30), attendees: ["Jo", "Kim"], meeting: zoom, provider: "Zoom" },
-    { ...base, id: "sprint", title: "Sprint planning", ...at(300, 25), attendees: ["Team"], meeting: zoom, provider: "Zoom" },
-    { ...base, id: "focus", title: "Focus: write queue RFC", ...at(390, 60), attendees: [], meeting: null, provider: null },
+    {
+      ...base,
+      id: "acme",
+      title: "Customer call: Acme onboarding",
+      ...at(210, 30),
+      attendees: ["Jo", "Kim"],
+      meeting: zoom,
+      provider: "Zoom",
+    },
+    {
+      ...base,
+      id: "sprint",
+      title: "Sprint planning",
+      ...at(300, 25),
+      attendees: ["Team"],
+      meeting: zoom,
+      provider: "Zoom",
+    },
+    {
+      ...base,
+      id: "focus",
+      title: "Focus: write queue RFC",
+      ...at(390, 60),
+      attendees: [],
+      meeting: null,
+      provider: null,
+    },
   ]
 }
 
@@ -47,14 +95,78 @@ function pr(
 
 export function demoPRs(): PullRequests {
   const review = [
-    pr({ number: 4830, title: "Fix SLA timer drift on snoozed threads", repo: "support-app", author: "mara", additions: 86, deletions: 12 }, 3),
-    pr({ number: 4815, title: "Sidekick: stream partial drafts into composer", repo: "support-app", author: "sam", checks: "PENDING", reviewedByMe: true, additions: 1204, deletions: 310 }, 48),
-    pr({ number: 412, title: "Bump Node to 22 in CI images", repo: "infra", author: "devon", additions: 9, deletions: 9 }, 24),
+    pr(
+      {
+        number: 4830,
+        title: "Fix SLA timer drift on snoozed threads",
+        repo: "support-app",
+        author: "mara",
+        additions: 86,
+        deletions: 12,
+      },
+      3,
+    ),
+    pr(
+      {
+        number: 4815,
+        title: "Sidekick: stream partial drafts into composer",
+        repo: "support-app",
+        author: "sam",
+        checks: "PENDING",
+        reviewedByMe: true,
+        additions: 1204,
+        deletions: 310,
+      },
+      48,
+    ),
+    pr(
+      {
+        number: 412,
+        title: "Bump Node to 22 in CI images",
+        repo: "infra",
+        author: "devon",
+        additions: 9,
+        deletions: 9,
+      },
+      24,
+    ),
   ]
   const mine = [
-    pr({ number: 4821, title: "Add keyboard shortcuts to thread composer", repo: "support-app", review: "APPROVED", additions: 312, deletions: 48 }, 5),
-    pr({ number: 4797, title: "Migrate queue row to /ui Button", repo: "support-app", review: "CHANGES_REQUESTED", checks: "FAILURE", additions: 140, deletions: 221 }, 72),
-    pr({ number: 1203, title: "Paginate customer events endpoint", repo: "api", draft: true, checks: "PENDING", additions: 58, deletions: 4 }, 144),
+    pr(
+      {
+        number: 4821,
+        title: "Add keyboard shortcuts to thread composer",
+        repo: "support-app",
+        review: "APPROVED",
+        additions: 312,
+        deletions: 48,
+      },
+      5,
+    ),
+    pr(
+      {
+        number: 4797,
+        title: "Migrate queue row to /ui Button",
+        repo: "support-app",
+        review: "CHANGES_REQUESTED",
+        checks: "FAILURE",
+        additions: 140,
+        deletions: 221,
+      },
+      72,
+    ),
+    pr(
+      {
+        number: 1203,
+        title: "Paginate customer events endpoint",
+        repo: "api",
+        draft: true,
+        checks: "PENDING",
+        additions: 58,
+        deletions: 4,
+      },
+      144,
+    ),
   ]
   return { review, reviewTotal: review.length, mine, mineTotal: mine.length }
 }

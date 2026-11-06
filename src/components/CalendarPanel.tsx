@@ -1,6 +1,6 @@
-import { useEffect, useRef, type CSSProperties } from "react"
-import type { CalendarEvent } from "../lib/types"
+import { type CSSProperties, useEffect, useRef } from "react"
 import { clock, countdown, hourLabel, people } from "../lib/format"
+import type { CalendarEvent } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { ArrowUpRightIcon, CalendarIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"

@@ -55,16 +55,16 @@ Requirements: macOS 14+, Node 22+, pnpm, Xcode command line tools (`swiftc`), an
 
 These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-run the install script after editing it.
 
-| Variable           | Default                | Purpose                                                     |
-| ------------------ | ---------------------- | ----------------------------------------------------------- |
-| `PORT`             | `3000`                 | Port to listen on                                           |
-| `GH_SEARCH_FILTER` | empty                  | Extra GitHub search qualifiers, e.g. `org:team-plain`       |
-| `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                                |
-| `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                                 |
+| Variable           | Default                | Purpose                                               |
+| ------------------ | ---------------------- | ----------------------------------------------------- |
+| `PORT`             | `3000`                 | Port to listen on                                     |
+| `GH_SEARCH_FILTER` | empty                  | Extra GitHub search qualifiers, e.g. `org:team-plain` |
+| `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                          |
+| `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                           |
 
 ## Notes
 
-- **Calendar permission.** macOS asks the *responsible process* (the app that launched you) for privacy permissions. `bin/agenda` re-spawns itself as its own responsible process, so one grant works from a terminal and under launchd. Rebuilding the binary changes its code signature, and macOS may ask again.
+- **Calendar permission.** macOS asks the _responsible process_ (the app that launched you) for privacy permissions. `bin/agenda` re-spawns itself as its own responsible process, so one grant works from a terminal and under launchd. Rebuilding the binary changes its code signature, and macOS may ask again.
 - **Caching.** Sources use stale-while-revalidate: calendar 1 min, PRs 2 min, HN 5 min. Every tab after the first loads instantly from cache, and the panel header shows the data's age. The server warms the caches at startup.
 - **Slow sources don't block the page.** Server rendering waits at most 1.5 s per source. Anything slower loads in the browser instead.
 - **Node path.** The launchd plist uses fnm's `default` alias. If you switch Node managers, edit the plist and re-run the install script.

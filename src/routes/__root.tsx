@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router"
-import { useState, type ReactNode } from "react"
+import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
+import { type ReactNode, useState } from "react"
 import appCss from "../styles.css?url"
 
 const FAVICON =

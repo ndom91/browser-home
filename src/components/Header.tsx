@@ -1,4 +1,4 @@
-import { useEffect, useRef, type FormEvent } from "react"
+import { type FormEvent, useEffect, useRef } from "react"
 import { clock, firstName, greeting, longDay } from "../lib/format"
 import { useNow } from "../lib/useNow"
 import { SearchIcon } from "./icons"

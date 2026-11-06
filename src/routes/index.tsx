@@ -4,8 +4,8 @@ import { CalendarPanel } from "../components/CalendarPanel"
 import { HackerNewsPanel } from "../components/HackerNewsPanel"
 import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
-import { getCalendar, getHN, getPRs, getViewer } from "../server/fns"
 import { NowContext, useTicker } from "../lib/useNow"
+import { getCalendar, getHN, getPRs, getViewer } from "../server/fns"
 
 // SSR waits this long per source. Anything slower (a cold GitHub call, a
 // pending calendar permission prompt) loads on the client instead.

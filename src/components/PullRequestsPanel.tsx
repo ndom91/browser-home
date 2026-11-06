@@ -1,5 +1,5 @@
-import type { PullRequest, PullRequests } from "../lib/types"
 import { age, prSize, signed, synced } from "../lib/format"
+import type { PullRequest, PullRequests } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"

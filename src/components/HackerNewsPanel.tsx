@@ -1,5 +1,5 @@
-import type { Story } from "../lib/types"
 import { age } from "../lib/format"
+import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { HackerNewsIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"

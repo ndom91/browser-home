@@ -34,7 +34,13 @@ export function HackerNewsIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>
       <rect width="16" height="16" rx="3" fill="var(--hn-icon-bg)" />
-      <path d="M5 4l3 4.5L11 4M8 8.5V12" stroke="var(--hn-icon-fg)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M5 4l3 4.5L11 4M8 8.5V12"
+        stroke="var(--hn-icon-fg)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -51,7 +57,13 @@ export function SearchIcon(props: IconProps) {
 export function ArrowUpRightIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
-      <path d="M5 11l6-6M6 5h5v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M5 11l6-6M6 5h5v5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
