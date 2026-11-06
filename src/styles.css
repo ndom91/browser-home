@@ -936,3 +936,187 @@ ul {
 .hn-meta a:hover {
   color: var(--text);
 }
+
+/* ---------- hacker news: comments ---------- */
+
+.hn-crumbs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  padding: 0 15px 0 9px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+}
+
+.hn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  cursor: pointer;
+}
+
+.hn-back:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.hn-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+}
+
+.hn-open:hover {
+  color: var(--text);
+}
+
+.hn-story {
+  padding: 11px 15px 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.hn-story-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 19px;
+}
+
+.hn-story-title:hover {
+  color: var(--b-blue-fg);
+}
+
+.hn-story-text {
+  margin-top: 8px;
+}
+
+.hn-comments {
+  padding: 4px 15px 16px 12px;
+}
+
+.hn-c {
+  padding-top: 9px;
+}
+
+.hn-c-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.hn-c-author {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.hn-c-author.is-op {
+  color: var(--b-blue-fg);
+}
+
+.hn-c-age:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.hn-c-toggle {
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.hn-c-toggle:hover {
+  color: var(--text);
+}
+
+.is-collapsed > .hn-c-meta {
+  opacity: 0.7;
+}
+
+.hn-c-text,
+.hn-story-text {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.hn-c-text p,
+.hn-story-text p {
+  margin-top: 6px;
+}
+
+.hn-c-text a,
+.hn-story-text a {
+  color: var(--b-blue-fg);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 2px;
+}
+
+.hn-c-text pre,
+.hn-story-text pre {
+  margin: 6px 0;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: var(--panel-sub);
+  overflow-x: auto;
+  font-size: 11.5px;
+  white-space: pre;
+}
+
+.hn-c-text code,
+.hn-story-text code {
+  font-family: var(--font-mono);
+}
+
+.hn-c-replies {
+  position: relative;
+  padding-left: 14px;
+}
+
+/* A wide invisible hit area with a hairline in the middle. */
+.hn-c-guide {
+  position: absolute;
+  top: 8px;
+  bottom: 0;
+  left: 0;
+  width: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.hn-c-guide::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 1px;
+  background: color-mix(in srgb, var(--muted) 30%, transparent);
+  transition: background 120ms ease;
+}
+
+.hn-c-guide:hover::before {
+  width: 2px;
+  background: var(--muted);
+}

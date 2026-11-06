@@ -34,3 +34,19 @@ export function cached<T>(fn: () => Promise<T>, ttlMs: number) {
     return value
   }
 }
+
+/** `cached`, keyed by an argument. Keeps the most recently used `max` keys. */
+export function cachedBy<K, T>(fn: (key: K) => Promise<T>, ttlMs: number, max = 50) {
+  const entries = new Map<K, () => Promise<Cached<T>>>()
+  return (key: K): Promise<Cached<T>> => {
+    let entry = entries.get(key)
+    if (entry) {
+      entries.delete(key) // re-insert below, so Map order tracks recency
+    } else {
+      entry = cached(() => fn(key), ttlMs)
+      if (entries.size >= max) entries.delete(entries.keys().next().value as K)
+    }
+    entries.set(key, entry)
+    return entry()
+  }
+}

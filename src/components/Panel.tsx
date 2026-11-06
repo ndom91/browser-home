@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ReactNode, Ref } from "react"
 
 interface PanelProps {
   id: string
@@ -6,9 +6,10 @@ interface PanelProps {
   title: string
   meta?: ReactNode
   children: ReactNode
+  bodyRef?: Ref<HTMLDivElement>
 }
 
-export function Panel({ id, icon, title, meta, children }: PanelProps) {
+export function Panel({ id, icon, title, meta, children, bodyRef }: PanelProps) {
   return (
     <section className="panel" id={id} aria-labelledby={`${id}-title`}>
       <header className="panel-head">
@@ -16,7 +17,9 @@ export function Panel({ id, icon, title, meta, children }: PanelProps) {
         <h2 id={`${id}-title`}>{title}</h2>
         {meta != null && <span className="panel-meta">{meta}</span>}
       </header>
-      <div className="panel-body">{children}</div>
+      <div className="panel-body" ref={bodyRef}>
+        {children}
+      </div>
     </section>
   )
 }

@@ -1,5 +1,5 @@
 // Fixture data matching the design mockups. Enable with BROWSER_HOME_DEMO=1.
-import type { CalendarEvent, PullRequest, PullRequests, Story, Viewer, Weather } from "../lib/types"
+import type { CalendarEvent, HNThread, PullRequest, PullRequests, Story, Viewer, Weather } from "../lib/types"
 
 export const DEMO = process.env.BROWSER_HOME_DEMO === "1"
 
@@ -226,3 +226,39 @@ export const demoViewer: Viewer = { login: "alex", name: "Alex" }
 
 // Partly cloudy, as in the mockup.
 export const demoWeather: Weather = { code: 2, max: 14, min: 6 }
+
+export function demoThread(id: number): HNThread {
+  const story = demoHN().find((s) => s.id === id) ?? demoHN()[0]
+  const at = (minAgo: number) => Date.now() - minAgo * 60_000
+  return {
+    id,
+    title: story.title,
+    url: story.url,
+    domain: story.domain,
+    author: "pg",
+    points: story.points,
+    time: story.time,
+    html: null,
+    total: 4,
+    comments: [
+      {
+        id: 1,
+        author: "dang",
+        time: at(42),
+        html: '<p>This is a great writeup. The <i>boring</i> parts are the point.</p><p>See <a href="https://example.com" target="_blank" rel="noreferrer">the docs</a>.</p>',
+        children: [
+          {
+            id: 2,
+            author: "pg",
+            time: at(30),
+            html: "<p>Agreed. Here is the snippet:</p><pre><code>SELECT * FROM jobs WHERE run_at &lt; now();</code></pre>",
+            children: [
+              { id: 3, author: "tptacek", time: at(12), html: "<p>Watch out for lock contention.</p>", children: [] },
+            ],
+          },
+        ],
+      },
+      { id: 4, author: "patio11", time: at(25), html: "<p>Shipping beats perfect.</p>", children: [] },
+    ],
+  }
+}

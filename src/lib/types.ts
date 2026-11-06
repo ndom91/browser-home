@@ -58,3 +58,27 @@ export interface Weather {
   max: number
   min: number
 }
+
+export interface HNComment {
+  id: number
+  author: string
+  time: number
+  /** Sanitized HTML: only p, a, i, b, em, strong, pre, code, br. */
+  html: string
+  children: Array<HNComment>
+}
+
+export interface HNThread {
+  id: number
+  title: string
+  url: string
+  domain: string
+  author: string
+  points: number
+  time: number
+  /** Body of Ask/Show HN posts, sanitized like comments. */
+  html: string | null
+  comments: Array<HNComment>
+  /** All comments, including nested ones. */
+  total: number
+}

@@ -6,4 +6,5 @@ export const TTL = {
   hn: 5 * 60_000,
   viewer: 24 * 60 * 60_000,
   weather: 30 * 60_000,
+  hnThread: 2 * 60_000,
 }

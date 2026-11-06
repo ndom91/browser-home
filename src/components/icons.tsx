@@ -138,3 +138,17 @@ export function WeatherIcon({ kind, ...props }: IconProps & { kind: WeatherKind 
     </svg>
   )
 }
+
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+      <path
+        d="M13 8H3.5M7.5 4L3.5 8l4 4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
