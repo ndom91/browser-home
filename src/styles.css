@@ -251,6 +251,8 @@ a:focus-visible,
   justify-content: space-between;
   gap: 24px;
   flex: none;
+  /* Inset past the gutter, so the greeting and search sit back from the window edge (26px total). */
+  padding: 0 12px;
 }
 
 .top h1 {
@@ -1222,7 +1224,7 @@ a:focus-visible,
   position: fixed;
   z-index: 10;
   left: 50%;
-  bottom: 18px;
+  bottom: 30px;
   width: min(540px, calc(100vw - 32px));
   transform: translateX(-50%);
   display: flex;
