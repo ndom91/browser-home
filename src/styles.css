@@ -1173,15 +1173,15 @@ ul {
   border-radius: 12px;
   box-shadow: var(--chat-shadow);
   transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
+    border-color 220ms ease-out,
+    box-shadow 220ms ease-out;
 }
 
 /* Focus ring only while the input is alone; inside the card it would frame the whole thread. */
 .chat:not(.is-open):focus-within {
-  border-color: var(--chat-accent);
+  border-color: color-mix(in srgb, var(--chat-accent) 55%, var(--line));
   box-shadow:
-    0 0 0 1px var(--chat-accent),
+    0 0 0 3px color-mix(in srgb, var(--chat-accent) 12%, transparent),
     var(--chat-shadow);
 }
 
