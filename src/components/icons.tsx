@@ -232,3 +232,49 @@ export function RefreshIcon(props: IconProps) {
     </svg>
   )
 }
+
+/** Linear-style priority: "!" box for urgent, 1–3 bars for low to high, a dash for none. */
+export function PriorityIcon({ priority, ...props }: IconProps & { priority: number }) {
+  if (priority === 1) {
+    return (
+      <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+        <rect x="1" y="1" width="14" height="14" rx="3" fill="var(--fail)" />
+        <path d="M8 4.5v4.5M8 11.5v.01" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    )
+  }
+  if (priority === 0) {
+    return (
+      <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+        <path d="M3.5 8h9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
+      </svg>
+    )
+  }
+  const filled = 5 - priority // high 3, medium 2, low 1
+  return (
+    <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+      {[0, 1, 2].map((i) => (
+        <rect
+          key={i}
+          x={2 + i * 4.5}
+          y={10 - i * 3.5}
+          width="3"
+          height={4 + i * 3.5}
+          rx="1"
+          fill="currentColor"
+          opacity={i < filled ? 1 : 0.25}
+        />
+      ))}
+    </svg>
+  )
+}
+
+/** Linear-style mark: a disc cut by diagonal lines. */
+export function LinearIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <circle cx="8" cy="8" r="6.75" fill="currentColor" />
+      <path d="M2.5 9.5l4 4M1.75 6.5l7.75 7.75M3.25 3.75l9 9" stroke="var(--panel)" strokeWidth="1.1" />
+    </svg>
+  )
+}

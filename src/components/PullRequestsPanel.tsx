@@ -1,11 +1,12 @@
-import { type CSSProperties, useEffect, useMemo, useState } from "react"
+import { type CSSProperties, useMemo } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
 import { repoHues } from "../lib/repoColor"
 import type { PullRequest, PullRequests } from "../lib/types"
+import { type Facet, useFacetFilter } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
-import { activeFilterCount, type FilterFacet, FilterMenu, type FilterState } from "./ui/FilterMenu"
+import { FilterMenu } from "./ui/FilterMenu"
 import { PopIn, SwapText } from "./ui/motion"
 
 interface Props {
@@ -93,11 +94,9 @@ function Section({
   tone?: "attention"
   showAuthor?: boolean
 }) {
-  const [filters, setFilters] = useStoredFilters(`prs-filter:${id}`)
-  const facets = useMemo(() => buildFacets(prs, badgeFor, hues), [prs, badgeFor, hues])
-  const effective = useMemo(() => pruneFilters(filters, facets), [filters, facets])
-  const filtering = activeFilterCount(effective) > 0
-  const visible = filtering ? prs.filter((pr) => matches(pr, effective, badgeFor)) : prs
+  const facets = useMemo(() => prFacets(badgeFor, hues), [badgeFor, hues])
+  const filter = useFacetFilter(`prs-filter:${id}`, prs, facets)
+  const { visible, filtering } = filter
 
   return (
     <div className="pr-section">
@@ -107,7 +106,12 @@ function Section({
           <PopIn value={filtering ? `${visible.length}/${total}` : String(total)} />
         </span>
         <span className="pr-section-actions">
-          <FilterMenu label={`Filter ${title}`} facets={facets} value={effective} onChange={setFilters} />
+          <FilterMenu
+            label={`Filter ${title}`}
+            facets={filter.facets}
+            value={filter.value}
+            onChange={filter.onChange}
+          />
         </span>
       </h3>
       {visible.length ? (
@@ -130,51 +134,21 @@ function Section({
   )
 }
 
-/** Each facet value as a function of a PR. Options come only from the PRs in the list. */
-const FACETS: Array<{ key: string; label: string; get: (pr: PullRequest, badge: Badge) => string | null }> = [
-  { key: "repo", label: "Repository", get: (pr) => pr.repoFull },
-  { key: "author", label: "Author", get: (pr) => pr.author },
-  { key: "status", label: "Status", get: (_, badge) => badge.label },
-  { key: "checks", label: "Checks", get: (pr) => (pr.checks ? CHECKS[pr.checks].label : "No checks") },
-]
-
-function buildFacets(
-  prs: Array<PullRequest>,
-  badgeFor: (pr: PullRequest) => Badge,
-  hues: Map<string, number>,
-): Array<FilterFacet> {
-  return FACETS.map(({ key, label, get }) => {
-    const values = [...new Set(prs.map((pr) => get(pr, badgeFor(pr))).filter((v) => v != null))].sort()
-    return {
-      key,
-      label,
-      options: values.map((value) => ({
-        value,
-        label: key === "repo" ? shortRepo(value, values) : value,
-        leading: key === "repo" ? <i className="repo-swatch" style={hueStyle(hues.get(value))} /> : undefined,
-      })),
-    }
-  }).filter((f) => f.options.length > 1 || f.key === "repo")
-}
-
-function matches(pr: PullRequest, filters: FilterState, badgeFor: (pr: PullRequest) => Badge) {
-  const badge = badgeFor(pr)
-  return FACETS.every(({ key, get }) => {
-    const wanted = filters[key]
-    if (!wanted?.length) return true
-    const v = get(pr, badge)
-    return v != null && wanted.includes(v)
-  })
-}
-
-/** Drop saved values that are no longer in the list, so a merged PR can't leave the section empty. */
-function pruneFilters(filters: FilterState, facets: Array<FilterFacet>): FilterState {
-  const out: FilterState = {}
-  for (const f of facets) {
-    const kept = (filters[f.key] ?? []).filter((v) => f.options.some((o) => o.value === v))
-    if (kept.length) out[f.key] = kept
-  }
-  return out
+/** How a PR section can be filtered. Options come only from the PRs in the list. */
+function prFacets(badgeFor: (pr: PullRequest) => Badge, hues: Map<string, number>): Array<Facet<PullRequest>> {
+  return [
+    {
+      key: "repo",
+      label: "Repository",
+      get: (pr) => pr.repoFull,
+      optionLabel: shortRepo,
+      leading: (repo) => <i className="repo-swatch" style={hueStyle(hues.get(repo))} />,
+      always: true,
+    },
+    { key: "author", label: "Author", get: (pr) => pr.author },
+    { key: "status", label: "Status", get: (pr) => badgeFor(pr).label },
+    { key: "checks", label: "Checks", get: (pr) => (pr.checks ? CHECKS[pr.checks].label : "No checks") },
+  ]
 }
 
 /** "org/repo" -> "repo", unless two orgs share that repo name. */
@@ -190,22 +164,6 @@ function withoutIssueId(title: string, id: string) {
 
 function hueStyle(hue: number | undefined) {
   return { "--repo-h": hue ?? 0 } as CSSProperties
-}
-
-/** Filters survive reloads. Read after mount so server and client render the same first frame. */
-function useStoredFilters(key: string) {
-  const [value, setValue] = useState<FilterState>({})
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) setValue(JSON.parse(raw))
-    } catch {}
-  }, [key])
-  const set = (next: FilterState) => {
-    setValue(next)
-    localStorage.setItem(key, JSON.stringify(next))
-  }
-  return [value, set] as const
 }
 
 function Row({

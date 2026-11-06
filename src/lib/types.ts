@@ -83,3 +83,23 @@ export interface HNThread {
   /** All comments, including nested ones. */
   total: number
 }
+
+export interface LinearIssue {
+  id: string
+  title: string
+  url: string
+  /** 0 none, 1 urgent, 2 high, 3 medium, 4 low (Linear's scale). */
+  priority: number
+  priorityLabel: string
+  updatedAt: string
+  state: { name: string; type: "started" | "unstarted"; color: string }
+  project: { name: string; color: string } | null
+  team: string
+  cycle: number | null
+}
+
+/** `configured: false` means LINEAR_API_KEY is unset, so the panel shows a setup hint. */
+export interface LinearIssues {
+  configured: boolean
+  issues: Array<LinearIssue>
+}

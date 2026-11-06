@@ -1,5 +1,14 @@
 // Fixture data matching the design mockups. Enable with BROWSER_HOME_DEMO=1.
-import type { CalendarEvent, HNThread, PullRequest, PullRequests, Story, Viewer, Weather } from "../lib/types"
+import type {
+  CalendarEvent,
+  HNThread,
+  LinearIssues,
+  PullRequest,
+  PullRequests,
+  Story,
+  Viewer,
+  Weather,
+} from "../lib/types"
 
 export const DEMO = process.env.BROWSER_HOME_DEMO === "1"
 
@@ -262,6 +271,56 @@ export function demoThread(id: number): HNThread {
         ],
       },
       { id: 4, author: "patio11", time: at(25), html: "<p>Shipping beats perfect.</p>", children: [] },
+    ],
+  }
+}
+
+export function demoLinear(): LinearIssues {
+  const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
+  const started = { name: "In Progress", type: "started", color: "#f2c94c" } as const
+  const review = { name: "In Review", type: "started", color: "#5e6ad2" } as const
+  const todo = { name: "Todo", type: "unstarted", color: "#bec2c8" } as const
+  const queues = { name: "Queue filters", color: "#4ea7fc" }
+  const sla = { name: "SLA v2", color: "#f7a1c1" }
+  const issue = (id: string, title: string, rest: Partial<LinearIssues["issues"][number]>) => ({
+    id,
+    title,
+    url: `https://linear.app/acme/issue/${id}`,
+    priority: 3,
+    priorityLabel: "Medium",
+    updatedAt: ago(3 * HOUR),
+    state: todo,
+    project: null,
+    team: id.split("-")[0],
+    cycle: 42,
+    ...rest,
+  })
+  return {
+    configured: true,
+    issues: [
+      issue("SUP-198", "Add keyboard shortcuts to thread composer", {
+        state: review,
+        project: queues,
+        priority: 2,
+        priorityLabel: "High",
+        updatedAt: ago(5 * HOUR),
+      }),
+      issue("SUP-214", "Saved views for queue filters", { state: started, project: queues, updatedAt: ago(40 * MIN) }),
+      issue("CORE-881", "SLA breach warnings in thread list", {
+        state: started,
+        project: sla,
+        priority: 1,
+        priorityLabel: "Urgent",
+        updatedAt: ago(2 * HOUR),
+      }),
+      issue("CORE-902", "Backfill SLA timers for snoozed threads", { project: sla, updatedAt: ago(26 * HOUR) }),
+      issue("SUP-220", "Empty state for filtered queues", { project: queues, priority: 4, priorityLabel: "Low" }),
+      issue("CORE-915", "Flaky test: workspace invite expiry", {
+        priority: 0,
+        priorityLabel: "No priority",
+        cycle: null,
+        updatedAt: ago(3 * 24 * HOUR),
+      }),
     ],
   }
 }

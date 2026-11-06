@@ -1677,6 +1677,70 @@ ul {
   }
 }
 
+/* ---------- linear ---------- */
+
+/* Two panels share the middle column, each scrolling on its own. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.stack > .panel {
+  flex: 1 1 0;
+}
+
+.issue-state {
+  width: 9px;
+  height: 9px;
+  margin: 5px 0 0 2px;
+  border-radius: 50%;
+  border: 2px solid var(--state);
+}
+
+/* Started states read as "half done", like Linear's own icon. */
+.issue-state[data-type="started"] {
+  background: linear-gradient(90deg, var(--state) 50%, transparent 50%);
+}
+
+.project-badge {
+  padding: 0 5px;
+  border-radius: 4px;
+  line-height: 17px;
+  background: color-mix(in srgb, var(--project) 16%, transparent);
+  color: color-mix(in srgb, var(--project) 70%, var(--text));
+}
+
+.issue-side {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.priority {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.issue-pr {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  border-radius: 4px;
+  line-height: 17px;
+  font-size: 10.5px;
+  background: var(--b-green-bg);
+  color: var(--b-green-fg);
+}
+
+.issue-pr:hover {
+  filter: brightness(1.1);
+}
+
 /* ---------- dialog (Base UI) ---------- */
 
 .dialog-backdrop {
