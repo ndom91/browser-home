@@ -7,6 +7,7 @@ import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
 import { TTL } from "../lib/ttl"
 import { NowContext, useTicker } from "../lib/useNow"
+import { useTitleCount } from "../lib/useTitleCount"
 import type { Cached } from "../server/cache"
 import { getCalendar, getHN, getPRs, getViewer, getWeather } from "../server/fns"
 
@@ -50,6 +51,7 @@ function Home() {
   const weather = useSource("weather", getWeather, initial.weather, TTL.weather)
   // The name barely changes, so it never refetches.
   const viewer = useSource("viewer", getViewer, initial.viewer, Infinity)
+  useTitleCount(prs.data?.data)
 
   return (
     <NowContext.Provider value={now}>
