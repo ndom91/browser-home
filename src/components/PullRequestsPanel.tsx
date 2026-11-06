@@ -1,6 +1,6 @@
 import { type CSSProperties, useEffect, useMemo, useState } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
-import { repoHue } from "../lib/repoColor"
+import { repoHues } from "../lib/repoColor"
 import type { PullRequest, PullRequests } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { GitHubIcon, PullRequestIcon } from "./icons"
@@ -15,6 +15,8 @@ interface Props {
 
 export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
   const now = useNow()
+  // One map for both sections, so a repo has the same color in each.
+  const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
     <Panel id="prs" icon={<GitHubIcon />} title="Pull requests" meta={synced(fetchedAt, now)}>
       {!prs ? (
@@ -28,11 +30,20 @@ export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
             prs={prs.review}
             total={prs.reviewTotal}
             badgeFor={reviewBadge}
+            hues={hues}
             now={now}
             tone="attention"
             showAuthor
           />
-          <Section id="mine" title="Yours" prs={prs.mine} total={prs.mineTotal} badgeFor={ownBadge} now={now} />
+          <Section
+            id="mine"
+            title="Yours"
+            prs={prs.mine}
+            total={prs.mineTotal}
+            badgeFor={ownBadge}
+            hues={hues}
+            now={now}
+          />
         </>
       )}
     </Panel>
@@ -66,6 +77,7 @@ function Section({
   prs,
   total,
   badgeFor,
+  hues,
   now,
   tone,
   showAuthor,
@@ -75,12 +87,13 @@ function Section({
   prs: Array<PullRequest>
   total: number
   badgeFor: (pr: PullRequest) => Badge
+  hues: Map<string, number>
   now: number
   tone?: "attention"
   showAuthor?: boolean
 }) {
   const [filters, setFilters] = useStoredFilters(`prs-filter:${id}`)
-  const facets = useMemo(() => buildFacets(prs, badgeFor), [prs, badgeFor])
+  const facets = useMemo(() => buildFacets(prs, badgeFor, hues), [prs, badgeFor, hues])
   const effective = useMemo(() => pruneFilters(filters, facets), [filters, facets])
   const filtering = activeFilterCount(effective) > 0
   const visible = filtering ? prs.filter((pr) => matches(pr, effective, badgeFor)) : prs
@@ -99,7 +112,14 @@ function Section({
       {visible.length ? (
         <ul className="pr-list">
           {visible.map((pr) => (
-            <Row key={pr.url} pr={pr} now={now} badge={badgeFor(pr)} showAuthor={showAuthor} />
+            <Row
+              key={pr.url}
+              pr={pr}
+              now={now}
+              badge={badgeFor(pr)}
+              hue={hues.get(pr.repoFull)}
+              showAuthor={showAuthor}
+            />
           ))}
         </ul>
       ) : (
@@ -117,7 +137,11 @@ const FACETS: Array<{ key: string; label: string; get: (pr: PullRequest, badge: 
   { key: "checks", label: "Checks", get: (pr) => (pr.checks ? CHECKS[pr.checks].label : "No checks") },
 ]
 
-function buildFacets(prs: Array<PullRequest>, badgeFor: (pr: PullRequest) => Badge): Array<FilterFacet> {
+function buildFacets(
+  prs: Array<PullRequest>,
+  badgeFor: (pr: PullRequest) => Badge,
+  hues: Map<string, number>,
+): Array<FilterFacet> {
   return FACETS.map(({ key, label, get }) => {
     const values = [...new Set(prs.map((pr) => get(pr, badgeFor(pr))).filter((v) => v != null))].sort()
     return {
@@ -126,7 +150,7 @@ function buildFacets(prs: Array<PullRequest>, badgeFor: (pr: PullRequest) => Bad
       options: values.map((value) => ({
         value,
         label: key === "repo" ? shortRepo(value, values) : value,
-        leading: key === "repo" ? <i className="repo-swatch" style={hueStyle(value)} /> : undefined,
+        leading: key === "repo" ? <i className="repo-swatch" style={hueStyle(hues.get(value))} /> : undefined,
       })),
     }
   }).filter((f) => f.options.length > 1 || f.key === "repo")
@@ -158,8 +182,8 @@ function shortRepo(full: string, all: Array<string>) {
   return all.filter((v) => v.endsWith(`/${name}`)).length > 1 ? full : name
 }
 
-function hueStyle(repoFull: string) {
-  return { "--repo-h": repoHue(repoFull) } as CSSProperties
+function hueStyle(hue: number | undefined) {
+  return { "--repo-h": hue ?? 0 } as CSSProperties
 }
 
 /** Filters survive reloads. Read after mount so server and client render the same first frame. */
@@ -178,7 +202,19 @@ function useStoredFilters(key: string) {
   return [value, set] as const
 }
 
-function Row({ pr, now, badge, showAuthor }: { pr: PullRequest; now: number; badge: Badge; showAuthor?: boolean }) {
+function Row({
+  pr,
+  now,
+  badge,
+  hue,
+  showAuthor,
+}: {
+  pr: PullRequest
+  now: number
+  badge: Badge
+  hue: number | undefined
+  showAuthor?: boolean
+}) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
   return (
     <li>
@@ -187,7 +223,7 @@ function Row({ pr, now, badge, showAuthor }: { pr: PullRequest; now: number; bad
         <span className="pr-main">
           <span className="pr-title">{pr.title}</span>
           <span className="pr-meta">
-            <span className="repo-badge mono" style={hueStyle(pr.repoFull)}>
+            <span className="repo-badge mono" style={hueStyle(hue)}>
               {pr.repo}#{pr.number}
             </span>
             {showAuthor && pr.author && <span className="mono">{pr.author}</span>}
