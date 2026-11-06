@@ -1,7 +1,7 @@
 import { fetchServerSentEvents, type UIMessage, useChat } from "@tanstack/ai-react"
 import { streamingMarkdownExtension } from "@tanstack/markdown/extensions/streaming"
 import { Markdown } from "@tanstack/markdown/react"
-import { type FormEvent, type KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ArrowUpIcon, ChevronDownIcon, SparkHexIcon, StopIcon } from "./icons"
 
 const connection = fetchServerSentEvents("/api/ask")
@@ -33,7 +33,7 @@ export function ChatWidget() {
 
   // "/" focuses the box from anywhere, unless you're already typing somewhere.
   useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
       if (e.key !== "/" || e.metaKey || e.ctrlKey || t.closest("input, textarea, [contenteditable]")) return
       e.preventDefault()
@@ -43,6 +43,22 @@ export function ChatWidget() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
+  // Esc hides the thread wherever focus is; the count pill brings it back. Capture phase plus
+  // stopPropagation, so the HN panel's own Esc doesn't also close a thread underneath.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      if (open) {
+        e.stopPropagation()
+        setCollapsed(true)
+      } else if (e.target === inputRef.current) {
+        inputRef.current?.blur()
+      }
+    }
+    window.addEventListener("keydown", onKey, { capture: true })
+    return () => window.removeEventListener("keydown", onKey, { capture: true })
+  }, [open])
+
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const text = draft.trim()
@@ -50,13 +66,6 @@ export function ChatWidget() {
     setDraft("")
     setCollapsed(false)
     void sendMessage(text)
-  }
-
-  const onInputKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Escape") return
-    // Esc hides the thread; the count pill brings it back.
-    if (visible.length && !collapsed) setCollapsed(true)
-    else inputRef.current?.blur()
   }
 
   const reset = () => {
@@ -101,7 +110,6 @@ export function ChatWidget() {
           ref={inputRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={onInputKey}
           placeholder={visible.length ? "Ask a follow-up…" : "Ask anything…"}
           aria-label="Ask the local model"
           autoComplete="off"
