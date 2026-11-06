@@ -25,9 +25,6 @@
     <string>/opt/homebrew/bin:/usr/bin:/bin</string>
     <key>PORT</key>
     <string>6464</string>
-    <!-- Optional: GitHub search qualifiers. Empty means the default, org:team-plain -->
-    <key>GH_SEARCH_FILTER</key>
-    <string></string>
   </dict>
 
   <key>RunAtLoad</key>

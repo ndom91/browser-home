@@ -58,19 +58,21 @@ You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logge
 
 Edit `launchd/com.ndom91.browser-home.plist`, then re-run `./scripts/install-launchd.sh`.
 
-| Setting            | Default                | What it does                      |
-| ------------------ | ---------------------- | --------------------------------- |
-| `PORT`             | `6464`                 | Port the page runs on             |
-| `GH_SEARCH_FILTER` | `org:team-plain`       | Which PRs to show (GitHub search) |
-| `GH_BIN`           | `/opt/homebrew/bin/gh` | Where `gh` lives                  |
+| Setting  | Default                | What it does          |
+| -------- | ---------------------- | --------------------- |
+| `PORT`   | `6464`                 | Port the page runs on |
+| `GH_BIN` | `/opt/homebrew/bin/gh` | Where `gh` lives      |
 
 The chat settings (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`) live in `.env`.
 
-The search engine also lives in `.env`, as a URL the query is appended to. It defaults to Google. Run `pnpm build` again after changing it.
+These also live in `.env`:
 
-```sh
-VITE_SEARCH_URL=https://www.google.com/search?q=
-```
+| Setting            | Default                            | What it does                                     |
+| ------------------ | ---------------------------------- | ------------------------------------------------ |
+| `GH_SEARCH_FILTER` | none                               | Extra GitHub search qualifiers, e.g. `org:acme`  |
+| `VITE_SEARCH_URL`  | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL |
+
+Run `pnpm build` again after changing `VITE_SEARCH_URL`. It is baked into the page at build time.
 
 ## After updating
 

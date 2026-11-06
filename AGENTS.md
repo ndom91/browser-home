@@ -82,7 +82,7 @@ launchd/ + scripts/    run at login
 ### GitHub
 
 - Search with diff stats and CI rollups is slow (3–8 s) and sometimes returns 502. Two parallel searches of 20, one retry on 502/504, and the cache keep it usable. Don't add heavy nested fields such as `latestReviews`. `viewerLatestReview` is the cheap way to spot a re-review.
-- `GH_SEARCH_FILTER` defaults to `org:team-plain`. The plist sets it to an empty string, so the code uses `||`, not `??`.
+- `GH_SEARCH_FILTER` lives in `.env`, not the plist. `process.loadEnvFile()` never overrides a variable that is already set, even to an empty string, so a plist entry would hide the `.env` value.
 
 ### Hacker News
 
