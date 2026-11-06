@@ -161,6 +161,7 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
 
   // Bring "now" into view once on load, about a third of the way down.
   const scrollRef = useRef<HTMLDivElement>(null)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run on mount only, so a ticking clock never yanks the scroll position.
   useEffect(() => {
     const el = scrollRef.current
     if (el && showNow) el.scrollTop = Math.max(0, nowY - el.clientHeight / 3)
@@ -210,7 +211,7 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
             )
           })}
 
-          {showNow && <div className="tl-now" style={{ top: nowY }} aria-label={`Now, ${clock(now)}`} />}
+          {showNow && <div className="tl-now" role="img" style={{ top: nowY }} aria-label={`Now, ${clock(now)}`} />}
         </div>
       </div>
     </div>

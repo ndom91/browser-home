@@ -45,7 +45,9 @@ function toRequest(req) {
   const url = `http://${req.headers.host}${req.url}`
   const headers = new Headers()
   for (const [key, value] of Object.entries(req.headers)) {
-    if (Array.isArray(value)) value.forEach((v) => headers.append(key, v))
+    if (Array.isArray(value)) {
+      for (const v of value) headers.append(key, v)
+    }
     else if (value != null) headers.set(key, value)
   }
   const hasBody = req.method !== "GET" && req.method !== "HEAD"

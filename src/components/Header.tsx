@@ -44,6 +44,7 @@ export function Header({ name }: { name: string | null }) {
           {longDay(now)} · {clock(now)}
         </span>
       </h1>
+      {/* biome-ignore lint/a11y/useSemanticElements: role="search" on the form is valid, and a <search> wrapper would break the .search flex layout. */}
       <form className="search" role="search" onSubmit={onSubmit}>
         <SearchIcon className="search-icon" />
         <input

@@ -12,7 +12,10 @@
     "build": "vite build",
     "start": "node serve.js",
     "typecheck": "tsc --noEmit",
-    "build:agenda": "mkdir -p bin && swiftc -O -swift-version 5 calendar/agenda.swift -o bin/agenda -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker calendar/Info.plist"
+    "build:agenda": "mkdir -p bin && swiftc -O -swift-version 5 calendar/agenda.swift -o bin/agenda -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker calendar/Info.plist",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check ."
   },
   "dependencies": {
     "@tanstack/react-query": "^5.105.0",
@@ -22,6 +25,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.4",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
