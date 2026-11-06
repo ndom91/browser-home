@@ -17,6 +17,8 @@ const viewer = cached(DEMO ? async () => demoViewer : fetchViewer, TTL.viewer)
 export const getCalendar = createServerFn({ method: "GET" }).handler(() => calendar())
 export const getPRs = createServerFn({ method: "GET" }).handler(() => prs())
 export const getHN = createServerFn({ method: "GET" }).handler(() => hn())
+/** Manual refresh from the HN panel. POST, so it is never served from an HTTP cache. */
+export const refreshHN = createServerFn({ method: "POST" }).handler(() => hn({ force: true }))
 export const getViewer = createServerFn({ method: "GET" }).handler(() => viewer())
 export const getWeather = createServerFn({ method: "GET" }).handler(() => weather())
 export const getHNThread = createServerFn({ method: "GET" })

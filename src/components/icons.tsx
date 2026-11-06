@@ -224,3 +224,17 @@ export function CheckIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function RefreshIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={13} height={13} {...props}>
+      <path
+        d="M13.25 8a5.25 5.25 0 1 1-1.54-3.71M13.25 2.5v2.75H10.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}

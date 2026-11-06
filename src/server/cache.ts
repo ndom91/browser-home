@@ -12,6 +12,7 @@ export interface Cached<T> {
  * - Empty: callers share one in-flight request.
  *
  * A failed background refresh keeps the last good value.
+ * `{ force: true }` skips the cache and waits for a fresh value.
  */
 export function cached<T>(fn: () => Promise<T>, ttlMs: number) {
   let value: Cached<T> | null = null
@@ -24,8 +25,8 @@ export function cached<T>(fn: () => Promise<T>, ttlMs: number) {
         inflight = null
       }))
 
-  return async (): Promise<Cached<T>> => {
-    if (!value) return refresh()
+  return async ({ force = false } = {}): Promise<Cached<T>> => {
+    if (!value || force) return refresh()
     if (Date.now() - value.fetchedAt >= ttlMs) {
       refresh().catch((err: unknown) => {
         console.error("background refresh failed:", err instanceof Error ? err.message : err)

@@ -58,7 +58,7 @@ function Home() {
         <main className="grid">
           <CalendarPanel events={calendar.data?.data} error={calendar.error} />
           <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />
-          <HackerNewsPanel stories={hn.data?.data} error={hn.error} />
+          <HackerNewsPanel stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
         </main>
         <ChatWidget />
       </div>

@@ -1634,3 +1634,51 @@ ul {
   margin: 4px -4px;
   background: var(--line-soft);
 }
+
+/* ---------- hacker news: header sync ---------- */
+
+.hn-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: -6px;
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.icon-btn:disabled {
+  cursor: default;
+}
+
+.icon-btn.is-spinning svg {
+  animation: icon-spin 0.8s linear infinite;
+}
+
+@keyframes icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn.is-spinning svg {
+    animation: none;
+    opacity: 0.5;
+  }
+}

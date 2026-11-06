@@ -1,23 +1,29 @@
-import { useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { age, plural } from "../lib/format"
+import { age, clock, plural } from "../lib/format"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
+import { refreshHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
-import { HackerNewsIcon } from "./icons"
+import { HackerNewsIcon, RefreshIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 
 interface Props {
   stories: Array<Story> | undefined
+  fetchedAt: number | undefined
   error: unknown
 }
 
-export function HackerNewsPanel({ stories, error }: Props) {
+export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
   const now = useNow()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState<Story | null>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const listScroll = useRef(0)
+  const refresh = useMutation({
+    mutationFn: () => refreshHN(),
+    onSuccess: (fresh) => queryClient.setQueryData(["hn"], fresh),
+  })
 
   const openThread = (story: Story) => (e: MouseEvent) => {
     // Let cmd/ctrl/shift/middle-click open the real HN page in a new tab.
@@ -48,7 +54,25 @@ export function HackerNewsPanel({ stories, error }: Props) {
       id="hn"
       icon={<HackerNewsIcon />}
       title="Hacker News"
-      meta={open ? "Comments" : stories ? `Top ${stories.length}` : undefined}
+      meta={
+        open ? (
+          "Comments"
+        ) : (
+          <span className="hn-sync">
+            {fetchedAt != null && <time dateTime={new Date(fetchedAt).toISOString()}>{clock(fetchedAt)}</time>}
+            <button
+              type="button"
+              className={`icon-btn${refresh.isPending ? " is-spinning" : ""}`}
+              onClick={() => refresh.mutate()}
+              disabled={refresh.isPending}
+              aria-label="Refresh stories"
+              title={refresh.isError ? "Refresh failed, try again" : "Refresh stories"}
+            >
+              <RefreshIcon />
+            </button>
+          </span>
+        )
+      }
       bodyRef={bodyRef}
     >
       {open ? (
