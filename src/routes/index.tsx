@@ -4,6 +4,7 @@ import { CalendarPanel } from "../components/CalendarPanel"
 import { HackerNewsPanel } from "../components/HackerNewsPanel"
 import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
+import { TTL } from "../lib/ttl"
 import { NowContext, useTicker } from "../lib/useNow"
 import { getCalendar, getHN, getPRs, getViewer } from "../server/fns"
 
@@ -45,18 +46,24 @@ function Home() {
     queryFn: () => getCalendar(),
     initialData: initial.calendar,
     initialDataUpdatedAt: initial.calendar?.fetchedAt,
+    staleTime: TTL.calendar,
+    refetchInterval: TTL.calendar,
   })
   const prs = useQuery({
     queryKey: ["prs"],
     queryFn: () => getPRs(),
     initialData: initial.prs,
     initialDataUpdatedAt: initial.prs?.fetchedAt,
+    staleTime: TTL.prs,
+    refetchInterval: TTL.prs,
   })
   const hn = useQuery({
     queryKey: ["hn"],
     queryFn: () => getHN(),
     initialData: initial.hn,
     initialDataUpdatedAt: initial.hn?.fetchedAt,
+    staleTime: TTL.hn,
+    refetchInterval: TTL.hn,
   })
   const viewer = useQuery({
     queryKey: ["viewer"],

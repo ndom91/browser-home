@@ -30,7 +30,6 @@ function RootComponent() {
       new QueryClient({
         defaultOptions: {
           queries: {
-            refetchInterval: 60_000,
             refetchIntervalInBackground: false,
             refetchOnWindowFocus: true,
             retry: 1,
