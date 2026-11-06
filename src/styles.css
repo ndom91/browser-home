@@ -1687,8 +1687,21 @@ ul {
   min-height: 0;
 }
 
+/* Sized by content, not split 50/50: issues take what they need and PRs fill the
+   rest. When both overflow, flex-shrink trims each in proportion to its content.
+   The floor keeps a header and a row visible. */
 .stack > .panel {
-  flex: 1 1 0;
+  flex: 0 1 auto;
+  min-height: 140px;
+}
+
+.stack > .panel:last-child {
+  flex-grow: 1;
+}
+
+/* The chat box only floats over the bottom panel, so the top one needs no spacer. */
+.stack > .panel:not(:last-child) .panel-body::after {
+  display: none;
 }
 
 .issue-state {
