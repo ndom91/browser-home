@@ -1,5 +1,6 @@
 // Prints today's events from the macOS calendar store as JSON.
-// Exit codes: 0 ok, 2 access denied, 3 access request failed, 4 permission prompt timed out.
+// Usage: agenda [YYYY-MM-DD]
+// Exit codes: 0 ok, 1 bad argument, 2 access denied, 3 access request failed, 4 permission prompt timed out.
 
 import AppKit
 import EventKit
@@ -111,8 +112,16 @@ if EKEventStore.authorizationStatus(for: .event) != .fullAccess {
     if !granted { fail(2, "calendar access denied; grant it in System Settings > Privacy & Security > Calendars") }
 }
 
+// Optional YYYY-MM-DD argument picks another day, which helps when debugging.
 let cal = Calendar.current
-let dayStart = cal.startOfDay(for: Date())
+var day = Date()
+if CommandLine.arguments.count > 1 {
+    let parser = DateFormatter()
+    parser.dateFormat = "yyyy-MM-dd"
+    guard let parsed = parser.date(from: CommandLine.arguments[1]) else { fail(1, "usage: agenda [YYYY-MM-DD]") }
+    day = parsed
+}
+let dayStart = cal.startOfDay(for: day)
 let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart)!
 let predicate = store.predicateForEvents(withStart: dayStart, end: dayEnd, calendars: nil)
 

@@ -12,7 +12,7 @@ const AGENDA_BIN = process.env.AGENDA_BIN ?? resolve(process.cwd(), "bin/agenda"
 const PROVIDERS: Array<[RegExp, string]> = [
   [/https:\/\/meet\.google\.com\/[a-z0-9-]+/i, "Meet"],
   [/https:\/\/[\w.-]*zoom\.us\/[^\s<>")]+/i, "Zoom"],
-  [/https:\/\/teams\.microsoft\.com\/l\/meetup-join\/[^\s<>")]+/i, "Teams"],
+  [/https:\/\/teams\.(?:microsoft|live)\.com\/(?:l\/meetup-join|meet)\/[^\s<>")]+/i, "Teams"],
   [/https:\/\/app\.around\.co\/[^\s<>")]+/i, "Around"],
 ]
 
@@ -33,6 +33,21 @@ function findMeeting(event: RawEvent) {
   return { meeting: null, provider: null }
 }
 
+// A timed block this long (out of office, "Writing Day") isn't a meeting. In the timeline it
+// would be the "current" event all day and squeeze every real meeting into half width.
+const LONG_EVENT_MS = 12 * 3_600_000
+
+// Google accounts often expose attendees as bare emails: "person@example.com" -> "Elise Hein".
+function displayName(attendee: string) {
+  if (!attendee.includes("@")) return attendee
+  return attendee
+    .split("@")[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ")
+}
+
 export async function fetchCalendar(): Promise<Array<CalendarEvent>> {
   let stdout: string
   try {
@@ -47,6 +62,8 @@ export async function fetchCalendar(): Promise<Array<CalendarEvent>> {
 
   return (JSON.parse(stdout) as Array<RawEvent>).map(({ notes, url, ...event }) => ({
     ...event,
+    allDay: event.allDay || Date.parse(event.end) - Date.parse(event.start) >= LONG_EVENT_MS,
+    attendees: event.attendees.map(displayName),
     location: event.location ?? null,
     ...findMeeting({ ...event, notes, url }),
   }))
