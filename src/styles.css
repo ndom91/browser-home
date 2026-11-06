@@ -76,6 +76,7 @@
   --radius: 10px;
   /* Space between columns, and between the columns and the window edge. */
   --gutter: 14px;
+  --header-space: 20px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -240,9 +241,10 @@ a:focus-visible,
   display: flex;
   flex-direction: column;
   height: 100vh;
-  /* Sides, bottom and the gap under the header all match the gap between columns. */
-  padding: 20px var(--gutter) var(--gutter);
-  gap: var(--gutter);
+  /* Sides and bottom match the gap between columns. The header gets the same space
+     above and below, so its contents sit centered in their band. */
+  padding: var(--header-space) var(--gutter) var(--gutter);
+  gap: var(--header-space);
 }
 
 .top {
