@@ -4,17 +4,20 @@ interface PanelProps {
   id: string
   icon: ReactNode
   title: string
+  /** Inline next to the title, e.g. status pills. */
+  titleSuffix?: ReactNode
   meta?: ReactNode
   children: ReactNode
   bodyRef?: Ref<HTMLDivElement>
 }
 
-export function Panel({ id, icon, title, meta, children, bodyRef }: PanelProps) {
+export function Panel({ id, icon, title, titleSuffix, meta, children, bodyRef }: PanelProps) {
   return (
     <section className="panel" id={id} aria-labelledby={`${id}-title`}>
       <header className="panel-head">
         <span className="panel-icon">{icon}</span>
         <h2 id={`${id}-title`}>{title}</h2>
+        {titleSuffix}
         {meta != null && <span className="panel-meta">{meta}</span>}
       </header>
       <div className="panel-body" ref={bodyRef}>

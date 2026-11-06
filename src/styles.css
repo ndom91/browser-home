@@ -580,15 +580,21 @@ ul {
 
 /* ---------- calendar: all-day ---------- */
 
+/* Lives in the panel header, so it must shrink instead of wrapping. */
 .allday {
   display: flex;
-  flex-wrap: wrap;
   gap: 5px;
-  padding: 10px 14px 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .allday li {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 11px;
+  line-height: 16px;
   padding: 1px 8px;
   border-radius: 999px;
   color: var(--text-2);
@@ -601,10 +607,6 @@ ul {
 .timeline {
   position: relative;
   margin: 22px 14px 14px 0;
-}
-
-.allday {
-  flex: none;
 }
 
 .tl-hour {

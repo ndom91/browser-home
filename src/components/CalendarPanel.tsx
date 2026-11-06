@@ -40,13 +40,18 @@ export function CalendarPanel({ events, error }: Props) {
   if (events) meta = remaining ? `${remaining} left today` : "all done"
 
   return (
-    <Panel id="calendar" icon={<CalendarIcon />} title="Today" meta={meta}>
+    <Panel
+      id="calendar"
+      icon={<CalendarIcon />}
+      title="Today"
+      titleSuffix={events && <AllDay events={events.filter((e) => e.allDay)} />}
+      meta={meta}
+    >
       {!events ? (
         <PanelFallback error={error} />
       ) : (
         <>
           <FocusCard current={current} next={next} now={now} />
-          <AllDay events={events.filter((e) => e.allDay)} />
           <Timeline events={timed} current={current} now={now} />
         </>
       )}
@@ -101,7 +106,7 @@ function AllDay({ events }: { events: Array<CalendarEvent> }) {
   return (
     <ul className="allday">
       {events.map((e) => (
-        <li key={e.id} style={{ "--cal": e.color ?? "var(--muted)" } as CSSProperties}>
+        <li key={e.id} title={e.title} style={{ "--cal": e.color ?? "var(--muted)" } as CSSProperties}>
           {e.title}
         </li>
       ))}
