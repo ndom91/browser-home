@@ -1,81 +1,85 @@
 # browser-home
 
-A local start page: today's calendar, your GitHub PRs, Hacker News, and the weather. It's built with TanStack Start.
+A new-tab page that runs on your own Mac. One glance shows:
 
-It runs entirely on your machine at `http://localhost:6464`. It needs no browser extension, no OAuth app, and no cloud service. It reuses auth you already have:
+- **Today**: your calendar as a timeline, with a countdown to the next meeting and a Join button.
+- **Pull requests**: PRs waiting for your review, and your own, with CI status and size.
+- **Hacker News**: the top stories, with a built-in threaded comment viewer.
+- **Weather**: today's forecast for Berlin.
+- **Quick question**: a chat box at the bottom that asks your local LLM.
 
-| Panel          | Source                            | Auth                       |
-| -------------- | --------------------------------- | -------------------------- |
-| Calendar       | macOS Calendar store via EventKit | macOS Calendars permission |
-| Pull requests  | GitHub GraphQL search             | `gh auth token`            |
-| Hacker News    | Public Firebase API               | none                       |
-| Weather        | Open-Meteo, fixed to Berlin       | none                       |
-| Quick question | Any OpenAI-compatible LLM         | `LLM_*` vars in `.env`     |
-
-The server binds to `127.0.0.1` only and rejects non-localhost `Host` headers, so other sites can't read your data.
+It runs at `http://localhost:6464`. It needs no browser extension, no OAuth app, and no cloud service. It reuses logins you already have: the macOS Calendar app and the `gh` CLI. Only your own machine can reach it.
 
 ## Setup
 
-Requirements: macOS 14+, Node 22+, pnpm, Xcode command line tools (`swiftc`), and `gh` logged in with SSO authorized for your org.
+You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logged in.
 
-1. Install dependencies and build the calendar helper:
+1. Install, and build the small calendar helper:
 
    ```sh
    pnpm install
    pnpm build:agenda
    ```
 
-2. Grant calendar access. Run this once from a terminal and click **Allow**:
+2. Allow calendar access. Run this once and click **Allow** when macOS asks:
 
    ```sh
    ./bin/agenda
    ```
 
-   It prints today's events as JSON. If no prompt appears, check System Settings → Privacy & Security → Calendars. Your MDM may manage that permission.
+   It prints today's events. No prompt? Check System Settings → Privacy & Security → Calendars.
 
-3. Optional: configure the "Quick question" box at the bottom of the page. Copy `.env.example` to `.env` and fill in `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY`. The file is gitignored.
+3. Optional: set up the chat box. Copy `.env.example` to `.env` and fill in your LLM's URL, model, and API key.
 
-4. Build and run:
+4. Build it, and start it at every login:
 
    ```sh
    pnpm build
-   pnpm start
-   ```
-
-5. Run it at login:
-
-   ```sh
    ./scripts/install-launchd.sh
    ```
 
-6. In Vivaldi, open Settings → Tabs → New Tab Page. Choose **Specific Page** and enter `http://localhost:6464`.
+5. Set it as your new-tab page. In Vivaldi: Settings → Tabs → New Tab Page → **Specific Page** → `http://localhost:6464`.
 
-## Development
+## Using it
 
-- `pnpm dev` starts the Vite dev server with live data.
-- `pnpm dev:demo` serves fixture data that matches the design mockups. This is handy for UI work.
+| Key   | Does                                |
+| ----- | ----------------------------------- |
+| `⌘K`  | Search with Kagi, or type a URL     |
+| `/`   | Ask the local LLM                   |
+| `Esc` | Hide the chat, or leave HN comments |
 
-## Configuration
+- Click **N comments** on a story to read the thread right in the HN column. Click `[–]` or a thread line to fold a branch.
+- Cmd-click any link to open it in a new tab instead.
+- The `…` menus in the PR column filter by repo, author, status, or checks. Filters are remembered.
 
-These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-run the install script after editing it.
+## Settings
 
-| Variable           | Default                | Purpose                                       |
-| ------------------ | ---------------------- | --------------------------------------------- |
-| `PORT`             | `6464`                 | Port to listen on                             |
-| `GH_SEARCH_FILTER` | `org:team-plain`       | GitHub search qualifiers for both PR searches |
-| `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                  |
-| `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                   |
+Edit `launchd/com.ndom91.browser-home.plist`, then re-run `./scripts/install-launchd.sh`.
 
-## Notes
+| Setting            | Default                | What it does                      |
+| ------------------ | ---------------------- | --------------------------------- |
+| `PORT`             | `6464`                 | Port the page runs on             |
+| `GH_SEARCH_FILTER` | `org:team-plain`       | Which PRs to show (GitHub search) |
+| `GH_BIN`           | `/opt/homebrew/bin/gh` | Where `gh` lives                  |
 
-- **Quick question.** Press `/` anywhere to focus it. Esc hides the thread. The server talks to the model, so the API key never reaches the browser, and `/api/ask` only accepts requests from the page itself. Node also trusts the macOS keychain, so a LAN host with a private-CA certificate works.
+The chat settings (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`) live in `.env`.
 
-- **Calendar permission.** macOS asks the _responsible process_ (the app that launched you) for privacy permissions. `bin/agenda` re-spawns itself as its own responsible process, so one grant works from a terminal and under launchd. Rebuilding the binary changes its code signature, and macOS may ask again.
-- **Caching.** Sources use stale-while-revalidate: calendar 1 min, PRs 2 min, HN 5 min. Every tab after the first loads instantly from cache, and the panel header shows the data's age. The server warms the caches at startup.
-- **Slow sources don't block the page.** Server rendering waits at most 1.5 s per source. Anything slower loads in the browser instead.
-- **Node path.** The launchd plist uses fnm's `default` alias. If you switch Node managers, edit the plist and re-run the install script.
-- **Moving the repo.** The plist stores the repo path. Re-run `./scripts/install-launchd.sh` after moving it.
-- **After rebuilding.** The server loads `dist/` at startup. Restart it with `launchctl kickstart -k gui/$(id -u)/com.ndom91.browser-home`.
+## After updating
+
+The page keeps running the old version until you rebuild and restart it:
+
+```sh
+pnpm build
+launchctl kickstart -k gui/$(id -u)/com.ndom91.browser-home
+```
+
+## Troubleshooting
+
+- **Calendar says "timed out" or "access denied".** Run `./bin/agenda` in a terminal and click Allow. Rebuilding the helper can make macOS ask again.
+- **No pull requests.** Run `gh auth status`. Your org may need SSO authorized for the `gh` token.
+- **Chat says "Missing LLM_…".** Create `.env` from `.env.example`, then restart.
+- **Moved the repo or switched Node managers.** Re-run `./scripts/install-launchd.sh`.
+- **Logs** are in `~/Library/Logs/browser-home.log`.
 
 ## Uninstall
 
@@ -83,3 +87,5 @@ These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-ru
 launchctl bootout gui/$(id -u)/com.ndom91.browser-home
 rm ~/Library/LaunchAgents/com.ndom91.browser-home.plist
 ```
+
+Working on the code? See [AGENTS.md](AGENTS.md).
