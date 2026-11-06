@@ -1,5 +1,7 @@
 # browser-home
 
+![](./.github/assets/screenshot_001.png)
+
 A new-tab page that runs on your own Mac. One glance shows:
 
 - **Today**: your calendar as a timeline, with a countdown to the next meeting and a Join button.
