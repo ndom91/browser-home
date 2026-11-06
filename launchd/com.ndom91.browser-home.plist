@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Paths are absolute because launchd does not expand ~ or $HOME.
+  Node: the fnm "default" alias, which is stable across shells
+  (unlike the per-shell fnm_multishells path that `which node` shows).
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ndom91.browser-home</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/ndom91/.local/share/fnm/aliases/default/bin/node</string>
+    <string>serve.js</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__REPO_DIR__</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin</string>
+    <key>PORT</key>
+    <string>3000</string>
+    <!-- Optional: extra GitHub search qualifiers, e.g. org:team-plain -->
+    <key>GH_SEARCH_FILTER</key>
+    <string></string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ndom91/Library/Logs/browser-home.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ndom91/Library/Logs/browser-home.log</string>
+</dict>
+</plist>

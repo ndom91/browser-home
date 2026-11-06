@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>com.ndom91.browser-home.agenda</string>
+  <key>CFBundleName</key>
+  <string>browser-home agenda</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>browser-home reads today's events to show them on your start page.</string>
+  <key>NSCalendarsUsageDescription</key>
+  <string>browser-home reads today's events to show them on your start page.</string>
+</dict>
+</plist>
