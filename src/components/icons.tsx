@@ -1,0 +1,75 @@
+import type { SVGProps } from "react"
+
+type IconProps = SVGProps<SVGSVGElement>
+
+const base = {
+  width: 14,
+  height: 14,
+  viewBox: "0 0 16 16",
+  fill: "none",
+  "aria-hidden": true,
+} as const
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 6.5h12M5.5 1.75v2.5M10.5 1.75v2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <rect x="4.5" y="8.5" width="2" height="2" rx=".4" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function GitHubIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path
+        fill="currentColor"
+        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+      />
+    </svg>
+  )
+}
+
+export function HackerNewsIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect width="16" height="16" rx="3" fill="var(--hn-icon-bg)" />
+      <path d="M5 4l3 4.5L11 4M8 8.5V12" stroke="var(--hn-icon-fg)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function ArrowUpRightIcon(props: IconProps) {
+  return (
+    <svg {...base} width={12} height={12} {...props}>
+      <path d="M5 11l6-6M6 5h5v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/** Open PR: ring with a centre dot. */
+export function PullRequestIcon({ draft, ...props }: IconProps & { draft?: boolean }) {
+  return (
+    <svg {...base} {...props}>
+      <circle
+        cx="8"
+        cy="8"
+        r="5.75"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeDasharray={draft ? "2.2 2" : undefined}
+      />
+      <circle cx="8" cy="8" r="1.75" fill="currentColor" />
+    </svg>
+  )
+}
