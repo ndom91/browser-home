@@ -240,9 +240,9 @@ a:focus-visible,
   display: flex;
   flex-direction: column;
   height: 100vh;
-  /* Sides and bottom match the gap between columns. */
-  padding: 22px var(--gutter) var(--gutter);
-  gap: 20px;
+  /* Sides, bottom and the gap under the header all match the gap between columns. */
+  padding: 20px var(--gutter) var(--gutter);
+  gap: var(--gutter);
 }
 
 .top {
@@ -251,8 +251,11 @@ a:focus-visible,
   justify-content: space-between;
   gap: 24px;
   flex: none;
-  /* Inset past the gutter, so the greeting and search sit back from the window edge (26px total). */
-  padding: 0 12px;
+  /* A row of the grid: as tall as a panel head. The greeting starts where panel titles
+     do (1px border + 15px padding in), and the search box's border lines up with the
+     last column's border. */
+  height: 47px;
+  padding-left: 16px;
 }
 
 .top h1 {
