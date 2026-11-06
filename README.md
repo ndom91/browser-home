@@ -55,12 +55,12 @@ Requirements: macOS 14+, Node 22+, pnpm, Xcode command line tools (`swiftc`), an
 
 These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-run the install script after editing it.
 
-| Variable           | Default                | Purpose                                               |
-| ------------------ | ---------------------- | ----------------------------------------------------- |
-| `PORT`             | `3000`                 | Port to listen on                                     |
-| `GH_SEARCH_FILTER` | `org:team-plain`       | GitHub search qualifiers for both PR searches         |
-| `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                          |
-| `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                           |
+| Variable           | Default                | Purpose                                       |
+| ------------------ | ---------------------- | --------------------------------------------- |
+| `PORT`             | `3000`                 | Port to listen on                             |
+| `GH_SEARCH_FILTER` | `org:team-plain`       | GitHub search qualifiers for both PR searches |
+| `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                  |
+| `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                   |
 
 ## Notes
 

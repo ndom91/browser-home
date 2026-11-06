@@ -109,8 +109,14 @@ function AllDay({ events }: { events: Array<CalendarEvent> }) {
   )
 }
 
-/** Side-by-side lanes for overlapping events, per overlap cluster. */
+/**
+ * Side-by-side lanes for overlapping events, per overlap cluster.
+ * Overlap uses the drawn end: a 15 min event still takes MIN_EVENT_PX, and
+ * would otherwise run under the event right after it.
+ */
 function placeInLanes(events: Array<Timed>): Array<Placed> {
+  const minMs = (MIN_EVENT_PX / HOUR_PX) * 3_600_000
+  const drawnEnd = (e: Timed) => Math.max(e.endMs, e.startMs + minMs)
   const placed: Array<Placed> = []
   let cluster: Array<Placed> = []
   let clusterEnd = -Infinity
@@ -125,11 +131,11 @@ function placeInLanes(events: Array<Timed>): Array<Placed> {
   for (const e of [...events].sort((a, b) => a.startMs - b.startMs || b.endMs - a.endMs)) {
     if (e.startMs >= clusterEnd) flush()
     const laneEnds = new Map<number, number>()
-    for (const c of cluster) laneEnds.set(c.lane, Math.max(laneEnds.get(c.lane) ?? 0, c.endMs))
+    for (const c of cluster) laneEnds.set(c.lane, Math.max(laneEnds.get(c.lane) ?? 0, drawnEnd(c)))
     let lane = 0
     while ((laneEnds.get(lane) ?? -Infinity) > e.startMs) lane++
     cluster.push({ ...e, lane, lanes: 1 })
-    clusterEnd = Math.max(clusterEnd, e.endMs)
+    clusterEnd = Math.max(clusterEnd, drawnEnd(e))
   }
   flush()
   return placed
@@ -149,9 +155,14 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
   dayStart.setHours(0, 0, 0, 0)
   const hourOf = (ms: number) => (ms - dayStart.getTime()) / 3_600_000
 
-  const firstHour = Math.min(DEFAULT_START, ...events.map((e) => Math.floor(hourOf(e.startMs))))
+  // Include the current hour, so the now-line stays visible early and late in the day.
+  const nowHour = hourOf(now)
+  const firstHour = Math.min(DEFAULT_START, Math.floor(nowHour), ...events.map((e) => Math.floor(hourOf(e.startMs))))
   // Clamp: an event running past midnight shouldn't grow a "25:00" row.
-  const lastHour = Math.min(24, Math.max(DEFAULT_END, ...events.map((e) => Math.ceil(hourOf(e.endMs)))))
+  const lastHour = Math.min(
+    24,
+    Math.max(DEFAULT_END, Math.ceil(nowHour), ...events.map((e) => Math.ceil(hourOf(e.endMs)))),
+  )
   const hours = Array.from({ length: lastHour - firstHour + 1 }, (_, i) => firstHour + i)
   const trackHeight = (lastHour - firstHour) * HOUR_PX
   const y = (ms: number) => (hourOf(ms) - firstHour) * HOUR_PX

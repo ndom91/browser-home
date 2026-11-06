@@ -79,3 +79,8 @@ export function prSize(additions: number, deletions: number): Size {
 export function signed(n: number, sign: "+" | "−") {
   return `${sign}${n.toLocaleString("en-US")}`
 }
+
+/** "1 comment", "2 comments" */
+export function plural(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`
+}

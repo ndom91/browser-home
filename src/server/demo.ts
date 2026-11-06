@@ -45,6 +45,17 @@ export function demoCalendar(): Array<CalendarEvent> {
       meeting: zoom,
       provider: "Zoom",
     },
+    // Declined and overlapping the 1:1, to cover both timeline paths.
+    {
+      ...base,
+      id: "allhands",
+      title: "Sales all-hands",
+      ...at(45, 30),
+      status: "declined",
+      attendees: ["Sales"],
+      meeting: "https://meet.google.com/abc-defg-hij",
+      provider: "Meet",
+    },
     { ...base, id: "lunch", title: "Lunch", ...at(90, 60), attendees: [], meeting: null, provider: null },
     {
       ...base,

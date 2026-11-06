@@ -1,4 +1,4 @@
-import { age } from "../lib/format"
+import { age, plural } from "../lib/format"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { HackerNewsIcon } from "./icons"
@@ -26,8 +26,8 @@ export function HackerNewsPanel({ stories, error }: Props) {
                 </a>
                 <p className="hn-meta">
                   <span>{s.domain}</span>
-                  <span>{s.points} pts</span>
-                  <a href={s.discussion}>{s.comments} comments</a>
+                  <span>{plural(s.points, "pt")}</span>
+                  <a href={s.discussion}>{plural(s.comments, "comment")}</a>
                   <span>{age(s.time, now)}</span>
                 </p>
               </div>
