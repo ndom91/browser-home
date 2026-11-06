@@ -4,12 +4,13 @@ A local start page: today's calendar, your GitHub PRs, Hacker News, and the weat
 
 It runs entirely on your machine at `http://localhost:6464`. It needs no browser extension, no OAuth app, and no cloud service. It reuses auth you already have:
 
-| Panel         | Source                            | Auth                       |
-| ------------- | --------------------------------- | -------------------------- |
-| Calendar      | macOS Calendar store via EventKit | macOS Calendars permission |
-| Pull requests | GitHub GraphQL search             | `gh auth token`            |
-| Hacker News   | Public Firebase API               | none                       |
-| Weather       | Open-Meteo, fixed to Berlin       | none                       |
+| Panel          | Source                            | Auth                       |
+| -------------- | --------------------------------- | -------------------------- |
+| Calendar       | macOS Calendar store via EventKit | macOS Calendars permission |
+| Pull requests  | GitHub GraphQL search             | `gh auth token`            |
+| Hacker News    | Public Firebase API               | none                       |
+| Weather        | Open-Meteo, fixed to Berlin       | none                       |
+| Quick question | Any OpenAI-compatible LLM         | `LLM_*` vars in `.env`     |
 
 The server binds to `127.0.0.1` only and rejects non-localhost `Host` headers, so other sites can't read your data.
 
@@ -32,20 +33,22 @@ Requirements: macOS 14+, Node 22+, pnpm, Xcode command line tools (`swiftc`), an
 
    It prints today's events as JSON. If no prompt appears, check System Settings → Privacy & Security → Calendars. Your MDM may manage that permission.
 
-3. Build and run:
+3. Optional: configure the "Quick question" box at the bottom of the page. Copy `.env.example` to `.env` and fill in `LLM_BASE_URL`, `LLM_MODEL`, and `LLM_API_KEY`. The file is gitignored.
+
+4. Build and run:
 
    ```sh
    pnpm build
    pnpm start
    ```
 
-4. Run it at login:
+5. Run it at login:
 
    ```sh
    ./scripts/install-launchd.sh
    ```
 
-5. In Vivaldi, open Settings → Tabs → New Tab Page. Choose **Specific Page** and enter `http://localhost:6464`.
+6. In Vivaldi, open Settings → Tabs → New Tab Page. Choose **Specific Page** and enter `http://localhost:6464`.
 
 ## Development
 
@@ -64,6 +67,8 @@ These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-ru
 | `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                   |
 
 ## Notes
+
+- **Quick question.** Press `/` anywhere to focus it. Esc hides the thread. The server talks to the model, so the API key never reaches the browser, and `/api/ask` only accepts requests from the page itself. Node also trusts the macOS keychain, so a LAN host with a private-CA certificate works.
 
 - **Calendar permission.** macOS asks the _responsible process_ (the app that launched you) for privacy permissions. `bin/agenda` re-spawns itself as its own responsible process, so one grant works from a terminal and under launchd. Rebuilding the binary changes its code signature, and macOS may ask again.
 - **Caching.** Sources use stale-while-revalidate: calendar 1 min, PRs 2 min, HN 5 min. Every tab after the first loads instantly from cache, and the panel header shows the data's age. The server warms the caches at startup.

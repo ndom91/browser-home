@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { CalendarPanel } from "../components/CalendarPanel"
+import { ChatWidget } from "../components/ChatWidget"
 import { HackerNewsPanel } from "../components/HackerNewsPanel"
 import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
@@ -91,6 +92,7 @@ function Home() {
           <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />
           <HackerNewsPanel stories={hn.data?.data} error={hn.error} />
         </main>
+        <ChatWidget />
       </div>
     </NowContext.Provider>
   )

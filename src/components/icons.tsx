@@ -152,3 +152,47 @@ export function ArrowLeftIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function SparkHexIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M8 1.75l5.4 3.1v6.3L8 14.25l-5.4-3.1v-6.3L8 1.75z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path d="M9.6 6v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function ArrowUpIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+      <path
+        d="M8 13V3.5M4 7.5l4-4 4 4"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function StopIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={10} height={10} {...props}>
+      <rect x="2" y="2" width="12" height="12" rx="2.5" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={12} height={12} {...props}>
+      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
