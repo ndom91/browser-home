@@ -197,9 +197,39 @@ ul {
   font-size: 11.5px;
 }
 
+:root {
+  /* Keyboard focus. Controls get a tight ring; list rows get a tint and a left bar. */
+  --focus-ring: color-mix(in srgb, var(--b-blue-fg) 75%, transparent);
+  --row-focus-bg: color-mix(in srgb, var(--b-blue-fg) 8%, var(--panel));
+  --row-focus-bar: var(--b-blue-fg);
+}
+
 :focus-visible {
-  outline: 2px solid var(--b-blue-fg);
-  outline-offset: 2px;
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* Inline links and text buttons have no radius of their own; round the ring. */
+a:focus-visible,
+.hn-c-toggle:focus-visible {
+  border-radius: 3px;
+}
+
+/* Links in meta lines carry their "·" separator inside the link box (::before),
+   so a ring would box the dot too. They get a thick underline instead. */
+.hn-meta a:focus-visible,
+.hn-c-meta a:focus-visible,
+.pr-meta a:focus-visible {
+  outline: none;
+  color: var(--text);
+  text-decoration: underline 2px var(--focus-ring);
+  text-underline-offset: 3px;
+}
+
+/* Small controls in tight headers: no gap, so the ring doesn't crowd the text beside it. */
+.icon-btn:focus-visible,
+.menu-trigger:focus-visible {
+  outline-offset: 0;
 }
 
 /* ---------- page ---------- */
@@ -824,11 +854,6 @@ ul {
   outline: none;
 }
 
-.pr-link:focus-visible::after {
-  outline: 2px solid var(--b-blue-fg);
-  outline-offset: -2px;
-}
-
 .pr-head {
   display: flex;
   align-items: baseline;
@@ -858,6 +883,8 @@ ul {
 
 .pr-meta > * + *::before {
   content: "·";
+  /* inline-block: a link's focus underline then stops short of the dot. */
+  display: inline-block;
   margin: 0 6px;
   color: var(--muted);
   font-family: var(--font-sans);
@@ -992,6 +1019,7 @@ ul {
 
 .hn-meta > * + *::before {
   content: "·";
+  display: inline-block;
   margin: 0 6px;
 }
 
@@ -1755,8 +1783,9 @@ ul {
 }
 
 /* ---------- keyboard focus ----------
-   One look for a focused row in every list: the hover background plus a 2px
-   inset ring, as on PR rows. The ring sits on the row, not the inner link. */
+   One look for a focused row in every list: a blue tint and a 2px bar on the
+   left edge. It sits on the row, not the inner link, so nothing gets boxed and
+   nothing collides with the scrollbar. */
 
 [data-nav-row] {
   /* Clear the sticky section head above and the chat box below when scrolled to. */
@@ -1766,16 +1795,12 @@ ul {
 
 .pr:has(.pr-link:focus-visible),
 .hn-item:has(.hn-title:focus-visible) {
-  background: var(--hover);
+  background: var(--row-focus-bg);
+  box-shadow: inset 2px 0 0 var(--row-focus-bar);
 }
 
 .hn-title:focus-visible {
   outline: none;
-}
-
-.hn-item:has(.hn-title:focus-visible) {
-  outline: 2px solid var(--b-blue-fg);
-  outline-offset: -2px;
 }
 
 .tl-event:focus-visible {
@@ -1789,7 +1814,7 @@ ul {
 
 /* The column you're in, while moving by keyboard. */
 .panel:has(:focus-visible) {
-  border-color: color-mix(in srgb, var(--b-blue-fg) 45%, var(--line));
+  border-color: color-mix(in srgb, var(--b-blue-fg) 30%, var(--line));
 }
 
 /* ---------- shortcuts sheet ---------- */
