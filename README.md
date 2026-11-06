@@ -2,7 +2,7 @@
 
 A local start page: today's calendar, your GitHub PRs, and Hacker News. It's built with TanStack Start.
 
-It runs entirely on your machine at `http://localhost:3000`. It needs no browser extension, no OAuth app, and no cloud service. It reuses auth you already have:
+It runs entirely on your machine at `http://localhost:6464`. It needs no browser extension, no OAuth app, and no cloud service. It reuses auth you already have:
 
 | Panel         | Source                            | Auth                       |
 | ------------- | --------------------------------- | -------------------------- |
@@ -44,7 +44,7 @@ Requirements: macOS 14+, Node 22+, pnpm, Xcode command line tools (`swiftc`), an
    ./scripts/install-launchd.sh
    ```
 
-5. In Vivaldi, open Settings → Tabs → New Tab Page. Choose **Specific Page** and enter `http://localhost:3000`.
+5. In Vivaldi, open Settings → Tabs → New Tab Page. Choose **Specific Page** and enter `http://localhost:6464`.
 
 ## Development
 
@@ -57,7 +57,7 @@ These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-ru
 
 | Variable           | Default                | Purpose                                       |
 | ------------------ | ---------------------- | --------------------------------------------- |
-| `PORT`             | `3000`                 | Port to listen on                             |
+| `PORT`             | `6464`                 | Port to listen on                             |
 | `GH_SEARCH_FILTER` | `org:team-plain`       | GitHub search qualifiers for both PR searches |
 | `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                  |
 | `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                   |

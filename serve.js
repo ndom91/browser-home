@@ -8,7 +8,7 @@ import { Readable } from "node:stream"
 import { fileURLToPath } from "node:url"
 import app from "./dist/server/server.js"
 
-const PORT = Number(process.env.PORT ?? 3000)
+const PORT = Number(process.env.PORT ?? 6464)
 // Loopback only: the page exposes private work data.
 const HOST = "127.0.0.1"
 const CLIENT_DIR = fileURLToPath(new URL("./dist/client/", import.meta.url))

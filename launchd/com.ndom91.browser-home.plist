@@ -24,7 +24,7 @@
     <key>PATH</key>
     <string>/opt/homebrew/bin:/usr/bin:/bin</string>
     <key>PORT</key>
-    <string>3000</string>
+    <string>6464</string>
     <!-- Optional: GitHub search qualifiers. Empty means the default, org:team-plain -->
     <key>GH_SEARCH_FILTER</key>
     <string></string>
