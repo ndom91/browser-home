@@ -3,10 +3,12 @@ import { age, synced } from "../lib/format"
 import type { LinearIssue, LinearIssues, PullRequests } from "../lib/types"
 import { type Facet, useFacetFilter } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
+import { refreshLinear } from "../server/fns"
 import { LinearIcon, PriorityIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { FilterMenu } from "./ui/FilterMenu"
 import { PopIn, SwapText } from "./ui/motion"
+import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
   linear: LinearIssues | undefined
@@ -25,7 +27,17 @@ export function LinearPanel({ linear, prs, fetchedAt, error }: Props) {
   }, [prs])
 
   return (
-    <Panel id="linear" icon={<LinearIcon />} title="My issues" meta={<SwapText text={synced(fetchedAt, now)} />}>
+    <Panel
+      id="linear"
+      icon={<LinearIcon />}
+      title="My issues"
+      meta={
+        <span className="panel-sync">
+          <SwapText text={synced(fetchedAt, now)} />
+          <RefreshButton queryKey={["linear"]} refresh={refreshLinear} what="issues" />
+        </span>
+      }
+    >
       <Body linear={linear} error={error} prFor={prFor} now={now} />
     </Panel>
   )

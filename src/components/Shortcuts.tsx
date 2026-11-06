@@ -17,7 +17,7 @@ const GROUPS: Array<{ title: string; keys: Array<[Array<string>, string]> }> = [
       [["↵"], "Open the row"],
       [["o"], "Open HN comments"],
       [["f"], "Filter the section"],
-      [["r"], "Refresh Hacker News"],
+      [["r"], "Refresh the column (or Hacker News)"],
     ],
   },
   {

@@ -1631,7 +1631,7 @@ ul {
 
 /* ---------- hacker news: header sync ---------- */
 
-.hn-sync {
+.panel-sync {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1699,8 +1699,8 @@ ul {
   flex-grow: 1;
 }
 
-/* The chat box only floats over the bottom panel, so the top one needs no spacer. */
-.stack > .panel:not(:last-child) .panel-body::after {
+/* The chat box only floats over the bottom panel (PRs), so issues need no spacer. */
+#linear .panel-body::after {
   display: none;
 }
 

@@ -1,14 +1,14 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { age, clock, plural } from "../lib/format"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { refreshHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
-import { HackerNewsIcon, RefreshIcon } from "./icons"
+import { HackerNewsIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 import { SwapText } from "./ui/motion"
-import { Tooltip } from "./ui/Tooltip"
+import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
   stories: Array<Story> | undefined
@@ -25,10 +25,6 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
   const threadRef = useRef<HTMLDivElement>(null)
   // The story row that opened the thread, so closing it puts focus back there.
   const returnTo = useRef<HTMLElement | null>(null)
-  const refresh = useMutation({
-    mutationFn: () => refreshHN(),
-    onSuccess: (fresh) => queryClient.setQueryData(["hn"], fresh),
-  })
 
   const openThread = (story: Story) => (e: MouseEvent) => {
     // Let cmd/ctrl/shift/middle-click open the real HN page in a new tab.
@@ -72,23 +68,13 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
         open ? (
           "Comments"
         ) : (
-          <span className="hn-sync">
+          <span className="panel-sync">
             {fetchedAt != null && (
               <time dateTime={new Date(fetchedAt).toISOString()}>
                 <SwapText text={clock(fetchedAt)} />
               </time>
             )}
-            <Tooltip content={refresh.isError ? "Refresh failed, try again" : "Refresh stories"}>
-              <button
-                type="button"
-                className={`icon-btn${refresh.isPending ? " is-spinning" : ""}`}
-                onClick={() => refresh.mutate()}
-                disabled={refresh.isPending}
-                aria-label="Refresh stories"
-              >
-                <RefreshIcon />
-              </button>
-            </Tooltip>
+            <RefreshButton queryKey={["hn"]} refresh={refreshHN} what="stories" />
           </span>
         )
       }

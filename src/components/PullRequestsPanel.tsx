@@ -4,10 +4,12 @@ import { repoHues } from "../lib/repoColor"
 import type { PullRequest, PullRequests } from "../lib/types"
 import { type Facet, useFacetFilter } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
+import { refreshPRs } from "../server/fns"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { FilterMenu } from "./ui/FilterMenu"
 import { PopIn, SwapText } from "./ui/motion"
+import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
   prs: PullRequests | undefined
@@ -20,7 +22,17 @@ export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
   // One map for both sections, so a repo has the same color in each.
   const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
-    <Panel id="prs" icon={<GitHubIcon />} title="Pull requests" meta={<SwapText text={synced(fetchedAt, now)} />}>
+    <Panel
+      id="prs"
+      icon={<GitHubIcon />}
+      title="Pull requests"
+      meta={
+        <span className="panel-sync">
+          <SwapText text={synced(fetchedAt, now)} />
+          <RefreshButton queryKey={["prs"]} refresh={refreshPRs} what="pull requests" />
+        </span>
+      }
+    >
       {!prs ? (
         <PanelFallback error={error} />
       ) : (

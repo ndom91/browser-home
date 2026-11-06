@@ -21,8 +21,10 @@ export const getCalendar = createServerFn({ method: "GET" }).handler(() => calen
 export const getPRs = createServerFn({ method: "GET" }).handler(() => prs())
 export const getLinear = createServerFn({ method: "GET" }).handler(() => linear())
 export const getHN = createServerFn({ method: "GET" }).handler(() => hn())
-/** Manual refresh from the HN panel. POST, so it is never served from an HTTP cache. */
+// Manual refreshes. POST, so they're never served from an HTTP cache; force skips the server cache.
 export const refreshHN = createServerFn({ method: "POST" }).handler(() => hn({ force: true }))
+export const refreshPRs = createServerFn({ method: "POST" }).handler(() => prs({ force: true }))
+export const refreshLinear = createServerFn({ method: "POST" }).handler(() => linear({ force: true }))
 export const getViewer = createServerFn({ method: "GET" }).handler(() => viewer())
 export const getWeather = createServerFn({ method: "GET" }).handler(() => weather())
 export const getHNThread = createServerFn({ method: "GET" })

@@ -8,7 +8,7 @@ import { useEffect } from "react"
  *   j k / ↓ ↑  next / previous row    g / G       first / last row
  *   o          a row's alternate link (HN: comments)
  *   f          the focused section's filter menu
- *   r          refresh HN              ?           shortcuts sheet
+ *   r          refresh this column (else HN)   ?   shortcuts sheet
  *   Esc        leave the panel
  *
  * "/" (chat), "c" (capture) and ⌘K (search) live with their components.
@@ -96,7 +96,7 @@ export function useKeyboardNav(onHelp: () => void) {
           ;(active?.closest(".pr-section") ?? panel)?.querySelector<HTMLElement>(".menu-trigger")?.click()
           break
         case "r":
-          document.querySelector<HTMLElement>("#hn .icon-btn")?.click()
+          ;(panel ?? document.querySelector("#hn"))?.querySelector<HTMLElement>("[data-refresh]")?.click()
           break
         case "?":
           onHelp()
