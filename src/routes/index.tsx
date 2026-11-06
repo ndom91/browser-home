@@ -68,16 +68,13 @@ function Home() {
         <Header name={viewer.data?.data.name ?? null} weather={weather.data?.data} />
         <main className="grid">
           <CalendarPanel events={calendar.data?.data} error={calendar.error} />
-          {/* Linear and PRs share the middle column: what you're meant to do, next to what you've opened. */}
-          <div className="stack">
-            <LinearPanel
-              linear={linear.data?.data}
-              prs={prs.data?.data}
-              fetchedAt={linear.data?.fetchedAt}
-              error={linear.error}
-            />
-            <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />
-          </div>
+          <LinearPanel
+            linear={linear.data?.data}
+            prs={prs.data?.data}
+            fetchedAt={linear.data?.fetchedAt}
+            error={linear.error}
+          />
+          <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />
           <HackerNewsPanel stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
         </main>
         <ChatWidget />

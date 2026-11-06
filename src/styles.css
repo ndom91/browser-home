@@ -373,19 +373,17 @@ a:focus-visible,
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(300px, 0.82fr) minmax(360px, 1fr) minmax(340px, 1fr);
+  /* Calendar at about two-thirds of its old share; issues, PRs and HN split the rest evenly. */
+  grid-template-columns: minmax(240px, 0.72fr) repeat(3, minmax(300px, 1fr));
   gap: 14px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1280px) {
   .page {
     height: auto;
   }
   .grid {
     grid-template-columns: 1fr 1fr;
-  }
-  #hn {
-    grid-column: 1 / -1;
   }
   .panel {
     max-height: none;
@@ -1706,31 +1704,6 @@ a:focus-visible,
 }
 
 /* ---------- linear ---------- */
-
-/* Two panels share the middle column, each scrolling on its own. */
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  min-height: 0;
-}
-
-/* Sized by content, not split 50/50: issues take what they need and PRs fill the
-   rest. When both overflow, flex-shrink trims each in proportion to its content.
-   The floor keeps a header and a row visible. */
-.stack > .panel {
-  flex: 0 1 auto;
-  min-height: 140px;
-}
-
-.stack > .panel:last-child {
-  flex-grow: 1;
-}
-
-/* The chat box only floats over the bottom panel (PRs), so issues need no spacer. */
-#linear .panel-body::after {
-  display: none;
-}
 
 .issue-state {
   width: 9px;
