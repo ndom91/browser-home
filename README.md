@@ -82,14 +82,16 @@ The page keeps running the old version until you rebuild and restart it:
 
 ```sh
 pnpm build
-launchctl kickstart -k gui/$(id -u)/com.ndom91.browser-home
+pnpm reload
 ```
+
+`pnpm reload` restarts the launchd service. Run it alone after changing `.env`.
 
 ## Troubleshooting
 
 - **Calendar says "timed out" or "access denied".** Run `./bin/agenda` in a terminal and click Allow. Rebuilding the helper can make macOS ask again.
 - **No pull requests.** Run `gh auth status`. Your org may need SSO authorized for the `gh` token.
-- **Chat says "Missing LLM_…".** Create `.env` from `.env.example`, then restart.
+- **Chat says "Missing LLM_…".** Create `.env` from `.env.example`, then run `pnpm reload`.
 - **Moved the repo or switched Node managers.** Re-run `./scripts/install-launchd.sh`.
 - **Logs** are in `~/Library/Logs/browser-home.log`.
 

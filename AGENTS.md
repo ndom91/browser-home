@@ -21,6 +21,7 @@ pnpm format         # Biome format --write
 pnpm typecheck      # tsc --noEmit
 pnpm build          # production build into dist/
 pnpm start          # node serve.js, the production server
+pnpm reload         # restart the launchd service, after a build or a .env change
 pnpm build:agenda   # compile the Swift calendar helper into bin/agenda
 ```
 
@@ -102,7 +103,7 @@ launchd/ + scripts/    run at login
 - `serve.js` binds to `127.0.0.1` and rejects non-localhost `Host` headers, which blocks DNS rebinding. Keep both.
 - Port 6464 is deliberate. Chromium blocks 6665–6669 (IRC) as unsafe ports.
 - Editing `vite.config.ts` restarts any running dev server. A user's own `pnpm dev` can move to a new port under them.
-- The launchd service runs the build that was current when it started. After `pnpm build`, restart it: `launchctl kickstart -k gui/$(id -u)/com.ndom91.browser-home`.
+- The launchd service runs the build that was current when it started. After `pnpm build`, restart it with `pnpm reload`.
 - `pnpm-workspace.yaml` sets `minimumReleaseAge` to 7 days and `saveExact`. A package released this week fails to install. That's on purpose: take the newest version that passes, and don't bypass the rule.
 
 ## Code style
