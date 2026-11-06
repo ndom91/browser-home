@@ -50,8 +50,9 @@ const PR_FIELDS = `
   }`
 
 const PAGE_SIZE = 20
-// Optional extra search qualifiers, e.g. "org:team-plain" to hide open-source noise.
-const FILTER = process.env.GH_SEARCH_FILTER?.trim() ?? ""
+// Extra search qualifiers. Scoped to the work org by default to hide open-source noise.
+// `||`, not `??`: the launchd plist sets the variable to an empty string.
+const FILTER = process.env.GH_SEARCH_FILTER?.trim() || "org:team-plain"
 
 const searchQuery = (q: string) => `
   query {

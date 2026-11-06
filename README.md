@@ -58,7 +58,7 @@ These environment variables go in `launchd/com.ndom91.browser-home.plist`. Re-ru
 | Variable           | Default                | Purpose                                               |
 | ------------------ | ---------------------- | ----------------------------------------------------- |
 | `PORT`             | `3000`                 | Port to listen on                                     |
-| `GH_SEARCH_FILTER` | empty                  | Extra GitHub search qualifiers, e.g. `org:team-plain` |
+| `GH_SEARCH_FILTER` | `org:team-plain`       | GitHub search qualifiers for both PR searches         |
 | `GH_BIN`           | `/opt/homebrew/bin/gh` | Path to `gh`                                          |
 | `AGENDA_BIN`       | `./bin/agenda`         | Path to the calendar helper                           |
 
