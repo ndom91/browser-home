@@ -8,6 +8,7 @@ import { HNThread, threadQuery } from "./HNThread"
 import { HackerNewsIcon, RefreshIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 import { SwapText } from "./ui/motion"
+import { Tooltip } from "./ui/Tooltip"
 
 interface Props {
   stories: Array<Story> | undefined
@@ -66,16 +67,17 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
                 <SwapText text={clock(fetchedAt)} />
               </time>
             )}
-            <button
-              type="button"
-              className={`icon-btn${refresh.isPending ? " is-spinning" : ""}`}
-              onClick={() => refresh.mutate()}
-              disabled={refresh.isPending}
-              aria-label="Refresh stories"
-              title={refresh.isError ? "Refresh failed, try again" : "Refresh stories"}
-            >
-              <RefreshIcon />
-            </button>
+            <Tooltip content={refresh.isError ? "Refresh failed, try again" : "Refresh stories"}>
+              <button
+                type="button"
+                className={`icon-btn${refresh.isPending ? " is-spinning" : ""}`}
+                onClick={() => refresh.mutate()}
+                disabled={refresh.isPending}
+                aria-label="Refresh stories"
+              >
+                <RefreshIcon />
+              </button>
+            </Tooltip>
           </span>
         )
       }

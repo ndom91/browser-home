@@ -4,6 +4,7 @@ import type { Weather } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { weatherKind } from "../lib/weather"
 import { SearchIcon, WeatherIcon } from "./icons"
+import { Tooltip } from "./ui/Tooltip"
 
 // "example.com", "localhost:3000/x", "192.168.1.1" — anything URL-shaped without spaces.
 const HOSTLIKE = /^(localhost|[\w-]+(\.[\w-]+)+|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/\S*)?$/i
@@ -76,18 +77,20 @@ function WeatherBadge({ weather }: { weather: Weather }) {
   const { kind, label } = weatherKind(weather.code)
   const summary = `Today in Berlin: ${label}, high ${weather.max}°, low ${weather.min}°`
   return (
-    <div className="weather" title={summary}>
-      <WeatherIcon kind={kind} />
-      <span className="weather-max" aria-hidden="true">
-        {weather.max}°
-      </span>
-      <span className="weather-sep" aria-hidden="true">
-        /
-      </span>
-      <span className="weather-min" aria-hidden="true">
-        {weather.min}°
-      </span>
-      <span className="sr-only">{summary}</span>
-    </div>
+    <Tooltip content={summary}>
+      <div className="weather">
+        <WeatherIcon kind={kind} />
+        <span className="weather-max" aria-hidden="true">
+          {weather.max}°
+        </span>
+        <span className="weather-sep" aria-hidden="true">
+          /
+        </span>
+        <span className="weather-min" aria-hidden="true">
+          {weather.min}°
+        </span>
+        <span className="sr-only">{summary}</span>
+      </div>
+    </Tooltip>
   )
 }
