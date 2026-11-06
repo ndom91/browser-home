@@ -88,7 +88,7 @@ function FocusCard({ current, next, now }: { current: Timed | null; next: Timed 
       <p className="focus-title">{event.title}</p>
       <p className="focus-sub">{details.join(" · ")}</p>
       {event.meeting && (
-        <a className="focus-join" href={event.meeting} target="_blank" rel="noreferrer">
+        <a className="focus-join" href={event.meeting} target="_blank" rel="noreferrer" data-nav-row>
           Join {event.provider ?? "call"} <ArrowUpRightIcon />
         </a>
       )}
@@ -210,6 +210,9 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
             return (
               <div
                 key={e.id}
+                // Focusable for keyboard nav; Enter forwards to the Join link.
+                tabIndex={-1}
+                data-nav-row
                 className={`tl-event ${kind}${declined ? " is-declined" : ""}${height < 30 ? " is-short" : ""}`}
                 style={style}
                 title={`${e.title}\n${clock(e.startMs)}–${clock(e.endMs)}`}
@@ -219,7 +222,7 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
                   <span className="tl-at"> · {clock(e.startMs)}</span>
                 </span>
                 {e.meeting && !isPast && !declined && (
-                  <a className="tl-join" href={e.meeting} target="_blank" rel="noreferrer">
+                  <a className="tl-join" href={e.meeting} target="_blank" rel="noreferrer" data-nav-primary>
                     Join
                   </a>
                 )}

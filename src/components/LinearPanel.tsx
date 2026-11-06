@@ -162,7 +162,7 @@ function Row({ issue, pr, now }: { issue: LinearIssue; pr: string | undefined; n
         <span className="pr-main">
           <span className="pr-head">
             <span className="pr-linear mono">{issue.id}</span>
-            <a className="pr-title pr-link" href={issue.url} target="_blank" rel="noreferrer">
+            <a className="pr-title pr-link" href={issue.url} target="_blank" rel="noreferrer" data-nav-row>
               {issue.title}
             </a>
           </span>

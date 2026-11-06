@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
+import { useCallback, useState } from "react"
 import { CalendarPanel } from "../components/CalendarPanel"
 import { ChatWidget } from "../components/ChatWidget"
 import { HackerNewsPanel } from "../components/HackerNewsPanel"
@@ -7,7 +8,9 @@ import { Header } from "../components/Header"
 import { LinearPanel } from "../components/LinearPanel"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
 import { QuickCapture } from "../components/QuickCapture"
+import { Shortcuts } from "../components/Shortcuts"
 import { TTL } from "../lib/ttl"
+import { useKeyboardNav } from "../lib/useKeyboardNav"
 import { NowContext, useTicker } from "../lib/useNow"
 import { useTitleCount } from "../lib/useTitleCount"
 import type { Cached } from "../server/cache"
@@ -56,6 +59,8 @@ function Home() {
   // The name barely changes, so it never refetches.
   const viewer = useSource("viewer", getViewer, initial.viewer, Infinity)
   useTitleCount(prs.data?.data)
+  const [help, setHelp] = useState(false)
+  useKeyboardNav(useCallback(() => setHelp(true), []))
 
   return (
     <NowContext.Provider value={now}>
@@ -77,6 +82,7 @@ function Home() {
         </main>
         <ChatWidget />
         <QuickCapture />
+        <Shortcuts open={help} onOpenChange={setHelp} />
       </div>
     </NowContext.Provider>
   )

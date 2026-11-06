@@ -1741,6 +1741,93 @@ ul {
   filter: brightness(1.1);
 }
 
+/* ---------- keyboard focus ----------
+   One look for a focused row in every list: the hover background plus a 2px
+   inset ring, as on PR rows. The ring sits on the row, not the inner link. */
+
+[data-nav-row] {
+  /* Clear the sticky section head above and the chat box below when scrolled to. */
+  scroll-margin-top: 36px;
+  scroll-margin-bottom: 72px;
+}
+
+.pr:has(.pr-link:focus-visible),
+.hn-item:has(.hn-title:focus-visible) {
+  background: var(--hover);
+}
+
+.hn-title:focus-visible {
+  outline: none;
+}
+
+.hn-item:has(.hn-title:focus-visible) {
+  outline: 2px solid var(--b-blue-fg);
+  outline-offset: -2px;
+}
+
+.tl-event:focus-visible {
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.hn-c-meta:has(.hn-c-toggle:focus-visible) {
+  color: var(--text-2);
+}
+
+/* The column you're in, while moving by keyboard. */
+.panel:has(:focus-visible) {
+  border-color: color-mix(in srgb, var(--b-blue-fg) 45%, var(--line));
+}
+
+/* ---------- shortcuts sheet ---------- */
+
+.shortcuts {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.shortcuts h3 {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.shortcuts dl {
+  margin: 0;
+}
+
+.shortcuts dl > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 12.5px;
+}
+
+.shortcuts dt {
+  display: flex;
+  gap: 3px;
+}
+
+.shortcuts kbd,
+.dialog-aside kbd {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--kbd-bg);
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.shortcuts dd {
+  margin: 0;
+  color: var(--text-2);
+}
+
 /* ---------- dialog (Base UI) ---------- */
 
 .dialog-backdrop {

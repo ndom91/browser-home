@@ -78,7 +78,9 @@ function WeatherBadge({ weather }: { weather: Weather }) {
   const summary = `Today in Berlin: ${label}, high ${weather.max}°, low ${weather.min}°`
   return (
     <Tooltip content={summary}>
-      <div className="weather">
+      {/* Focusable so the tooltip also opens from the keyboard. */}
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: the tooltip is the interaction. */}
+      <div className="weather" tabIndex={0}>
         <WeatherIcon kind={kind} />
         <span className="weather-max" aria-hidden="true">
           {weather.max}°

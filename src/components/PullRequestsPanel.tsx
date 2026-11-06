@@ -198,7 +198,14 @@ function Row({
                 {pr.linear.id}
               </a>
             )}
-            <a className="pr-title pr-link" href={pr.url} target="_blank" rel="noreferrer" title={pr.repoFull}>
+            <a
+              className="pr-title pr-link"
+              href={pr.url}
+              target="_blank"
+              rel="noreferrer"
+              title={pr.repoFull}
+              data-nav-row
+            >
               {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
             </a>
           </span>

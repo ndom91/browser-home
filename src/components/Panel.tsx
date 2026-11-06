@@ -12,7 +12,7 @@ interface PanelProps {
 
 export function Panel({ id, icon, title, titleSuffix, meta, children }: PanelProps) {
   return (
-    <section className="panel" id={id} aria-labelledby={`${id}-title`}>
+    <section className="panel" id={id} aria-labelledby={`${id}-title`} data-nav-panel>
       <header className="panel-head">
         <span className="panel-icon">{icon}</span>
         <h2 id={`${id}-title`}>{title}</h2>

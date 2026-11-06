@@ -75,7 +75,7 @@ function Comment({ comment, op, now }: { comment: HNComment; op: string; now: nu
         <a className="hn-c-age" href={itemUrl(comment.id)} target="_blank" rel="noreferrer">
           {age(comment.time, now)}
         </a>
-        <button type="button" className="hn-c-toggle" onClick={toggle} aria-expanded={!collapsed}>
+        <button type="button" className="hn-c-toggle" onClick={toggle} aria-expanded={!collapsed} data-nav-row>
           {collapsed ? `[+${1 + countComments(comment.children)}]` : "[–]"}
         </button>
       </p>

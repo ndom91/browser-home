@@ -23,6 +23,8 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
   // The last opened story stays rendered while the thread page slides out.
   const [shown, setShown] = useState<Story | null>(null)
   const threadRef = useRef<HTMLDivElement>(null)
+  // The story row that opened the thread, so closing it puts focus back there.
+  const returnTo = useRef<HTMLElement | null>(null)
   const refresh = useMutation({
     mutationFn: () => refreshHN(),
     onSuccess: (fresh) => queryClient.setQueryData(["hn"], fresh),
@@ -32,6 +34,8 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
     // Let cmd/ctrl/shift/middle-click open the real HN page in a new tab.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
     e.preventDefault()
+    returnTo.current =
+      (e.currentTarget as HTMLElement).closest("[data-nav-item]")?.querySelector("[data-nav-row]") ?? null
     setOpen(story)
     setShown(story)
   }
@@ -39,8 +43,15 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
   const prefetch = (story: Story) => () => void queryClient.prefetchQuery(threadQuery(story.id))
 
   // Each page scrolls on its own, so the list keeps its place. A new thread opens at the top.
+  // The page you leave turns inert and drops focus, so move it along: into the thread
+  // on open, back to the story on close.
   useLayoutEffect(() => {
-    if (open && threadRef.current) threadRef.current.scrollTop = 0
+    if (open) {
+      if (threadRef.current) threadRef.current.scrollTop = 0
+      threadRef.current?.querySelector<HTMLElement>(".hn-back")?.focus({ preventScroll: true })
+    } else {
+      returnTo.current?.focus({ preventScroll: true })
+    }
   }, [open])
 
   useEffect(() => {
@@ -112,16 +123,22 @@ function StoryList({
   return (
     <ol className="hn-list">
       {stories.map((s, i) => (
-        <li key={s.id} className="hn-item">
+        <li key={s.id} className="hn-item" data-nav-item>
           <span className="hn-rank mono">{i + 1}</span>
           <div className="hn-main">
-            <a className="hn-title" href={s.url} target="_blank" rel="noreferrer">
+            <a className="hn-title" href={s.url} target="_blank" rel="noreferrer" data-nav-row>
               {s.title}
             </a>
             <p className="hn-meta">
               <span>{s.domain}</span>
               <span>{plural(s.points, "pt")}</span>
-              <a href={s.discussion} onClick={onOpen(s)} onMouseEnter={onPrefetch(s)} onFocus={onPrefetch(s)}>
+              <a
+                href={s.discussion}
+                onClick={onOpen(s)}
+                onMouseEnter={onPrefetch(s)}
+                onFocus={onPrefetch(s)}
+                data-nav-alt
+              >
                 {plural(s.comments, "comment")}
               </a>
               <span>{age(s.time, now)}</span>
