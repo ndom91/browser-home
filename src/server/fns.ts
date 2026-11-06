@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start"
 import { TTL } from "../lib/ttl"
 import { cached, cachedBy } from "./cache"
 import { fetchCalendar } from "./calendar"
+import { capture, MAX_CAPTURE } from "./capture"
 import { DEMO, demoCalendar, demoHN, demoPRs, demoThread, demoViewer, demoWeather } from "./demo"
 import { fetchPRs, fetchViewer } from "./github"
 import { fetchHN, fetchThread } from "./hn"
@@ -27,3 +28,12 @@ export const getHNThread = createServerFn({ method: "GET" })
     return id
   })
   .handler(({ data }) => thread(data))
+
+/** Quick capture: appends a bullet to this week's Obsidian note. */
+export const captureNote = createServerFn({ method: "POST" })
+  .validator((text: unknown) => {
+    if (typeof text !== "string" || !text.trim()) throw new Error("Nothing to save")
+    if (text.length > MAX_CAPTURE) throw new Error(`Keep it under ${MAX_CAPTURE} characters`)
+    return text
+  })
+  .handler(async ({ data }) => ({ note: await capture(data) }))

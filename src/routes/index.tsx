@@ -5,6 +5,7 @@ import { ChatWidget } from "../components/ChatWidget"
 import { HackerNewsPanel } from "../components/HackerNewsPanel"
 import { Header } from "../components/Header"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
+import { QuickCapture } from "../components/QuickCapture"
 import { TTL } from "../lib/ttl"
 import { NowContext, useTicker } from "../lib/useNow"
 import { useTitleCount } from "../lib/useTitleCount"
@@ -63,6 +64,7 @@ function Home() {
           <HackerNewsPanel stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
         </main>
         <ChatWidget />
+        <QuickCapture />
       </div>
     </NowContext.Provider>
   )
