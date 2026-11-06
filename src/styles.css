@@ -67,8 +67,6 @@
   --count-bg: #fdf0c2;
   --count-fg: #876500;
 
-  --hn-icon-bg: #1c1c21;
-  --hn-icon-fg: #ffffff;
   --hn-accent: #ff6600;
   --weather-sun: #e0a100;
   --weather-rain: #4a7fd6;
@@ -136,8 +134,6 @@
     --count-bg: #3a2e07;
     --count-fg: #f5cf55;
 
-    --hn-icon-bg: #ececef;
-    --hn-icon-fg: #111113;
     --hn-accent: #ff7a26;
     --weather-sun: #f5b82e;
     --weather-rain: #6f9cf0;
@@ -409,10 +405,6 @@ ul {
   font-size: 14px;
   font-weight: 500;
   letter-spacing: -0.005em;
-}
-
-#hn .panel-head h2 {
-  color: var(--hn-accent);
 }
 
 .panel-icon {

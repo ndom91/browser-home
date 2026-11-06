@@ -34,10 +34,10 @@ export function GitHubIcon(props: IconProps) {
 export function HackerNewsIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>
-      <rect width="16" height="16" rx="3" fill="var(--hn-icon-bg)" />
+      <rect width="16" height="16" rx="3" fill="var(--hn-accent)" />
       <path
         d="M5 4l3 4.5L11 4M8 8.5V12"
-        stroke="var(--hn-icon-fg)"
+        stroke="#fff"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
