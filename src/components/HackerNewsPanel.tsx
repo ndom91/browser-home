@@ -85,7 +85,7 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
             <li key={s.id} className="hn-item">
               <span className="hn-rank mono">{i + 1}</span>
               <div className="hn-main">
-                <a className="hn-title" href={s.url}>
+                <a className="hn-title" href={s.url} target="_blank" rel="noreferrer">
                   {s.title}
                 </a>
                 <p className="hn-meta">

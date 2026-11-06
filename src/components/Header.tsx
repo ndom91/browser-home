@@ -8,11 +8,14 @@ import { SearchIcon, WeatherIcon } from "./icons"
 // "example.com", "localhost:3000/x", "192.168.1.1" — anything URL-shaped without spaces.
 const HOSTLIKE = /^(localhost|[\w-]+(\.[\w-]+)+|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/\S*)?$/i
 
+// Baked in at build time: Vite inlines VITE_ variables into the client bundle.
+const SEARCH_URL = import.meta.env.VITE_SEARCH_URL || "https://www.google.com/search?q="
+
 function destination(input: string) {
   const q = input.trim()
   if (/^[a-z][\w+.-]*:\/\//i.test(q)) return q
   if (HOSTLIKE.test(q)) return `${q.startsWith("localhost") ? "http" : "https"}://${q}`
-  return `https://kagi.com/search?q=${encodeURIComponent(q)}`
+  return SEARCH_URL + encodeURIComponent(q)
 }
 
 export function Header({ name, weather }: { name: string | null; weather: Weather | undefined }) {
@@ -33,8 +36,10 @@ export function Header({ name, weather }: { name: string | null; weather: Weathe
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const value = inputRef.current?.value ?? ""
-    if (value.trim()) window.location.assign(destination(value))
+    const input = inputRef.current
+    if (!input?.value.trim()) return
+    window.open(destination(input.value), "_blank", "noopener,noreferrer")
+    input.value = ""
   }
 
   return (

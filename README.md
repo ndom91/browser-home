@@ -46,12 +46,12 @@ You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logge
 
 | Key   | Does                                |
 | ----- | ----------------------------------- |
-| `⌘K`  | Search with Kagi, or type a URL     |
+| `⌘K`  | Search the web, or type a URL       |
 | `/`   | Ask the local LLM                   |
 | `Esc` | Hide the chat, or leave HN comments |
 
 - Click **N comments** on a story to read the thread right in the HN column. Click `[–]` or a thread line to fold a branch.
-- Cmd-click any link to open it in a new tab instead.
+- Links and searches open in a new tab, so this page stays put.
 - The `…` menus in the PR column filter by repo, author, status, or checks. Filters are remembered.
 
 ## Settings
@@ -65,6 +65,12 @@ Edit `launchd/com.ndom91.browser-home.plist`, then re-run `./scripts/install-lau
 | `GH_BIN`           | `/opt/homebrew/bin/gh` | Where `gh` lives                  |
 
 The chat settings (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`) live in `.env`.
+
+The search engine also lives in `.env`, as a URL the query is appended to. It defaults to Google. Run `pnpm build` again after changing it.
+
+```sh
+VITE_SEARCH_URL=https://www.google.com/search?q=
+```
 
 ## After updating
 

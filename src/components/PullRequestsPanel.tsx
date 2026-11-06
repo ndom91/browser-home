@@ -218,7 +218,13 @@ function Row({
   const checks = pr.checks ? CHECKS[pr.checks] : null
   return (
     <li>
-      <a className={`pr${pr.draft ? " is-draft" : ""}`} href={pr.url} title={pr.repoFull}>
+      <a
+        className={`pr${pr.draft ? " is-draft" : ""}`}
+        href={pr.url}
+        target="_blank"
+        rel="noreferrer"
+        title={pr.repoFull}
+      >
         <PullRequestIcon className="pr-icon" draft={pr.draft} />
         <span className="pr-main">
           <span className="pr-title">{pr.title}</span>

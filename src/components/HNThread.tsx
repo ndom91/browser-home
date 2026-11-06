@@ -33,7 +33,7 @@ export function HNThread({ story, onBack }: { story: Story; onBack: () => void }
       </nav>
 
       <header className="hn-story">
-        <a className="hn-story-title" href={story.url}>
+        <a className="hn-story-title" href={story.url} target="_blank" rel="noreferrer">
           {story.title}
         </a>
         <p className="hn-meta">
