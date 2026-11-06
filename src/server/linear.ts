@@ -3,10 +3,10 @@ import type { LinearIssue, LinearIssues } from "../lib/types"
 const API = "https://api.linear.app/graphql"
 const KEY = process.env.LINEAR_API_KEY?.trim()
 
-// In progress and Todo only. Backlog is "someday", which is noise on a new-tab page.
+// In progress, Todo and Backlog. Done and canceled stay out.
 const QUERY = `query {
   viewer {
-    assignedIssues(first: 50, orderBy: updatedAt, filter: { state: { type: { in: ["started", "unstarted"] } } }) {
+    assignedIssues(first: 50, orderBy: updatedAt, filter: { state: { type: { in: ["started", "unstarted", "backlog"] } } }) {
       nodes {
         identifier title url priority priorityLabel updatedAt
         state { name type color }

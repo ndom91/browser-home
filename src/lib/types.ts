@@ -92,7 +92,7 @@ export interface LinearIssue {
   priority: number
   priorityLabel: string
   updatedAt: string
-  state: { name: string; type: "started" | "unstarted"; color: string }
+  state: { name: string; type: "started" | "unstarted" | "backlog"; color: string }
   project: { name: string; color: string } | null
   team: string
   cycle: number | null

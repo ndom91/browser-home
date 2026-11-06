@@ -1722,6 +1722,12 @@ a:focus-visible,
 }
 
 /* Started states read as "half done", like Linear's own icon. */
+/* Backlog reads as "not planned yet": a dashed ring, like Linear's own icon. */
+.issue-state[data-type="backlog"] {
+  border-style: dashed;
+  border-width: 1.5px;
+}
+
 .issue-state[data-type="started"] {
   background: linear-gradient(90deg, var(--state) 50%, transparent 50%);
 }

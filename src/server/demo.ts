@@ -280,6 +280,7 @@ export function demoLinear(): LinearIssues {
   const started = { name: "In Progress", type: "started", color: "#f2c94c" } as const
   const review = { name: "In Review", type: "started", color: "#5e6ad2" } as const
   const todo = { name: "Todo", type: "unstarted", color: "#bec2c8" } as const
+  const backlog = { name: "Backlog", type: "backlog", color: "#95a2b3" } as const
   const queues = { name: "Queue filters", color: "#4ea7fc" }
   const sla = { name: "SLA v2", color: "#f7a1c1" }
   const issue = (id: string, title: string, rest: Partial<LinearIssues["issues"][number]>) => ({
@@ -315,6 +316,11 @@ export function demoLinear(): LinearIssues {
       }),
       issue("CORE-902", "Backfill SLA timers for snoozed threads", { project: sla, updatedAt: ago(26 * HOUR) }),
       issue("SUP-220", "Empty state for filtered queues", { project: queues, priority: 4, priorityLabel: "Low" }),
+      issue("CORE-940", "Bulk snooze from the thread list", {
+        state: backlog,
+        project: queues,
+        updatedAt: ago(9 * 24 * HOUR),
+      }),
       issue("CORE-915", "Flaky test: workspace invite expiry", {
         priority: 0,
         priorityLabel: "No priority",

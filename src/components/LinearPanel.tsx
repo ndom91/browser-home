@@ -79,6 +79,13 @@ function Body({
         prFor={prFor}
         now={now}
       />
+      <Section
+        id="backlog"
+        title="Backlog"
+        issues={linear.issues.filter((i) => i.state.type === "backlog")}
+        prFor={prFor}
+        now={now}
+      />
     </>
   )
 }
