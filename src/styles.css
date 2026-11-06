@@ -212,7 +212,7 @@ ul {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 22px 26px 76px;
+  padding: 22px 26px 24px;
   gap: 20px;
 }
 
@@ -437,6 +437,24 @@ ul {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+/* The chat box floats over the bottom of the panels. Room at the end of each
+   scrolling list lets its last item scroll clear of the box. */
+.panel-body::after {
+  content: "";
+  display: block;
+  height: 64px;
+}
+
+/* The calendar body doesn't scroll; its timeline does. Its children are
+   absolutely positioned, so it gets padding instead of an ::after. */
+#calendar .panel-body::after {
+  display: none;
+}
+
+.timeline-scroll {
+  padding-bottom: 50px;
 }
 
 .panel-empty,
