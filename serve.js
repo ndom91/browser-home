@@ -6,7 +6,14 @@ import { createServer } from "node:http"
 import { extname, join, normalize } from "node:path"
 import { Readable } from "node:stream"
 import { fileURLToPath } from "node:url"
-import app from "./dist/server/server.js"
+
+// Secrets (LLM_API_KEY) live in a gitignored .env. Vars from launchd win.
+try {
+  process.loadEnvFile(fileURLToPath(new URL("./.env", import.meta.url)))
+} catch {
+  // No .env: fine, the LLM prompt reports what's missing.
+}
+const { default: app } = await import("./dist/server/server.js")
 
 const PORT = Number(process.env.PORT ?? 6464)
 // Loopback only: the page exposes private work data.
@@ -41,7 +48,7 @@ async function serveStatic(pathname, res) {
   return true
 }
 
-function toRequest(req) {
+function toRequest(req, signal) {
   const url = `http://${req.headers.host}${req.url}`
   const headers = new Headers()
   for (const [key, value] of Object.entries(req.headers)) {
@@ -53,6 +60,7 @@ function toRequest(req) {
   return new Request(url, {
     method: req.method,
     headers,
+    signal,
     body: hasBody ? Readable.toWeb(req) : undefined,
     duplex: hasBody ? "half" : undefined,
   })
@@ -67,7 +75,12 @@ const server = createServer(async (req, res) => {
     const { pathname } = new URL(req.url, "http://localhost")
     if (pathname !== "/" && (await serveStatic(pathname, res))) return
 
-    const response = await app.fetch(toRequest(req))
+    // Abort when the browser goes away, so a stopped LLM answer stops upstream too.
+    const aborter = new AbortController()
+    res.on("close", () => {
+      if (!res.writableFinished) aborter.abort()
+    })
+    const response = await app.fetch(toRequest(req, aborter.signal))
     res.statusCode = response.status
     response.headers.forEach((value, key) => {
       if (key !== "set-cookie") res.setHeader(key, value)
