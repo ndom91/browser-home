@@ -146,3 +146,85 @@ export const STREAMING_COMPONENTS = {
   p: ({ children, ...props }: ComponentProps<"p">) => <p {...props}>{streamWords(children)}</p>,
   li: ({ children, ...props }: ComponentProps<"li">) => <li {...props}>{streamWords(children)}</li>,
 }
+
+type RowPhase = "enter" | "idle" | "exit"
+
+/**
+ * A list whose rows collapse out and grow in (transitions.dev accordion, per row), so
+ * filtering never makes rows pop. The rows around them glide along as the height
+ * animates. The first render is static; later changes animate.
+ */
+export function AnimatedList<T>({
+  items,
+  getKey,
+  className,
+  render,
+}: {
+  items: Array<T>
+  getKey: (item: T) => string
+  className: string
+  render: (item: T) => ReactNode
+}) {
+  const keys = items.map(getKey)
+  const signature = keys.join("\n")
+  const [rows, setRows] = useState<Array<{ key: string; phase: RowPhase }>>(() =>
+    keys.map((key) => ({ key, phase: "idle" })),
+  )
+  // Latest data per key, so exiting rows keep rendering after they leave `items`.
+  const latest = useRef(new Map<string, T>())
+  for (const item of items) latest.current.set(getKey(item), item)
+  const listRef = useRef<HTMLUListElement>(null)
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the key list; `keys` is a new array every render.
+  useLayoutEffect(() => {
+    setRows((prev) => {
+      const present = new Set(keys)
+      const before = new Map(prev.map((r) => [r.key, r.phase]))
+      const next: Array<{ key: string; phase: RowPhase }> = keys.map((key) => {
+        const phase = before.get(key)
+        return { key, phase: phase === undefined || phase === "exit" ? "enter" : phase }
+      })
+      // Leaving rows stay where they were: right after the nearest earlier row that's still here.
+      prev.forEach((row, i) => {
+        if (present.has(row.key)) return
+        const anchor = prev
+          .slice(0, i)
+          .reverse()
+          .find((r) => next.some((n) => n.key === r.key))
+        next.splice(anchor ? next.findIndex((n) => n.key === anchor.key) + 1 : 0, 0, { key: row.key, phase: "exit" })
+      })
+      return next
+    })
+  }, [signature])
+
+  // Entering rows render collapsed first; flush that pose, then release them to expand.
+  useLayoutEffect(() => {
+    if (!rows.some((r) => r.phase === "enter")) return
+    void listRef.current?.offsetHeight
+    setRows((prev) => prev.map((r) => (r.phase === "enter" ? { ...r, phase: "idle" } : r)))
+  }, [rows])
+
+  // Drop exiting rows once their collapse has played.
+  useEffect(() => {
+    if (!rows.some((r) => r.phase === "exit")) return
+    const timer = setTimeout(
+      () => setRows((prev) => prev.filter((r) => r.phase !== "exit")),
+      cssMs("--acc-collapse", 250),
+    )
+    return () => clearTimeout(timer)
+  }, [rows])
+
+  return (
+    <ul ref={listRef} className={className}>
+      {rows.map(({ key, phase }) => {
+        const item = latest.current.get(key)
+        if (item === undefined) return null
+        return (
+          <li key={key} className="t-list-row" data-state={phase} inert={phase === "exit"}>
+            <div className="t-list-inner">{render(item)}</div>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}

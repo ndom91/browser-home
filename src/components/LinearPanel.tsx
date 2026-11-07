@@ -7,7 +7,7 @@ import { refreshLinear } from "../server/fns"
 import { LinearIcon, PriorityIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { FilterMenu } from "./ui/FilterMenu"
-import { PopIn, SwapText } from "./ui/motion"
+import { AnimatedList, PopIn, SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
@@ -151,13 +151,13 @@ function Section({
           />
         </span>
       </h3>
-      {sorted.length ? (
-        <ul className="pr-list">
-          {sorted.map((issue) => (
-            <Row key={issue.id} issue={issue} pr={prFor.get(issue.id)} now={now} />
-          ))}
-        </ul>
-      ) : (
+      <AnimatedList
+        className="pr-list"
+        items={sorted}
+        getKey={(issue) => issue.id}
+        render={(issue) => <Row issue={issue} pr={prFor.get(issue.id)} now={now} />}
+      />
+      {sorted.length === 0 && (
         <p className="panel-empty">{filter.filtering ? "Nothing matches these filters." : "Nothing here."}</p>
       )}
     </div>
@@ -170,42 +170,40 @@ function projectStyle(color: string | undefined) {
 
 function Row({ issue, pr, now }: { issue: LinearIssue; pr: string | undefined; now: number }) {
   return (
-    <li>
-      <div className="pr issue">
-        <i
-          className="issue-state"
-          data-type={issue.state.type}
-          style={{ "--state": issue.state.color } as CSSProperties}
-          title={issue.state.name}
-        />
-        <span className="pr-main">
-          <span className="pr-head">
-            <span className="pr-linear mono">{issue.id}</span>
-            <a className="pr-title pr-link" href={issue.url} target="_blank" rel="noreferrer" data-nav-row>
-              {issue.title}
-            </a>
-          </span>
-          <span className="pr-meta">
-            {issue.project && (
-              <span className="project-badge" style={projectStyle(issue.project.color)}>
-                {issue.project.name}
-              </span>
-            )}
-            <span>{issue.state.name}</span>
-            <span className="mono">{age(Date.parse(issue.updatedAt), now)}</span>
-          </span>
+    <div className="pr issue">
+      <i
+        className="issue-state"
+        data-type={issue.state.type}
+        style={{ "--state": issue.state.color } as CSSProperties}
+        title={issue.state.name}
+      />
+      <span className="pr-main">
+        <span className="pr-head">
+          <span className="pr-linear mono">{issue.id}</span>
+          <a className="pr-title pr-link" href={issue.url} target="_blank" rel="noreferrer" data-nav-row>
+            {issue.title}
+          </a>
         </span>
-        <span className="pr-side issue-side">
-          <span className="priority" title={issue.priorityLabel}>
-            <PriorityIcon priority={issue.priority} />
-          </span>
-          {pr && (
-            <a className="issue-pr" href={pr} target="_blank" rel="noreferrer" title="Open the linked PR">
-              <PullRequestIcon width={11} height={11} /> PR
-            </a>
+        <span className="pr-meta">
+          {issue.project && (
+            <span className="project-badge" style={projectStyle(issue.project.color)}>
+              {issue.project.name}
+            </span>
           )}
+          <span>{issue.state.name}</span>
+          <span className="mono">{age(Date.parse(issue.updatedAt), now)}</span>
         </span>
-      </div>
-    </li>
+      </span>
+      <span className="pr-side issue-side">
+        <span className="priority" title={issue.priorityLabel}>
+          <PriorityIcon priority={issue.priority} />
+        </span>
+        {pr && (
+          <a className="issue-pr" href={pr} target="_blank" rel="noreferrer" title="Open the linked PR">
+            <PullRequestIcon width={11} height={11} /> PR
+          </a>
+        )}
+      </span>
+    </div>
   )
 }

@@ -2589,4 +2589,43 @@ a:focus-visible,
   }
 }
 
+/* ---------- accordion, per row: list rows entering and leaving ----------
+   Same grid-rows technique and timing as the comment accordion. A leaving row
+   collapses, so the rows below glide up with it; an entering row grows in. */
+
+.t-list-row {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--acc-expand) var(--acc-ease);
+}
+.t-list-inner {
+  min-height: 0;
+  overflow: hidden;
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--acc-expand) var(--acc-ease),
+    filter var(--acc-expand) var(--acc-ease);
+}
+.t-list-row[data-state="enter"],
+.t-list-row[data-state="exit"] {
+  grid-template-rows: 0fr;
+}
+.t-list-row[data-state="enter"] > .t-list-inner,
+.t-list-row[data-state="exit"] > .t-list-inner {
+  opacity: 0;
+  filter: blur(2px);
+}
+.t-list-row[data-state="exit"],
+.t-list-row[data-state="exit"] > .t-list-inner {
+  transition-duration: var(--acc-collapse);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-list-row,
+  .t-list-inner {
+    transition: none !important;
+  }
+}
+
 /* biome-ignore-end lint/complexity/noImportantStyles: end of motion section. */

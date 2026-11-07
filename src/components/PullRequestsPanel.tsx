@@ -8,7 +8,7 @@ import { refreshPRs } from "../server/fns"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { FilterMenu } from "./ui/FilterMenu"
-import { PopIn, SwapText } from "./ui/motion"
+import { AnimatedList, PopIn, SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
@@ -126,20 +126,16 @@ function Section({
           />
         </span>
       </h3>
-      {visible.length ? (
-        <ul className="pr-list">
-          {visible.map((pr) => (
-            <Row
-              key={pr.url}
-              pr={pr}
-              now={now}
-              badge={badgeFor(pr)}
-              hue={hues.get(pr.repoFull)}
-              showAuthor={showAuthor}
-            />
-          ))}
-        </ul>
-      ) : (
+      {/* Always mounted, so the last rows can animate out before the empty message takes over. */}
+      <AnimatedList
+        className="pr-list"
+        items={visible}
+        getKey={(pr) => pr.url}
+        render={(pr) => (
+          <Row pr={pr} now={now} badge={badgeFor(pr)} hue={hues.get(pr.repoFull)} showAuthor={showAuthor} />
+        )}
+      />
+      {visible.length === 0 && (
         <p className="panel-empty">{filtering ? "Nothing matches these filters." : "Nothing here."}</p>
       )}
     </div>
@@ -192,58 +188,56 @@ function Row({
   showAuthor?: boolean
 }) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
+  // Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead.
   return (
-    <li>
-      {/* Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead. */}
-      <div className={`pr${pr.draft ? " is-draft" : ""}`}>
-        <PullRequestIcon className="pr-icon" draft={pr.draft} />
-        <span className="pr-main">
-          <span className="pr-head">
-            {pr.linear && (
-              <a
-                className="pr-linear mono"
-                href={pr.linear.url}
-                target="_blank"
-                rel="noreferrer"
-                title={`Open ${pr.linear.id} in Linear`}
-              >
-                {pr.linear.id}
-              </a>
-            )}
+    <div className={`pr${pr.draft ? " is-draft" : ""}`}>
+      <PullRequestIcon className="pr-icon" draft={pr.draft} />
+      <span className="pr-main">
+        <span className="pr-head">
+          {pr.linear && (
             <a
-              className="pr-title pr-link"
-              href={pr.url}
+              className="pr-linear mono"
+              href={pr.linear.url}
               target="_blank"
               rel="noreferrer"
-              title={pr.repoFull}
-              data-nav-row
+              title={`Open $pr.linear.idin Linear`}
             >
-              {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
+              {pr.linear.id}
             </a>
+          )}
+          <a
+            className="pr-title pr-link"
+            href={pr.url}
+            target="_blank"
+            rel="noreferrer"
+            title={pr.repoFull}
+            data-nav-row
+          >
+            {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
+          </a>
+        </span>
+        <span className="pr-meta">
+          <span className="repo-badge mono" style={hueStyle(hue)}>
+            {pr.repo}#{pr.number}
           </span>
-          <span className="pr-meta">
-            <span className="repo-badge mono" style={hueStyle(hue)}>
-              {pr.repo}#{pr.number}
+          {showAuthor && pr.author && <span className="mono">{pr.author}</span>}
+          <span className="mono">{age(Date.parse(pr.updatedAt), now)}</span>
+          {checks && (
+            <span className={`checks checks-${checks.tone}`}>
+              <i className="checks-dot" />
+              {checks.label}
             </span>
-            {showAuthor && pr.author && <span className="mono">{pr.author}</span>}
-            <span className="mono">{age(Date.parse(pr.updatedAt), now)}</span>
-            {checks && (
-              <span className={`checks checks-${checks.tone}`}>
-                <i className="checks-dot" />
-                {checks.label}
-              </span>
-            )}
-          </span>
+          )}
         </span>
-        <span className="pr-side">
-          <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
-          <span className="pr-diff mono">
-            <span className="add">{signed(pr.additions, "+")}</span>
-            <span className="del">{signed(pr.deletions, "−")}</span>
-            <span className="size">{prSize(pr.additions, pr.deletions)}</span>
-          </span>
+      </span>
+      <span className="pr-side">
+        <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
+        <span className="pr-diff mono">
+          <span className="add">{signed(pr.additions, "+")}</span>
+          <span className="del">{signed(pr.deletions, "−")}</span>
+          <span className="size">{prSize(pr.additions, pr.deletions)}</span>
         </span>
-      </div>
-    </li>
+      </span>
+    </div>
   )
 }
