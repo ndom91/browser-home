@@ -86,10 +86,15 @@ function Home() {
 }
 
 /** Starts from the server-rendered value and treats it as fresh until its TTL runs out. */
-function useSource<T>(key: string, fetch: () => Promise<Cached<T>>, initial: Cached<T> | undefined, ttl: number) {
+function useSource<T>(
+  key: string,
+  fetch: (opts: { data: boolean }) => Promise<Cached<T>>,
+  initial: Cached<T> | undefined,
+  ttl: number,
+) {
   return useQuery({
     queryKey: [key],
-    queryFn: () => fetch(),
+    queryFn: () => fetch({ data: true }),
     initialData: initial,
     initialDataUpdatedAt: initial?.fetchedAt,
     staleTime: ttl,

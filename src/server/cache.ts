@@ -13,6 +13,9 @@ export interface Cached<T> {
  *
  * A failed background refresh keeps the last good value.
  * `{ force: true }` skips the cache and waits for a fresh value.
+ * `{ wait: true }` waits for the refresh when stale. Client refetches use it:
+ * React Query marks whatever it receives as fresh, so a stale value would
+ * stay on screen for another full TTL.
  */
 export function cached<T>(fn: () => Promise<T>, ttlMs: number) {
   let value: Cached<T> | null = null
@@ -25,14 +28,17 @@ export function cached<T>(fn: () => Promise<T>, ttlMs: number) {
         inflight = null
       }))
 
-  return async ({ force = false } = {}): Promise<Cached<T>> => {
+  return async ({ force = false, wait = false } = {}): Promise<Cached<T>> => {
     if (!value || force) return refresh()
-    if (Date.now() - value.fetchedAt >= ttlMs) {
-      refresh().catch((err: unknown) => {
+    const current = value
+    if (Date.now() - current.fetchedAt >= ttlMs) {
+      const pending = refresh().catch((err: unknown) => {
         console.error("background refresh failed:", err instanceof Error ? err.message : err)
+        return current
       })
+      if (wait) return pending
     }
-    return value
+    return current
   }
 }
 
