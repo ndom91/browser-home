@@ -31,13 +31,13 @@ export function FilteredSection<T>({
   const { visible, filtering } = filter
 
   return (
-    <div className="pr-section" data-nav-section>
-      <h3 className="pr-section-head">
+    <div className="list-section" data-nav-section>
+      <h3 className="list-section-head">
         {title}
         <span className={`count${tone ? ` count-${tone}` : ""}`}>
           <PopIn value={filtering ? `${visible.length}/${total}` : String(total)} />
         </span>
-        <span className="pr-section-actions">
+        <span className="list-section-actions">
           <FilterMenu
             label={`Filter ${title}`}
             facets={filter.facets}
@@ -47,7 +47,7 @@ export function FilteredSection<T>({
         </span>
       </h3>
       {/* Always mounted, so the last rows can animate out before the empty message takes over. */}
-      <AnimatedList className="pr-list" items={visible} getKey={getKey} render={render} />
+      <AnimatedList className="list-section-rows" items={visible} getKey={getKey} render={render} />
       {visible.length === 0 && (
         <p className="panel-empty">{filtering ? "Nothing matches these filters." : "Nothing here."}</p>
       )}
