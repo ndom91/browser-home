@@ -1,6 +1,6 @@
 # browser-home
 
-![](./.github/assets/screenshot_001.png)
+![](./.github/assets/screenshot_002.png)
 
 A new-tab page that runs on your own Mac. One glance shows:
 
