@@ -1,13 +1,13 @@
 import { type CSSProperties, useMemo } from "react"
 import { age, synced } from "../lib/format"
 import type { LinearIssue, LinearIssues, PullRequests } from "../lib/types"
-import { type Facet, useFacetFilter } from "../lib/useFacetFilter"
+import type { Facet } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
 import { refreshLinear } from "../server/fns"
+import { FilteredSection } from "./FilteredSection"
 import { LinearIcon, PriorityIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
-import { FilterMenu } from "./ui/FilterMenu"
-import { AnimatedList, PopIn, SwapText } from "./ui/motion"
+import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
@@ -132,35 +132,17 @@ function Section({
         : f,
     )
   }, [issues])
-  const filter = useFacetFilter(`linear-filter:${id}`, issues, facets)
-  const sorted = useMemo(() => [...filter.visible].sort(byPriority), [filter.visible])
-
+  // Filtering keeps order, so sorting first sorts the visible rows too.
+  const sorted = useMemo(() => [...issues].sort(byPriority), [issues])
   return (
-    <div className="pr-section">
-      <h3 className="pr-section-head">
-        {title}
-        <span className="count">
-          <PopIn value={filter.filtering ? `${sorted.length}/${issues.length}` : String(issues.length)} />
-        </span>
-        <span className="pr-section-actions">
-          <FilterMenu
-            label={`Filter ${title}`}
-            facets={filter.facets}
-            value={filter.value}
-            onChange={filter.onChange}
-          />
-        </span>
-      </h3>
-      <AnimatedList
-        className="pr-list"
-        items={sorted}
-        getKey={(issue) => issue.id}
-        render={(issue) => <Row issue={issue} pr={prFor.get(issue.id)} now={now} />}
-      />
-      {sorted.length === 0 && (
-        <p className="panel-empty">{filter.filtering ? "Nothing matches these filters." : "Nothing here."}</p>
-      )}
-    </div>
+    <FilteredSection
+      storageKey={`linear-filter:${id}`}
+      title={title}
+      items={sorted}
+      facets={facets}
+      getKey={(issue) => issue.id}
+      render={(issue) => <Row issue={issue} pr={prFor.get(issue.id)} now={now} />}
+    />
   )
 }
 

@@ -2,13 +2,13 @@ import { type CSSProperties, useMemo } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
 import { repoHues } from "../lib/repoColor"
 import type { PullRequest, PullRequests } from "../lib/types"
-import { type Facet, useFacetFilter } from "../lib/useFacetFilter"
+import type { Facet } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
 import { refreshPRs } from "../server/fns"
+import { FilteredSection } from "./FilteredSection"
 import { GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
-import { FilterMenu } from "./ui/FilterMenu"
-import { AnimatedList, PopIn, SwapText } from "./ui/motion"
+import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
@@ -107,38 +107,19 @@ function Section({
   showAuthor?: boolean
 }) {
   const facets = useMemo(() => prFacets(badgeFor, hues), [badgeFor, hues])
-  const filter = useFacetFilter(`prs-filter:${id}`, prs, facets)
-  const { visible, filtering } = filter
-
   return (
-    <div className="pr-section">
-      <h3 className="pr-section-head">
-        {title}
-        <span className={`count${tone ? ` count-${tone}` : ""}`}>
-          <PopIn value={filtering ? `${visible.length}/${total}` : String(total)} />
-        </span>
-        <span className="pr-section-actions">
-          <FilterMenu
-            label={`Filter ${title}`}
-            facets={filter.facets}
-            value={filter.value}
-            onChange={filter.onChange}
-          />
-        </span>
-      </h3>
-      {/* Always mounted, so the last rows can animate out before the empty message takes over. */}
-      <AnimatedList
-        className="pr-list"
-        items={visible}
-        getKey={(pr) => pr.url}
-        render={(pr) => (
-          <Row pr={pr} now={now} badge={badgeFor(pr)} hue={hues.get(pr.repoFull)} showAuthor={showAuthor} />
-        )}
-      />
-      {visible.length === 0 && (
-        <p className="panel-empty">{filtering ? "Nothing matches these filters." : "Nothing here."}</p>
+    <FilteredSection
+      storageKey={`prs-filter:${id}`}
+      title={title}
+      items={prs}
+      total={total}
+      facets={facets}
+      tone={tone}
+      getKey={(pr) => pr.url}
+      render={(pr) => (
+        <Row pr={pr} now={now} badge={badgeFor(pr)} hue={hues.get(pr.repoFull)} showAuthor={showAuthor} />
       )}
-    </div>
+    />
   )
 }
 
