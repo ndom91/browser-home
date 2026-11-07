@@ -45,17 +45,21 @@ src/
   routes/index.tsx     the page: SSR loader + client queries
   routes/api/ask.ts    POST /api/ask, LLM chat via TanStack AI (SSE)
   server/              data sources, server-only
-    fns.ts             createServerFn wrappers, each behind cached()
+    fns.ts             createServerFn wrappers, each behind cached(); getFeatures
     cache.ts           stale-while-revalidate memo (cached, cachedBy)
     calendar.ts        runs bin/agenda, parses events, detects meeting links
     github.ts          GraphQL search for your PRs
+    linear.ts          GraphQL query for your assigned issues
     hn.ts              top stories + comment threads
+    capture.ts         appends quick-capture notes to this week's Obsidian note
     weather.ts         Open-Meteo daily forecast
     llm.ts             OpenAI-compatible adapter from env vars
     sanitize.ts        allowlist sanitizer for HN comment HTML
     demo.ts            fixtures for dev:demo
-  components/          one file per panel, plus Panel, icons, ChatWidget
-  lib/                 shared by client and server: types, format, ttl, hn
+  components/          one file per panel, plus Panel, FilteredSection, ChatWidget, QuickCapture, Shortcuts
+    ui/                Base UI wrappers (FilterMenu, Dialog, Tooltip), RefreshButton, motion.tsx
+  lib/                 shared by client and server: types, format, ttl, hn, and the client hooks
+                       (useFacetFilter, useKeyboardNav, useTitleCount, useNow)
 calendar/agenda.swift  EventKit CLI that prints a day's events as JSON
 serve.js               production Node server around dist/server/server.js
 launchd/ + scripts/    run at login
@@ -63,11 +67,11 @@ launchd/ + scripts/    run at login
 
 ### Data flow
 
-1. The route loader calls every server function. It waits at most `SSR_BUDGET_MS` (1.5 s) per source, then renders. A slow source loads in the browser instead.
+1. The route loader first asks `getFeatures()` which optional parts are set up (chat, Linear). A part without its env vars never renders and never fetches. Then it calls every server function it needs. It waits at most `SSR_BUDGET_MS` (1.5 s) per source, then renders. A slow source loads in the browser instead.
 2. On the server, each source sits behind `cached()`. Stale data is returned at once while one background refresh runs. Many tabs never multiply upstream calls.
 3. On the client, `useSource()` seeds React Query with the server-rendered value. `staleTime` and `refetchInterval` come from `src/lib/ttl.ts`, the same table the server cache uses. So a new tab makes no data requests until its data expires.
 
-**Adding a source:** write `fetchX()` in `src/server/`, wrap it in `cached()` in `fns.ts` with a `TTL` entry, add a fixture in `demo.ts`, then load it in the route loader and read it with `useSource()`.
+**Adding a source:** write `fetchX()` in `src/server/`, wrap it in `cached()` in `fns.ts` with a `TTL` entry, add a fixture in `demo.ts`, then load it in the route loader and read it with `useSource()`. If the source needs env vars, add a flag to `Features` and gate it like Linear.
 
 ## Gotchas already found
 
@@ -97,6 +101,24 @@ launchd/ + scripts/    run at login
 - Vite loads only `VITE_`-prefixed variables, so both `vite.config.ts` and `serve.js` call `process.loadEnvFile()`. Variables already set (for example from launchd) win.
 - `serve.js` aborts the request when the browser disconnects, so Stop also stops the upstream call.
 - Answers render with `@tanstack/markdown` and its streaming extension. Raw HTML stays off.
+
+### Linear
+
+- Personal API keys go in the `Authorization` header as-is, without `Bearer`.
+- The column needs both `LINEAR_API_KEY` and `LINEAR_WORKSPACE`. Demo mode shows it from fixtures either way.
+- PRs link to issues through the issue ID in the PR title or body (`github.ts`). The Linear column reuses those IDs for its PR chip, so it makes no extra GitHub call.
+
+### Quick capture
+
+- Weekly notes don't always start on Monday (there's a `2026-10-13.md`). Any `YYYY-MM-DD.md` dated inside the current week counts as this week's note.
+- With no note for the week, `capture.ts` copies `template.md` and fills in `week:`. It writes with `flag: "wx"`, so it never overwrites a note Obsidian created a moment earlier.
+
+### Keyboard and motion
+
+- `useKeyboardNav` finds its targets only through `data-nav-*`, `data-filter-trigger`, `data-refresh` and `data-refresh-default`. Never key a shortcut off a class name or an id.
+- The handler checks `e.target.closest()`. To test a key from a script, dispatch the `keydown` on an element, not on `window`.
+- Transitions follow transitions.dev snippets in the motion section of `styles.css`. JS timing reads the same CSS tokens through `cssMs()`, so change durations in CSS only.
+- `AnimatedList` keeps leaving rows mounted (and `inert`) until their collapse finishes. Code that walks rows must skip `[inert]`, as `useKeyboardNav` does.
 
 ### Server and tooling
 
