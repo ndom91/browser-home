@@ -76,7 +76,7 @@ export function FilterMenu({ label, facets, value, onChange }: Props) {
         </ul>
       )}
       <Menu.Root>
-        <Menu.Trigger className={`menu-trigger${active ? " is-active" : ""}`} aria-label={label}>
+        <Menu.Trigger className={`menu-trigger${active ? " is-active" : ""}`} aria-label={label} data-filter-trigger>
           <FilterIcon />
         </Menu.Trigger>
         <Menu.Portal>

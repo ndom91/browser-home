@@ -31,7 +31,7 @@ export function FilteredSection<T>({
   const { visible, filtering } = filter
 
   return (
-    <div className="pr-section">
+    <div className="pr-section" data-nav-section>
       <h3 className="pr-section-head">
         {title}
         <span className={`count${tone ? ` count-${tone}` : ""}`}>

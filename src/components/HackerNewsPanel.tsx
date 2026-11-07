@@ -62,6 +62,7 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
   return (
     <Panel
       id="hn"
+      refreshDefault
       icon={<HackerNewsIcon />}
       title="Hacker News"
       meta={

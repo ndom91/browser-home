@@ -7,12 +7,20 @@ interface PanelProps {
   /** Inline next to the title, e.g. status pills. */
   titleSuffix?: ReactNode
   meta?: ReactNode
+  /** The panel "r" refreshes when no panel has focus. */
+  refreshDefault?: boolean
   children: ReactNode
 }
 
-export function Panel({ id, icon, title, titleSuffix, meta, children }: PanelProps) {
+export function Panel({ id, icon, title, titleSuffix, meta, refreshDefault, children }: PanelProps) {
   return (
-    <section className="panel" id={id} aria-labelledby={`${id}-title`} data-nav-panel>
+    <section
+      className="panel"
+      id={id}
+      aria-labelledby={`${id}-title`}
+      data-nav-panel
+      data-refresh-default={refreshDefault || undefined}
+    >
       <header className="panel-head">
         <span className="panel-icon">{icon}</span>
         <h2 id={`${id}-title`}>{title}</h2>

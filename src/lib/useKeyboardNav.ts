@@ -2,7 +2,9 @@ import { useEffect } from "react"
 
 /**
  * Page-wide keyboard navigation over [data-nav-panel] columns and their [data-nav-row]
- * rows. Rows are the real focus targets (mostly links), so Enter opens them natively.
+ * rows. It finds everything through data-* attributes, never class names or ids, so
+ * restyling can't break a shortcut. Rows are the real focus targets (mostly links), so
+ * Enter opens them natively.
  *
  *   1–4        focus a panel          h l / ← →   previous / next panel
  *   j k / ↓ ↑  next / previous row    g / G       first / last row
@@ -93,10 +95,14 @@ export function useKeyboardNav(onHelp: () => void) {
           active?.closest("[data-nav-item]")?.querySelector<HTMLElement>("[data-nav-alt]")?.click()
           break
         case "f":
-          ;(active?.closest(".pr-section") ?? panel)?.querySelector<HTMLElement>(".menu-trigger")?.click()
+          ;(active?.closest("[data-nav-section]") ?? panel)
+            ?.querySelector<HTMLElement>("[data-filter-trigger]")
+            ?.click()
           break
         case "r":
-          ;(panel ?? document.querySelector("#hn"))?.querySelector<HTMLElement>("[data-refresh]")?.click()
+          ;(panel ?? document.querySelector("[data-refresh-default]"))
+            ?.querySelector<HTMLElement>("[data-refresh]")
+            ?.click()
           break
         case "?":
           onHelp()
