@@ -1,6 +1,6 @@
 import { Menu } from "@base-ui/react/menu"
 import type { ReactNode } from "react"
-import { CheckIcon, ChevronRightIcon, MoreIcon } from "../icons"
+import { CheckIcon, ChevronRightIcon, FilterIcon } from "../icons"
 
 export interface FilterOption {
   value: string
@@ -43,7 +43,7 @@ export function FilterMenu({ label, facets, value, onChange }: Props) {
     <Menu.Root>
       <Menu.Trigger className={`menu-trigger${active ? " is-active" : ""}`} aria-label={label}>
         {active > 0 && <span className="menu-trigger-count">{active}</span>}
-        <MoreIcon />
+        <FilterIcon />
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner className="menu-positioner" side="bottom" align="end" sideOffset={4}>

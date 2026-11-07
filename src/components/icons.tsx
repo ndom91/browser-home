@@ -191,14 +191,10 @@ export function ChevronDownIcon(props: IconProps) {
   )
 }
 
-export function MoreIcon(props: IconProps) {
+export function FilterIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>
-      <g fill="currentColor">
-        <circle cx="3.5" cy="8" r="1.25" />
-        <circle cx="8" cy="8" r="1.25" />
-        <circle cx="12.5" cy="8" r="1.25" />
-      </g>
+      <path d="M2.5 4.5h11M4.5 8h7M6.5 11.5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   )
 }
