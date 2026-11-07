@@ -383,8 +383,9 @@ a:focus-visible,
   flex: 1;
   min-height: 0;
   display: grid;
-  /* Calendar at about two-thirds of its old share; issues, PRs and HN split the rest evenly. */
-  grid-template-columns: minmax(240px, 0.72fr) repeat(3, minmax(300px, 1fr));
+  /* Calendar at about two-thirds of its old share; the data columns split the rest evenly.
+     --columns is 2 or 3, depending on whether Linear is set up. */
+  grid-template-columns: minmax(240px, 0.72fr) repeat(var(--columns, 3), minmax(300px, 1fr));
   gap: var(--gutter);
 }
 

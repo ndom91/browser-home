@@ -55,13 +55,6 @@ function Body({
   now: number
 }) {
   if (!linear) return <PanelFallback error={error} />
-  if (!linear.configured) {
-    return (
-      <p className="panel-empty">
-        Add <code>LINEAR_API_KEY</code> to <code>.env</code> to see your issues.
-      </p>
-    )
-  }
   return (
     <>
       {error != null && <PanelError error={error} />}

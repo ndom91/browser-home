@@ -1,12 +1,14 @@
 import { createServerFn } from "@tanstack/react-start"
 import { TTL } from "../lib/ttl"
+import type { Features } from "../lib/types"
 import { cached, cachedBy } from "./cache"
 import { fetchCalendar } from "./calendar"
 import { capture, MAX_CAPTURE } from "./capture"
 import { DEMO, demoCalendar, demoHN, demoLinear, demoPRs, demoThread, demoViewer, demoWeather } from "./demo"
 import { fetchPRs, fetchViewer } from "./github"
 import { fetchHN, fetchThread } from "./hn"
-import { fetchLinear } from "./linear"
+import { fetchLinear, linearConfigured } from "./linear"
+import { missingLlmVars } from "./llm"
 import { fetchWeather } from "./weather"
 
 const calendar = cached(DEMO ? async () => demoCalendar() : fetchCalendar, TTL.calendar)
@@ -21,6 +23,10 @@ const viewer = cached(DEMO ? async () => demoViewer : fetchViewer, TTL.viewer)
 // takes the cached value at once.
 const waitFlag = (wait: unknown) => wait === true
 
+// Demo mode shows Linear from fixtures. Chat always needs a real model.
+export const getFeatures = createServerFn({ method: "GET" }).handler(
+  (): Features => ({ chat: missingLlmVars().length === 0, linear: DEMO || linearConfigured }),
+)
 export const getCalendar = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => calendar({ wait: data }))

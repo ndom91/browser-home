@@ -63,7 +63,9 @@ Edit `launchd/com.ndom91.browser-home.plist`, then re-run `./scripts/install-lau
 | `PORT`   | `6464`                 | Port the page runs on |
 | `GH_BIN` | `/opt/homebrew/bin/gh` | Where `gh` lives      |
 
-The chat settings (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`) live in `.env`.
+The chat settings (`LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`) live in `.env`. Without all three, the chat box is hidden.
+
+The Linear column needs `LINEAR_API_KEY` and `LINEAR_WORKSPACE` in `.env`. Without both, the column is hidden.
 
 These also live in `.env`:
 

@@ -297,7 +297,6 @@ export function demoLinear(): LinearIssues {
     ...rest,
   })
   return {
-    configured: true,
     issues: [
       issue("SUP-198", "Add keyboard shortcuts to thread composer", {
         state: review,

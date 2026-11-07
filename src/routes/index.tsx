@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
-import { useCallback, useState } from "react"
+import { type CSSProperties, useCallback, useState } from "react"
 import { CalendarPanel } from "../components/CalendarPanel"
 import { ChatWidget } from "../components/ChatWidget"
 import { HackerNewsPanel } from "../components/HackerNewsPanel"
@@ -14,7 +14,7 @@ import { useKeyboardNav } from "../lib/useKeyboardNav"
 import { NowContext, useTicker } from "../lib/useNow"
 import { useTitleCount } from "../lib/useTitleCount"
 import type { Cached } from "../server/cache"
-import { getCalendar, getHN, getLinear, getPRs, getViewer, getWeather } from "../server/fns"
+import { getCalendar, getFeatures, getHN, getLinear, getPRs, getViewer, getWeather } from "../server/fns"
 
 // SSR waits this long per source. Anything slower (a cold GitHub call, a
 // pending calendar permission prompt) loads on the client instead.
@@ -33,15 +33,16 @@ function within<T>(name: string, promise: Promise<T>): Promise<T | undefined> {
 
 export const Route = createFileRoute("/")({
   loader: async () => {
+    const features = await getFeatures()
     const [calendar, prs, linear, hn, viewer, weather] = await Promise.all([
       within("calendar", getCalendar()),
       within("prs", getPRs()),
-      within("linear", getLinear()),
+      features.linear ? within("linear", getLinear()) : undefined,
       within("hn", getHN()),
       within("viewer", getViewer()),
       within("weather", getWeather()),
     ])
-    return { now: Date.now(), calendar, prs, linear, hn, viewer, weather }
+    return { now: Date.now(), features, calendar, prs, linear, hn, viewer, weather }
   },
   staleTime: Infinity,
   component: Home,
@@ -49,11 +50,12 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const initial = Route.useLoaderData()
+  const { features } = initial
   const now = useTicker(initial.now)
 
   const calendar = useSource("calendar", getCalendar, initial.calendar, TTL.calendar)
   const prs = useSource("prs", getPRs, initial.prs, TTL.prs)
-  const linear = useSource("linear", getLinear, initial.linear, TTL.linear)
+  const linear = useSource("linear", getLinear, initial.linear, TTL.linear, features.linear)
   const hn = useSource("hn", getHN, initial.hn, TTL.hn)
   const weather = useSource("weather", getWeather, initial.weather, TTL.weather)
   // The name barely changes, so it never refetches.
@@ -66,20 +68,22 @@ function Home() {
     <NowContext.Provider value={now}>
       <div className="page">
         <Header name={viewer.data?.data.name ?? null} weather={weather.data?.data} />
-        <main className="grid">
+        <main className="grid" style={{ "--columns": features.linear ? 3 : 2 } as CSSProperties}>
           <CalendarPanel events={calendar.data?.data} error={calendar.error} />
-          <LinearPanel
-            linear={linear.data?.data}
-            prs={prs.data?.data}
-            fetchedAt={linear.data?.fetchedAt}
-            error={linear.error}
-          />
+          {features.linear && (
+            <LinearPanel
+              linear={linear.data?.data}
+              prs={prs.data?.data}
+              fetchedAt={linear.data?.fetchedAt}
+              error={linear.error}
+            />
+          )}
           <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />
           <HackerNewsPanel stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
         </main>
-        <ChatWidget />
+        {features.chat && <ChatWidget />}
         <QuickCapture />
-        <Shortcuts open={help} onOpenChange={setHelp} />
+        <Shortcuts open={help} onOpenChange={setHelp} features={features} />
       </div>
     </NowContext.Provider>
   )
@@ -91,9 +95,11 @@ function useSource<T>(
   fetch: (opts: { data: boolean }) => Promise<Cached<T>>,
   initial: Cached<T> | undefined,
   ttl: number,
+  enabled = true,
 ) {
   return useQuery({
     queryKey: [key],
+    enabled,
     queryFn: () => fetch({ data: true }),
     initialData: initial,
     initialDataUpdatedAt: initial?.fetchedAt,

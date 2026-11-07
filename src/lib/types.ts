@@ -98,8 +98,12 @@ export interface LinearIssue {
   cycle: number | null
 }
 
-/** `configured: false` means LINEAR_API_KEY is unset, so the panel shows a setup hint. */
 export interface LinearIssues {
-  configured: boolean
   issues: Array<LinearIssue>
+}
+
+/** Optional parts of the page. Each is on only when its env vars are set. */
+export interface Features {
+  chat: boolean
+  linear: boolean
 }

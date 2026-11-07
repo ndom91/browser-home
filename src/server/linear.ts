@@ -3,6 +3,9 @@ import type { LinearIssue, LinearIssues } from "../lib/types"
 const API = "https://api.linear.app/graphql"
 const KEY = process.env.LINEAR_API_KEY?.trim()
 
+/** The page shows the Linear column only with both the key and the workspace slug. */
+export const linearConfigured = Boolean(KEY && process.env.LINEAR_WORKSPACE?.trim())
+
 // In progress, Todo and Backlog. Done and canceled stay out.
 const QUERY = `query {
   viewer {
@@ -32,7 +35,7 @@ interface RawIssue {
 }
 
 export async function fetchLinear(): Promise<LinearIssues> {
-  if (!KEY) return { configured: false, issues: [] }
+  if (!KEY) throw new Error("LINEAR_API_KEY is unset")
   const res = await fetch(API, {
     method: "POST",
     // Personal API keys go in as-is, without "Bearer".
@@ -48,7 +51,6 @@ export async function fetchLinear(): Promise<LinearIssues> {
   if (body.errors?.length || !body.data)
     throw new Error(body.errors?.map((e) => e.message).join("; ") ?? "Linear: no data")
   return {
-    configured: true,
     issues: body.data.viewer.assignedIssues.nodes.map((i) => ({
       id: i.identifier,
       title: i.title,
