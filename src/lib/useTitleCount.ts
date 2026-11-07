@@ -4,7 +4,7 @@ import type { PullRequests } from "./types"
 const BASE_TITLE = "Home"
 
 /** Things that need you: review requests, plus your own PRs with failing checks. */
-export function attentionCount(prs: PullRequests | undefined) {
+function attentionCount(prs: PullRequests | undefined) {
   if (!prs) return 0
   const failing = prs.mine.filter((pr) => pr.checks === "FAILURE" || pr.checks === "ERROR").length
   return prs.reviewTotal + failing

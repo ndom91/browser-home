@@ -2047,7 +2047,6 @@ a:focus-visible,
   /* Accordion */
   --acc-expand: 250ms;
   --acc-collapse: 250ms;
-  --acc-chevron: 250ms;
   --acc-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* Shimmer text: theme colors, so it follows light and dark mode. */
   --shimmer-dur: 2000ms;
@@ -2092,7 +2091,6 @@ a:focus-visible,
   /* Thinking states. Hold is longer than upstream: the one swap means "this is taking a while". */
   --think-hold: 4000ms;
   --think-swap: 150ms;
-  --think-gap: 50ms;
   --think-distance: 8px;
   --think-blur: 2px;
   --think-shimmer: 2000ms;
@@ -2206,8 +2204,7 @@ a:focus-visible,
 
 @media (prefers-reduced-motion: reduce) {
   .t-acc-panel,
-  .t-acc-panel-inner,
-  .t-acc-chevron {
+  .t-acc-panel-inner {
     transition: none !important;
   }
 }

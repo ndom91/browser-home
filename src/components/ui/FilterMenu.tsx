@@ -2,7 +2,7 @@ import { Menu } from "@base-ui/react/menu"
 import type { ReactNode } from "react"
 import { CheckIcon, ChevronRightIcon, CloseIcon, FilterIcon } from "../icons"
 
-export interface FilterOption {
+interface FilterOption {
   value: string
   label: string
   /** Optional swatch or icon shown before the label. */

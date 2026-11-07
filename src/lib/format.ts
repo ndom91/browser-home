@@ -65,7 +65,7 @@ export function people(names: Array<string>, max = 3) {
   return rest > 0 ? `${first.join(", ")} +${rest}` : first.join(", ")
 }
 
-export type Size = "XS" | "S" | "M" | "L" | "XL"
+type Size = "XS" | "S" | "M" | "L" | "XL"
 
 export function prSize(additions: number, deletions: number): Size {
   const lines = additions + deletions
