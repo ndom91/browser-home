@@ -274,3 +274,11 @@ export function LinearIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} width={10} height={10} {...props}>
+      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
