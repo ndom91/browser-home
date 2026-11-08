@@ -396,6 +396,8 @@ a:focus-visible,
   /* In the 2x2 grid the chat box can float over the calendar, so leave room under it. */
   .timeline-scroll {
     padding-bottom: 50px;
+    /* The page grows here instead of the panels, so the full-day timeline needs its own cap. */
+    max-height: 560px;
   }
   .grid {
     grid-template-columns: 1fr 1fr;
