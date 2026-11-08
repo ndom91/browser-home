@@ -19,6 +19,8 @@ export function Panel({ id, icon, title, titleSuffix, meta, refreshDefault, chil
       id={id}
       aria-labelledby={`${id}-title`}
       data-nav-panel
+      // Focusable from script only, for columns with no rows (see useKeyboardNav).
+      tabIndex={-1}
       data-refresh-default={refreshDefault || undefined}
     >
       <header className="panel-head">

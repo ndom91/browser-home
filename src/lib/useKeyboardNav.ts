@@ -42,10 +42,14 @@ export function useKeyboardNav(onHelp: () => void, onSettings: () => void) {
         row.focus({ preventScroll: true, focusVisible: true } as FocusOptions)
         row.scrollIntoView({ block: "nearest" })
       }
-      const enterPanel = (p: Element | undefined) => {
+      const enterPanel = (p: HTMLElement | undefined) => {
         if (!p) return
+        const rows = rowsOf(p)
+        // A column with no rows (an empty calendar) takes focus itself. Otherwise focus
+        // would stay on the page body, and h/l could never step past it.
+        if (rows.length === 0) return p.focus({ preventScroll: true, focusVisible: true } as FocusOptions)
         const remembered = lastRow.get(p)
-        focusRow(remembered?.isConnected && rowsOf(p).includes(remembered) ? remembered : rowsOf(p)[0])
+        focusRow(remembered?.isConnected && rows.includes(remembered) ? remembered : rows[0])
       }
       const step = (delta: number) => {
         if (!panel) return enterPanel(panels[0])

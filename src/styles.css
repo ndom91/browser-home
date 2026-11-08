@@ -532,7 +532,8 @@ a:focus-visible,
 /* One quiet line under the focus card. */
 .free-time {
   flex: none;
-  margin: 2px 16px 6px;
+  /* Centered between the card and the first hour label, which sits 16px into the timeline. */
+  margin: 10px 16px 0;
   font-size: 11.5px;
   color: var(--muted);
   white-space: nowrap;
@@ -1890,6 +1891,12 @@ a:focus-visible,
 }
 
 /* The column you're in, while moving by keyboard. */
+/* The panel itself takes focus when it has no rows; the border shows it. */
+.panel:focus {
+  outline: 0;
+}
+
+.panel:focus-visible,
 .panel:has(:focus-visible) {
   border-color: color-mix(in srgb, var(--b-blue-fg) 30%, var(--line));
 }
@@ -1954,8 +1961,8 @@ a:focus-visible,
 }
 
 .icon-btn.top-settings svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .settings {

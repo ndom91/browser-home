@@ -338,16 +338,17 @@ export function HourglassIcon(props: IconProps) {
   )
 }
 
+/** An 8-tooth gear, generated so every tooth is the same shape. */
 export function CogIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>
-      <circle cx="8" cy="8" r="2.1" stroke="currentColor" strokeWidth="1.4" />
       <path
-        d="M6.9 1.5h2.2l.35 1.75 1.2.7 1.7-.57 1.1 1.9-1.35 1.18v1.38l1.35 1.18-1.1 1.9-1.7-.57-1.2.7-.35 1.75H6.9l-.35-1.75-1.2-.7-1.7.57-1.1-1.9 1.35-1.18V7.46L2.55 6.28l1.1-1.9 1.7.57 1.2-.7L6.9 1.5Z"
+        d="M6.76 2.95L6.90 1.19L9.10 1.19L9.24 2.95A5.2 5.2 0 0 1 10.70 3.55L12.04 2.41L13.59 3.96L12.45 5.30A5.2 5.2 0 0 1 13.05 6.76L14.81 6.90L14.81 9.10L13.05 9.24A5.2 5.2 0 0 1 12.45 10.70L13.59 12.04L12.04 13.59L10.70 12.45A5.2 5.2 0 0 1 9.24 13.05L9.10 14.81L6.90 14.81L6.76 13.05A5.2 5.2 0 0 1 5.30 12.45L3.96 13.59L2.41 12.04L3.55 10.70A5.2 5.2 0 0 1 2.95 9.24L1.19 9.10L1.19 6.90L2.95 6.76A5.2 5.2 0 0 1 3.55 5.30L2.41 3.96L3.96 2.41L5.30 3.55A5.2 5.2 0 0 1 6.76 2.95Z"
         stroke="currentColor"
-        strokeWidth="1.4"
+        strokeWidth="1.3"
         strokeLinejoin="round"
       />
+      <circle cx="8" cy="8" r="2.1" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   )
 }
