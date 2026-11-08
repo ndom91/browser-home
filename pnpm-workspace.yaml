@@ -10,3 +10,16 @@ minimumReleaseAgeIgnoreMissingTime: false
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@6.3.1
+
+skills:
+  dirs:
+    - .agents/skills
+permissions:
+  "@tanstack/ai":
+    skills: true
+  "@tanstack/markdown":
+    skills: true
+  "@tanstack/react-router":
+    skills: true
+  "@tanstack/react-start":
+    skills: true
