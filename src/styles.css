@@ -64,6 +64,12 @@
   --b-red-fg: light-dark(#c62e2e, #ff9b98);
   --b-gray-bg: light-dark(#efeff2, #26262b);
   --b-gray-fg: light-dark(#6b6b75, #a0a0a9);
+  /* PR size badges: one amber hue that deepens with size. XS stays plain. */
+  --size-s-bg: light-dark(oklch(0.96 0.02 80), oklch(0.27 0.02 80));
+  --size-m-bg: light-dark(oklch(0.93 0.05 75), oklch(0.3 0.045 75));
+  --size-l-bg: light-dark(oklch(0.89 0.09 70), oklch(0.34 0.08 70));
+  --size-xl-bg: light-dark(oklch(0.85 0.13 60), oklch(0.38 0.11 60));
+  --size-heavy-fg: light-dark(oklch(0.42 0.1 55), oklch(0.88 0.08 70));
   --count-bg: light-dark(#fdf0c2, #3a2e07);
   --count-fg: light-dark(#876500, #f5cf55);
 
@@ -1050,6 +1056,26 @@ a:focus-visible,
   border-radius: 3px;
   border: 1px solid var(--line);
   color: var(--text-2);
+}
+
+/* Filled sizes drop the outline, so the badge keeps the same box. */
+.size[data-size="S"] {
+  background: var(--size-s-bg);
+  border-color: transparent;
+}
+.size[data-size="M"] {
+  background: var(--size-m-bg);
+  border-color: transparent;
+}
+.size[data-size="L"] {
+  background: var(--size-l-bg);
+  border-color: transparent;
+  color: var(--size-heavy-fg);
+}
+.size[data-size="XL"] {
+  background: var(--size-xl-bg);
+  border-color: transparent;
+  color: var(--size-heavy-fg);
 }
 
 /* ---------- hacker news ---------- */

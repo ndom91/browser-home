@@ -199,6 +199,7 @@ function Row({
   showAuthor?: boolean
 }) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
+  const size = prSize(pr.additions, pr.deletions)
   // Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead.
   return (
     <div className={`pr${pr.draft ? " is-draft" : ""}`}>
@@ -256,7 +257,9 @@ function Row({
         <span className="pr-diff mono">
           <span className="add">{signed(pr.additions, "+")}</span>
           <span className="del">{signed(pr.deletions, "−")}</span>
-          <span className="size">{prSize(pr.additions, pr.deletions)}</span>
+          <span className="size" data-size={size}>
+            {size}
+          </span>
         </span>
       </span>
     </div>
