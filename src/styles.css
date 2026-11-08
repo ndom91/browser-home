@@ -6,71 +6,71 @@
   --font-sans: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
 
-  --bg: #f3f3f5;
-  --panel: #ffffff;
-  --panel-sub: #f7f7f9;
-  --line: #e6e6ea;
-  --line-soft: #efeff2;
-  --scrollbar: #d2d2d8;
-  --text: #1c1c21;
-  --text-2: #3d3d45;
-  --muted: #84848e;
-  --hover: #f7f7f9;
-  --input: #ffffff;
-  --kbd-bg: #f1f1f4;
+  --bg: light-dark(#f3f3f5, #111113);
+  --panel: light-dark(#ffffff, #19191c);
+  --panel-sub: light-dark(#f7f7f9, #141416);
+  --line: light-dark(#e6e6ea, #2a2a2f);
+  --line-soft: light-dark(#efeff2, #232327);
+  --scrollbar: light-dark(#d2d2d8, #3a3a41);
+  --text: light-dark(#1c1c21, #ececef);
+  --text-2: light-dark(#3d3d45, #c9c9cf);
+  --muted: light-dark(#84848e, #85858f);
+  --hover: light-dark(#f7f7f9, #1f1f23);
+  --input: light-dark(#ffffff, #19191c);
+  --kbd-bg: light-dark(#f1f1f4, #26262b);
 
-  --ok: #12a150;
-  --fail: #e5484d;
-  --pending: #b88a00;
-  --add: #12a150;
-  --del: #e5484d;
+  --ok: light-dark(#12a150, #3dd68c);
+  --fail: light-dark(#e5484d, #ff6369);
+  --pending: light-dark(#b88a00, #f1a10d);
+  --add: light-dark(#12a150, #3dd68c);
+  --del: light-dark(#e5484d, #ff6369);
   --now: #e5484d;
 
-  --pr-open: #12a150;
+  --pr-open: light-dark(#12a150, #3dd68c);
 
-  --focus-bg: #effbf3;
-  --focus-border: #c6ecd3;
-  --focus-num: #0f3d24;
-  --focus-label: #12a150;
+  --focus-bg: light-dark(#effbf3, #0f1c14);
+  --focus-border: light-dark(#c6ecd3, #1d4a2d);
+  --focus-num: light-dark(#0f3d24, #b4f5cc);
+  --focus-label: light-dark(#12a150, #3dd68c);
   --focus-idle-bg: var(--panel-sub);
   --focus-idle-border: var(--line);
   --join-bg: #2ee68a;
   --join-bg-hover: #25d67d;
-  --join-fg: #06301a;
+  --join-fg: light-dark(#06301a, #052414);
 
-  --ev-past-bg: #f0f0f3;
-  --ev-past-border: #e3e3e8;
-  --ev-past-fg: #9a9aa3;
-  --ev-now-bg: #e8f8ee;
-  --ev-now-border: #8fdcab;
-  --ev-now-fg: #1d6b3d;
-  --ev-call-bg: #eceffd;
-  --ev-call-border: #cfd6f8;
-  --ev-call-fg: #29348f;
-  --ev-plain-bg: #ffffff;
-  --ev-plain-border: #dcdce2;
-  --ev-plain-fg: #4b4b55;
-  --pill-bg: #ffffff;
-  --pill-border: #d9d9e0;
-  --pill-fg: #1c1c21;
+  --ev-past-bg: light-dark(#f0f0f3, #202024);
+  --ev-past-border: light-dark(#e3e3e8, #2b2b30);
+  --ev-past-fg: light-dark(#9a9aa3, #77777f);
+  --ev-now-bg: light-dark(#e8f8ee, #13281a);
+  --ev-now-border: light-dark(#8fdcab, #2c7a48);
+  --ev-now-fg: light-dark(#1d6b3d, #b4f5cc);
+  --ev-call-bg: light-dark(#eceffd, #20245a);
+  --ev-call-border: light-dark(#cfd6f8, #3a42a0);
+  --ev-call-fg: light-dark(#29348f, #dfe3ff);
+  --ev-plain-bg: light-dark(#ffffff, #19191c);
+  --ev-plain-border: light-dark(#dcdce2, #34343a);
+  --ev-plain-fg: light-dark(#4b4b55, #c9c9cf);
+  --pill-bg: light-dark(#ffffff, #111113);
+  --pill-border: light-dark(#d9d9e0, #3a3a41);
+  --pill-fg: light-dark(#1c1c21, #ececef);
 
-  --b-blue-bg: #e9edfd;
-  --b-blue-fg: #2c3aa8;
-  --b-pink-bg: #fbe8f4;
-  --b-pink-fg: #a51d6c;
-  --b-green-bg: #e3f7ea;
-  --b-green-fg: #15753c;
-  --b-red-bg: #fde9e8;
-  --b-red-fg: #c62e2e;
-  --b-gray-bg: #efeff2;
-  --b-gray-fg: #6b6b75;
-  --count-bg: #fdf0c2;
-  --count-fg: #876500;
+  --b-blue-bg: light-dark(#e9edfd, #23285c);
+  --b-blue-fg: light-dark(#2c3aa8, #c3cbff);
+  --b-pink-bg: light-dark(#fbe8f4, #3e1631);
+  --b-pink-fg: light-dark(#a51d6c, #f6b6dc);
+  --b-green-bg: light-dark(#e3f7ea, #133220);
+  --b-green-fg: light-dark(#15753c, #8ee6b0);
+  --b-red-bg: light-dark(#fde9e8, #3f1717);
+  --b-red-fg: light-dark(#c62e2e, #ff9b98);
+  --b-gray-bg: light-dark(#efeff2, #26262b);
+  --b-gray-fg: light-dark(#6b6b75, #a0a0a9);
+  --count-bg: light-dark(#fdf0c2, #3a2e07);
+  --count-fg: light-dark(#876500, #f5cf55);
 
-  --hn-accent: #ff6600;
-  --weather-sun: #e0a100;
-  --weather-rain: #4a7fd6;
-  --chat-accent: #5b5fe6;
+  --hn-accent: light-dark(#ff6600, #ff7a26);
+  --weather-sun: light-dark(#e0a100, #f5b82e);
+  --weather-rain: light-dark(#4a7fd6, #6f9cf0);
+  --chat-accent: light-dark(#5b5fe6, #8f93ff);
   --shadow-popover: 0 8px 28px rgb(20 20 30 / 0.12), 0 1px 3px rgb(20 20 30 / 0.06);
 
   --radius: 10px;
@@ -79,68 +79,20 @@
   --header-space: 20px;
 }
 
+/* Settings > Theme sets data-theme. Without it, the OS decides. light-dark() follows color-scheme. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Shadows can't go through light-dark(): only colors can. */
+:root[data-theme="dark"] {
+  --shadow-popover: 0 10px 32px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
+}
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111113;
-    --panel: #19191c;
-    --panel-sub: #141416;
-    --line: #2a2a2f;
-    --line-soft: #232327;
-    --scrollbar: #3a3a41;
-    --text: #ececef;
-    --text-2: #c9c9cf;
-    --muted: #85858f;
-    --hover: #1f1f23;
-    --input: #19191c;
-    --kbd-bg: #26262b;
-
-    --ok: #3dd68c;
-    --fail: #ff6369;
-    --pending: #f1a10d;
-    --add: #3dd68c;
-    --del: #ff6369;
-
-    --pr-open: #3dd68c;
-
-    --focus-bg: #0f1c14;
-    --focus-border: #1d4a2d;
-    --focus-num: #b4f5cc;
-    --focus-label: #3dd68c;
-    --join-fg: #052414;
-
-    --ev-past-bg: #202024;
-    --ev-past-border: #2b2b30;
-    --ev-past-fg: #77777f;
-    --ev-now-bg: #13281a;
-    --ev-now-border: #2c7a48;
-    --ev-now-fg: #b4f5cc;
-    --ev-call-bg: #20245a;
-    --ev-call-border: #3a42a0;
-    --ev-call-fg: #dfe3ff;
-    --ev-plain-bg: #19191c;
-    --ev-plain-border: #34343a;
-    --ev-plain-fg: #c9c9cf;
-    --pill-bg: #111113;
-    --pill-border: #3a3a41;
-    --pill-fg: #ececef;
-
-    --b-blue-bg: #23285c;
-    --b-blue-fg: #c3cbff;
-    --b-pink-bg: #3e1631;
-    --b-pink-fg: #f6b6dc;
-    --b-green-bg: #133220;
-    --b-green-fg: #8ee6b0;
-    --b-red-bg: #3f1717;
-    --b-red-fg: #ff9b98;
-    --b-gray-bg: #26262b;
-    --b-gray-fg: #a0a0a9;
-    --count-bg: #3a2e07;
-    --count-fg: #f5cf55;
-
-    --hn-accent: #ff7a26;
-    --weather-sun: #f5b82e;
-    --weather-rain: #6f9cf0;
-    --chat-accent: #8f93ff;
+  :root:not([data-theme="light"]) {
     --shadow-popover: 0 10px 32px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
   }
 }
@@ -383,9 +335,8 @@ a:focus-visible,
   flex: 1;
   min-height: 0;
   display: grid;
-  /* Calendar at about two-thirds of its old share; the data columns split the rest evenly.
-     --columns is 2 or 3, depending on whether Linear is set up. */
-  grid-template-columns: minmax(240px, 0.72fr) repeat(var(--columns, 3), minmax(300px, 1fr));
+  /* Set inline from the visible columns and their order. Today is narrower than the rest. */
+  grid-template-columns: var(--grid-cols);
   gap: var(--gutter);
 }
 
@@ -1616,8 +1567,8 @@ a:focus-visible,
   padding: 0 5px;
   border-radius: 4px;
   line-height: 17px;
-  background: oklch(0.95 0.035 var(--repo-h));
-  color: oklch(0.46 0.12 var(--repo-h));
+  background: light-dark(oklch(0.95 0.035 var(--repo-h)), oklch(0.3 0.05 var(--repo-h)));
+  color: light-dark(oklch(0.46 0.12 var(--repo-h)), oklch(0.86 0.09 var(--repo-h)));
 }
 
 .repo-swatch {
@@ -1625,17 +1576,7 @@ a:focus-visible,
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: oklch(0.68 0.14 var(--repo-h));
-}
-
-@media (prefers-color-scheme: dark) {
-  .repo-badge {
-    background: oklch(0.3 0.05 var(--repo-h));
-    color: oklch(0.86 0.09 var(--repo-h));
-  }
-  .repo-swatch {
-    background: oklch(0.72 0.13 var(--repo-h));
-  }
+  background: light-dark(oklch(0.68 0.14 var(--repo-h)), oklch(0.72 0.13 var(--repo-h)));
 }
 
 .list-section-actions {
@@ -2002,6 +1943,173 @@ a:focus-visible,
   color: var(--text-2);
 }
 
+/* ---------- settings ---------- */
+
+/* Same height as the search box next to it. */
+.top-settings {
+  width: 34px;
+  height: 34px;
+  margin-left: -8px;
+  border-radius: 8px;
+}
+
+.icon-btn.top-settings svg {
+  width: 16px;
+  height: 16px;
+}
+
+.settings {
+  display: grid;
+  gap: 16px;
+  padding-bottom: 6px;
+}
+
+.settings h3 {
+  margin-bottom: 7px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* Segmented control: equal segments, and one highlight that slides to the checked one. */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--seg-count), 1fr);
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--kbd-bg);
+}
+
+.segmented-indicator {
+  position: absolute;
+  inset: 2px auto 2px 2px;
+  width: calc((100% - 4px) / var(--seg-count));
+  translate: calc(var(--seg-index) * 100%) 0;
+  border-radius: 5px;
+  background: var(--panel);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  transition: translate var(--seg-dur) var(--seg-ease);
+}
+
+.segmented-option {
+  position: relative;
+  padding: 4px 0;
+  border-radius: 5px;
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--seg-dur) var(--seg-ease);
+}
+
+.segmented-option[data-checked] {
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segmented-indicator {
+    transition: none;
+  }
+}
+
+.column-list {
+  display: grid;
+  gap: 2px;
+}
+
+.column-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--panel);
+  font-size: 12.5px;
+  cursor: grab;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
+}
+
+.column-row:hover {
+  background: var(--hover);
+}
+
+.column-row[data-dragging] {
+  opacity: 0.45;
+}
+
+.column-grip {
+  flex: none;
+  color: var(--muted);
+}
+
+.column-icon {
+  display: inline-grid;
+  color: var(--text-2);
+}
+
+.column-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.column-note {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-row[data-hidden] .column-icon,
+.column-row[data-hidden] .column-name {
+  color: var(--muted);
+}
+
+/* Some column icons carry their own color (HN orange), so fade them too. */
+.column-row[data-hidden] .column-icon {
+  opacity: 0.5;
+}
+
+.workday {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+.workday label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.workday input {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--input);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.workday-error {
+  font-size: 11.5px;
+  color: var(--fail);
+}
+
 /* ---------- dialog (Base UI) ---------- */
 
 .dialog-backdrop {
@@ -2137,6 +2245,9 @@ a:focus-visible,
   --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
   --digit-dir-x: 0;
   --digit-dir-y: 1;
+  /* Sliding segmented control */
+  --seg-dur: 200ms;
+  --seg-ease: cubic-bezier(0.25, 1, 0.5, 1);
   /* Row signal dismiss */
   --signal-exit: 150ms;
   /* Text states swap */

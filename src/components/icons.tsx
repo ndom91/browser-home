@@ -337,3 +337,55 @@ export function HourglassIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function CogIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <circle cx="8" cy="8" r="2.1" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M6.9 1.5h2.2l.35 1.75 1.2.7 1.7-.57 1.1 1.9-1.35 1.18v1.38l1.35 1.18-1.1 1.9-1.7-.57-1.2.7-.35 1.75H6.9l-.35-1.75-1.2-.7-1.7.57-1.1-1.9 1.35-1.18V7.46L2.55 6.28l1.1-1.9 1.7.57 1.2-.7L6.9 1.5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function EyeIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M1.25 8S3.75 3.25 8 3.25 14.75 8 14.75 8 12.25 12.75 8 12.75 1.25 8 1.25 8Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  )
+}
+
+export function EyeOffIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M6.4 3.45A6.2 6.2 0 0 1 8 3.25C12.25 3.25 14.75 8 14.75 8a11.6 11.6 0 0 1-1.62 2.18M4.35 4.4C2.3 5.7 1.25 8 1.25 8S3.75 12.75 8 12.75c1.37 0 2.55-.49 3.52-1.15M6.6 6.6a2 2 0 0 0 2.8 2.8M2 2l12 12"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function GripIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      {[4.5, 8, 11.5].flatMap((y) =>
+        [6, 10].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.1" fill="currentColor" />),
+      )}
+    </svg>
+  )
+}

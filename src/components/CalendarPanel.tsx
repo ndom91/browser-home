@@ -1,8 +1,9 @@
 import { type CSSProperties, type RefObject, useLayoutEffect, useRef, useState } from "react"
 import { clock, countdown, duration, hourLabel, people } from "../lib/format"
-import { DEFAULT_WORKDAY, freeTime } from "../lib/freeTime"
+import { freeTime } from "../lib/freeTime"
 import type { CalendarEvent } from "../lib/types"
 import { useNow } from "../lib/useNow"
+import { useSettings } from "../lib/useSettings"
 import { ArrowUpRightIcon, CalendarIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 
@@ -99,7 +100,7 @@ function FocusCard({ current, next, now }: { current: Timed | null; next: Timed 
 
 /** "40m free until Standup · 6h 25m today". Hidden outside the workday. */
 function FreeTime({ busy, now }: { busy: Array<Timed>; now: number }) {
-  const free = freeTime(busy, now, DEFAULT_WORKDAY)
+  const free = freeTime(busy, now, useSettings().settings.workday)
   if (!free) return null
   if (free.totalMs < 60_000) return <p className="free-time">Booked until {clock(free.endMs)}</p>
   return (

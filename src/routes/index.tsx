@@ -8,10 +8,13 @@ import { Header } from "../components/Header"
 import { LinearPanel } from "../components/LinearPanel"
 import { PullRequestsPanel } from "../components/PullRequestsPanel"
 import { QuickCapture } from "../components/QuickCapture"
+import { SettingsDialog } from "../components/SettingsDialog"
 import { Shortcuts } from "../components/Shortcuts"
+import type { ColumnId } from "../lib/settings"
 import { TTL } from "../lib/ttl"
 import { useKeyboardNav } from "../lib/useKeyboardNav"
 import { NowContext, useTicker } from "../lib/useNow"
+import { useSettings } from "../lib/useSettings"
 import { useTitleCount } from "../lib/useTitleCount"
 import type { Cached } from "../server/cache"
 import {
@@ -41,14 +44,16 @@ function within<T>(name: string, promise: Promise<T>): Promise<T | undefined> {
 }
 
 export const Route = createFileRoute("/")({
-  loader: async () => {
+  loader: async ({ context }) => {
     const features = await getFeatures()
+    const show = new Set(shownColumns(context.settings.columns, features.linear))
     const [calendar, prs, notifications, linear, hn, viewer, weather] = await Promise.all([
-      within("calendar", getCalendar()),
-      within("prs", getPRs()),
-      within("notifications", getNotifications()),
-      features.linear ? within("linear", getLinear()) : undefined,
-      within("hn", getHN()),
+      show.has("calendar") ? within("calendar", getCalendar()) : undefined,
+      // The Linear column reads PRs too, for its PR chips.
+      show.has("prs") || show.has("linear") ? within("prs", getPRs()) : undefined,
+      show.has("prs") ? within("notifications", getNotifications()) : undefined,
+      show.has("linear") ? within("linear", getLinear()) : undefined,
+      show.has("hn") ? within("hn", getHN()) : undefined,
       within("viewer", getViewer()),
       within("weather", getWeather()),
     ])
@@ -58,48 +63,86 @@ export const Route = createFileRoute("/")({
   component: Home,
 })
 
+/** Visible columns, in order: not hidden in settings, and set up if they need env vars. */
+function shownColumns(columns: Array<{ id: ColumnId; hidden: boolean }>, linear: boolean): Array<ColumnId> {
+  return columns.filter((c) => !c.hidden && (c.id !== "linear" || linear)).map((c) => c.id)
+}
+
+// Today stays narrower than the data columns, wherever it sits.
+const columnWidth = (id: ColumnId) => (id === "calendar" ? "minmax(240px, 0.72fr)" : "minmax(300px, 1fr)")
+
 function Home() {
   const initial = Route.useLoaderData()
   const { features } = initial
   const now = useTicker(initial.now)
+  const { settings } = useSettings()
+  const columns = shownColumns(settings.columns, features.linear)
+  const show = new Set(columns)
 
-  const calendar = useSource("calendar", getCalendar, initial.calendar, TTL.calendar)
-  const prs = useSource("prs", getPRs, initial.prs, TTL.prs)
-  const notifications = useSource("notifications", getNotifications, initial.notifications, TTL.notifications)
-  const linear = useSource("linear", getLinear, initial.linear, TTL.linear, features.linear)
-  const hn = useSource("hn", getHN, initial.hn, TTL.hn)
+  // A hidden column doesn't fetch. Showing it again starts its query.
+  const calendar = useSource("calendar", getCalendar, initial.calendar, TTL.calendar, show.has("calendar"))
+  const prs = useSource("prs", getPRs, initial.prs, TTL.prs, show.has("prs") || show.has("linear"))
+  const notifications = useSource(
+    "notifications",
+    getNotifications,
+    initial.notifications,
+    TTL.notifications,
+    show.has("prs"),
+  )
+  const linear = useSource("linear", getLinear, initial.linear, TTL.linear, show.has("linear"))
+  const hn = useSource("hn", getHN, initial.hn, TTL.hn, show.has("hn"))
   const weather = useSource("weather", getWeather, initial.weather, TTL.weather)
   // The name barely changes, so it never refetches.
   const viewer = useSource("viewer", getViewer, initial.viewer, Infinity)
   useTitleCount(prs.data?.data, notifications.data?.data)
   const [help, setHelp] = useState(false)
-  useKeyboardNav(useCallback(() => setHelp(true), []))
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const openSettings = useCallback(() => setSettingsOpen(true), [])
+  useKeyboardNav(
+    useCallback(() => setHelp(true), []),
+    openSettings,
+  )
 
-  return (
-    <NowContext.Provider value={now}>
-      <div className="page">
-        <Header name={viewer.data?.data.name ?? null} weather={weather.data?.data} />
-        <main className="grid" style={{ "--columns": features.linear ? 3 : 2 } as CSSProperties}>
-          <CalendarPanel events={calendar.data?.data} error={calendar.error} />
-          {features.linear && (
-            <LinearPanel
-              linear={linear.data?.data}
-              prs={prs.data?.data}
-              fetchedAt={linear.data?.fetchedAt}
-              error={linear.error}
-            />
-          )}
+  const panel = (id: ColumnId) => {
+    switch (id) {
+      case "calendar":
+        return <CalendarPanel key={id} events={calendar.data?.data} error={calendar.error} />
+      case "linear":
+        return (
+          <LinearPanel
+            key={id}
+            linear={linear.data?.data}
+            prs={prs.data?.data}
+            fetchedAt={linear.data?.fetchedAt}
+            error={linear.error}
+          />
+        )
+      case "prs":
+        return (
           <PullRequestsPanel
+            key={id}
             prs={prs.data?.data}
             notifications={notifications.data?.data}
             fetchedAt={prs.data?.fetchedAt}
             error={prs.error}
           />
-          <HackerNewsPanel stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
+        )
+      case "hn":
+        return <HackerNewsPanel key={id} stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
+    }
+  }
+
+  return (
+    <NowContext.Provider value={now}>
+      <div className="page">
+        <Header name={viewer.data?.data.name ?? null} weather={weather.data?.data} onSettings={openSettings} />
+        <main className="grid" style={{ "--grid-cols": columns.map(columnWidth).join(" ") } as CSSProperties}>
+          {columns.map(panel)}
         </main>
         {features.chat && <ChatWidget />}
         <QuickCapture />
-        <Shortcuts open={help} onOpenChange={setHelp} features={features} />
+        <Shortcuts open={help} onOpenChange={setHelp} chat={features.chat} columns={columns} />
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} features={features} />
       </div>
     </NowContext.Provider>
   )

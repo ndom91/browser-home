@@ -11,11 +11,12 @@ import { useEffect } from "react"
  *   o          a row's alternate link (HN: comments)
  *   f          the focused section's filter menu
  *   r          refresh this column (else HN)   ?   shortcuts sheet
+ *   ,          settings
  *   Esc        leave the panel
  *
  * "/" (chat), "c" (capture) and ⌘K (search) live with their components.
  */
-export function useKeyboardNav(onHelp: () => void) {
+export function useKeyboardNav(onHelp: () => void, onSettings: () => void) {
   useEffect(() => {
     // Last focused row per panel, so jumping back lands where you were.
     const lastRow = new WeakMap<Element, HTMLElement>()
@@ -107,6 +108,9 @@ export function useKeyboardNav(onHelp: () => void) {
         case "?":
           onHelp()
           break
+        case ",":
+          onSettings()
+          break
         case "Escape":
           if (!panel) return
           active?.blur()
@@ -127,5 +131,5 @@ export function useKeyboardNav(onHelp: () => void) {
       document.removeEventListener("focusin", onFocus)
       window.removeEventListener("keydown", onKey)
     }
-  }, [onHelp])
+  }, [onHelp, onSettings])
 }

@@ -3,7 +3,7 @@ import { clock, firstName, greeting, longDay } from "../lib/format"
 import type { Weather } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { weatherKind } from "../lib/weather"
-import { SearchIcon, WeatherIcon } from "./icons"
+import { CogIcon, SearchIcon, WeatherIcon } from "./icons"
 import { Tooltip } from "./ui/Tooltip"
 
 // "example.com", "localhost:3000/x", "192.168.1.1" — anything URL-shaped without spaces.
@@ -19,7 +19,15 @@ function destination(input: string) {
   return SEARCH_URL + encodeURIComponent(q)
 }
 
-export function Header({ name, weather }: { name: string | null; weather: Weather | undefined }) {
+export function Header({
+  name,
+  weather,
+  onSettings,
+}: {
+  name: string | null
+  weather: Weather | undefined
+  onSettings: () => void
+}) {
   const now = useNow()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -68,6 +76,17 @@ export function Header({ name, weather }: { name: string | null; weather: Weathe
           />
           <kbd>⌘K</kbd>
         </form>
+        <Tooltip
+          content={
+            <>
+              Settings <kbd>,</kbd>
+            </>
+          }
+        >
+          <button type="button" className="icon-btn top-settings" aria-label="Settings" onClick={onSettings}>
+            <CogIcon />
+          </button>
+        </Tooltip>
       </div>
     </header>
   )

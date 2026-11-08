@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
+import { getCookie } from "@tanstack/react-start/server"
+import { parseSettings, SETTINGS_COOKIE } from "../lib/settings"
 import { TTL } from "../lib/ttl"
 import type { Features } from "../lib/types"
 import { cached, cachedBy } from "./cache"
@@ -39,6 +41,8 @@ const waitFlag = (wait: unknown) => wait === true
 export const getFeatures = createServerFn({ method: "GET" }).handler(
   (): Features => ({ chat: missingLlmVars().length === 0, linear: DEMO || linearConfigured }),
 )
+/** The settings cookie, read on the server so the first paint already uses it. */
+export const getSettings = createServerFn({ method: "GET" }).handler(() => parseSettings(getCookie(SETTINGS_COOKIE)))
 export const getCalendar = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => calendar({ wait: data }))
