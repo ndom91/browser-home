@@ -14,7 +14,16 @@ import { useKeyboardNav } from "../lib/useKeyboardNav"
 import { NowContext, useTicker } from "../lib/useNow"
 import { useTitleCount } from "../lib/useTitleCount"
 import type { Cached } from "../server/cache"
-import { getCalendar, getFeatures, getHN, getLinear, getPRs, getViewer, getWeather } from "../server/fns"
+import {
+  getCalendar,
+  getFeatures,
+  getHN,
+  getLinear,
+  getNotifications,
+  getPRs,
+  getViewer,
+  getWeather,
+} from "../server/fns"
 
 // SSR waits this long per source. Anything slower (a cold GitHub call, a
 // pending calendar permission prompt) loads on the client instead.
@@ -34,15 +43,16 @@ function within<T>(name: string, promise: Promise<T>): Promise<T | undefined> {
 export const Route = createFileRoute("/")({
   loader: async () => {
     const features = await getFeatures()
-    const [calendar, prs, linear, hn, viewer, weather] = await Promise.all([
+    const [calendar, prs, notifications, linear, hn, viewer, weather] = await Promise.all([
       within("calendar", getCalendar()),
       within("prs", getPRs()),
+      within("notifications", getNotifications()),
       features.linear ? within("linear", getLinear()) : undefined,
       within("hn", getHN()),
       within("viewer", getViewer()),
       within("weather", getWeather()),
     ])
-    return { now: Date.now(), features, calendar, prs, linear, hn, viewer, weather }
+    return { now: Date.now(), features, calendar, prs, notifications, linear, hn, viewer, weather }
   },
   staleTime: Infinity,
   component: Home,
@@ -55,12 +65,13 @@ function Home() {
 
   const calendar = useSource("calendar", getCalendar, initial.calendar, TTL.calendar)
   const prs = useSource("prs", getPRs, initial.prs, TTL.prs)
+  const notifications = useSource("notifications", getNotifications, initial.notifications, TTL.notifications)
   const linear = useSource("linear", getLinear, initial.linear, TTL.linear, features.linear)
   const hn = useSource("hn", getHN, initial.hn, TTL.hn)
   const weather = useSource("weather", getWeather, initial.weather, TTL.weather)
   // The name barely changes, so it never refetches.
   const viewer = useSource("viewer", getViewer, initial.viewer, Infinity)
-  useTitleCount(prs.data?.data)
+  useTitleCount(prs.data?.data, notifications.data?.data)
   const [help, setHelp] = useState(false)
   useKeyboardNav(useCallback(() => setHelp(true), []))
 
@@ -78,7 +89,12 @@ function Home() {
               error={linear.error}
             />
           )}
-          <PullRequestsPanel prs={prs.data?.data} fetchedAt={prs.data?.fetchedAt} error={prs.error} />
+          <PullRequestsPanel
+            prs={prs.data?.data}
+            notifications={notifications.data?.data}
+            fetchedAt={prs.data?.fetchedAt}
+            error={prs.error}
+          />
           <HackerNewsPanel stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
         </main>
         {features.chat && <ChatWidget />}

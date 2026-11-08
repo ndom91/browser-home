@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
-import type { PullRequest, PullRequests, Viewer } from "../lib/types"
+import type { PrNotification, PullRequest, PullRequests, Viewer } from "../lib/types"
 
 const run = promisify(execFile)
 
@@ -17,21 +17,30 @@ async function getToken() {
   return token
 }
 
-async function graphql<T>(query: string, retry = true): Promise<T> {
-  const res = await fetch("https://api.github.com/graphql", {
-    method: "POST",
+/** A GitHub API call with the gh token. Retries once on 401, since gh may have rotated its token. */
+async function rest(path: string, init: RequestInit = {}, retry = true): Promise<Response> {
+  const res = await fetch(`https://api.github.com/${path}`, {
+    ...init,
     headers: {
       Authorization: `Bearer ${await getToken()}`,
-      "Content-Type": "application/json",
+      Accept: "application/vnd.github+json",
       "User-Agent": "browser-home",
+      ...init.headers,
     },
-    body: JSON.stringify({ query }),
   })
-  // gh may have refreshed or rotated its token since we cached it.
   if (res.status === 401 && retry) {
     token = null
-    return graphql(query, false)
+    return rest(path, init, false)
   }
+  return res
+}
+
+async function graphql<T>(query: string, retry = true): Promise<T> {
+  const res = await rest("graphql", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  })
   // Search with diff stats and CI rollups sometimes times out upstream.
   if ((res.status === 502 || res.status === 504) && retry) return graphql(query, false)
   if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
@@ -132,4 +141,51 @@ export async function fetchPRs(): Promise<PullRequests> {
 export async function fetchViewer(): Promise<Viewer> {
   const data = await graphql<{ viewer: { login: string; name: string | null } }>(`query { viewer { login name } }`)
   return { login: data.viewer.login, name: process.env.GREETING_NAME?.trim() || data.viewer.name }
+}
+
+// Activity worth a row icon. "review_requested" is left out: the "Review requested"
+// section already shows those, so the icon would only add noise.
+const SIGNAL_REASONS = new Set(["comment", "mention", "team_mention", "author", "state_change"])
+
+interface RawThread {
+  id: string
+  reason: string
+  updated_at: string
+  subject: { type: string; url: string | null }
+}
+
+// The last list, replayed on 304. GitHub doesn't count 304s against the rate limit.
+let lastModified: string | null = null
+let lastNotifications: Array<PrNotification> = []
+
+/** Unread notifications on pull requests, keyed to the PR's web URL so rows can find them. */
+export async function fetchNotifications(): Promise<Array<PrNotification>> {
+  const res = await rest("notifications?per_page=50", {
+    headers: lastModified ? { "If-Modified-Since": lastModified } : {},
+  })
+  if (res.status === 304) return lastNotifications
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
+  const threads = (await res.json()) as Array<RawThread>
+  lastModified = res.headers.get("Last-Modified")
+  lastNotifications = threads.flatMap((t) => {
+    // api.github.com/repos/o/r/pulls/12 -> github.com/o/r/pull/12, the URL PR rows carry.
+    const path = t.subject.url?.match(/\/repos\/(.+)\/pulls\/(\d+)$/)
+    if (t.subject.type !== "PullRequest" || !path || !SIGNAL_REASONS.has(t.reason)) return []
+    return [
+      {
+        threadId: t.id,
+        prUrl: `https://github.com/${path[1]}/pull/${path[2]}`,
+        reason: t.reason,
+        updatedAt: t.updated_at,
+      },
+    ]
+  })
+  return lastNotifications
+}
+
+/** Marks a notification read on GitHub, and drops it from the list a 304 would replay. */
+export async function markNotificationRead(threadId: string) {
+  const res = await rest(`notifications/threads/${encodeURIComponent(threadId)}`, { method: "PATCH" })
+  if (!res.ok && res.status !== 304) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
+  lastNotifications = lastNotifications.filter((n) => n.threadId !== threadId)
 }

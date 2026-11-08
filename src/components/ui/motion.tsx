@@ -1,7 +1,7 @@
 import { Children, type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 /** Reads a duration token like "150ms" from :root, so JS timing follows the CSS. */
-function cssMs(name: string, fallback: number) {
+export function cssMs(name: string, fallback: number) {
   const v = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name))
   return Number.isFinite(v) ? v : fallback
 }

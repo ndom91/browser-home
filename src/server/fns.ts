@@ -4,8 +4,19 @@ import type { Features } from "../lib/types"
 import { cached, cachedBy } from "./cache"
 import { fetchCalendar } from "./calendar"
 import { capture, MAX_CAPTURE } from "./capture"
-import { DEMO, demoCalendar, demoHN, demoLinear, demoPRs, demoThread, demoViewer, demoWeather } from "./demo"
-import { fetchPRs, fetchViewer } from "./github"
+import {
+  DEMO,
+  demoCalendar,
+  demoDismissNotification,
+  demoHN,
+  demoLinear,
+  demoNotifications,
+  demoPRs,
+  demoThread,
+  demoViewer,
+  demoWeather,
+} from "./demo"
+import { fetchNotifications, fetchPRs, fetchViewer, markNotificationRead } from "./github"
 import { fetchHN, fetchThread } from "./hn"
 import { fetchLinear, linearConfigured } from "./linear"
 import { missingLlmVars } from "./llm"
@@ -13,6 +24,7 @@ import { fetchWeather } from "./weather"
 
 const calendar = cached(DEMO ? async () => demoCalendar() : fetchCalendar, TTL.calendar)
 const prs = cached(DEMO ? async () => demoPRs() : fetchPRs, TTL.prs)
+const notifications = cached(DEMO ? async () => demoNotifications() : fetchNotifications, TTL.notifications)
 const linear = cached(DEMO ? async () => demoLinear() : fetchLinear, TTL.linear)
 const hn = cached(DEMO ? async () => demoHN() : fetchHN, TTL.hn)
 const thread = cachedBy(DEMO ? async (id: number) => demoThread(id) : fetchThread, TTL.hnThread)
@@ -33,6 +45,20 @@ export const getCalendar = createServerFn({ method: "GET" })
 export const getPRs = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => prs({ wait: data }))
+export const getNotifications = createServerFn({ method: "GET" })
+  .validator(waitFlag)
+  .handler(({ data }) => notifications({ wait: data }))
+/** Marks a PR notification read on GitHub. Returns the list without it. */
+export const dismissNotification = createServerFn({ method: "POST" })
+  .validator((id: unknown) => {
+    if (typeof id !== "string" || !/^\d+$/.test(id)) throw new Error("Invalid notification id")
+    return id
+  })
+  .handler(async ({ data }) => {
+    if (DEMO) demoDismissNotification(data)
+    else await markNotificationRead(data)
+    return notifications({ force: true })
+  })
 export const getLinear = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => linear({ wait: data }))

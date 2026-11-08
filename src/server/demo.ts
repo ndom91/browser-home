@@ -3,6 +3,7 @@ import type {
   CalendarEvent,
   HNThread,
   LinearIssues,
+  PrNotification,
   PullRequest,
   PullRequests,
   Story,
@@ -220,6 +221,28 @@ const STORIES: Array<[string, string, number, number, number]> = [
   ["A field guide to flaky tests", "testing.example", 57, 28, 18],
   ["Show HN: A terminal UI for GitHub notifications", "github.com", 52, 21, 7],
 ]
+
+// Mutable, so dismissing in demo mode sticks until the server restarts.
+let notifications: Array<PrNotification> = [
+  {
+    threadId: "1",
+    prUrl: "https://github.com/acme/support-app/pull/4797",
+    reason: "comment",
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    threadId: "2",
+    prUrl: "https://github.com/acme/support-app/pull/4830",
+    reason: "mention",
+    updatedAt: new Date().toISOString(),
+  },
+]
+
+export const demoNotifications = () => notifications
+
+export function demoDismissNotification(threadId: string) {
+  notifications = notifications.filter((n) => n.threadId !== threadId)
+}
 
 export function demoHN(): Array<Story> {
   return STORIES.map(([title, domain, points, comments, hoursAgo], i) => ({

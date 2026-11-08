@@ -282,3 +282,44 @@ export function CloseIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function CommentIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M3 2.75h10c.97 0 1.75.78 1.75 1.75v5.5c0 .97-.78 1.75-1.75 1.75H7.5l-3.25 2.5v-2.5H3c-.97 0-1.75-.78-1.75-1.75V4.5c0-.97.78-1.75 1.75-1.75Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export function AtIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <circle cx="8" cy="8" r="2.6" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M10.6 8v1.1a1.95 1.95 0 0 0 3.9 0V8A6.5 6.5 0 1 0 12 13.1"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function ActivityIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M1.25 8h3l2-4.75 3.5 9.5 2-4.75h3"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}

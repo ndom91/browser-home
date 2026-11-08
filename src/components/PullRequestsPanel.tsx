@@ -1,24 +1,29 @@
-import { type CSSProperties, useMemo } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { type CSSProperties, type ReactNode, useMemo } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
 import { repoHues } from "../lib/repoColor"
-import type { PullRequest, PullRequests } from "../lib/types"
+import type { PrNotification, PullRequest, PullRequests } from "../lib/types"
 import type { Facet } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
-import { refreshPRs } from "../server/fns"
+import type { Cached } from "../server/cache"
+import { dismissNotification, refreshPRs } from "../server/fns"
 import { FilteredSection } from "./FilteredSection"
-import { GitHubIcon, PullRequestIcon } from "./icons"
+import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
+import { RowSignals, type Signal } from "./RowSignals"
 import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 
 interface Props {
   prs: PullRequests | undefined
+  notifications: Array<PrNotification> | undefined
   fetchedAt: number | undefined
   error: unknown
 }
 
-export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
+export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Props) {
   const now = useNow()
+  const signalsFor = useNotificationSignals(notifications)
   // One map for both sections, so a repo has the same color in each.
   const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
@@ -46,6 +51,7 @@ export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
             badgeFor={reviewBadge}
             hues={hues}
             now={now}
+            signalsFor={signalsFor}
             tone="attention"
             showAuthor
           />
@@ -57,6 +63,7 @@ export function PullRequestsPanel({ prs, fetchedAt, error }: Props) {
             badgeFor={ownBadge}
             hues={hues}
             now={now}
+            signalsFor={signalsFor}
           />
         </>
       )}
@@ -93,6 +100,7 @@ function Section({
   badgeFor,
   hues,
   now,
+  signalsFor,
   tone,
   showAuthor,
 }: {
@@ -103,6 +111,7 @@ function Section({
   badgeFor: (pr: PullRequest) => Badge
   hues: Map<string, number>
   now: number
+  signalsFor: (pr: PullRequest) => Array<Signal>
   tone?: "attention"
   showAuthor?: boolean
 }) {
@@ -117,7 +126,14 @@ function Section({
       tone={tone}
       getKey={(pr) => pr.url}
       render={(pr) => (
-        <Row pr={pr} now={now} badge={badgeFor(pr)} hue={hues.get(pr.repoFull)} showAuthor={showAuthor} />
+        <Row
+          pr={pr}
+          now={now}
+          badge={badgeFor(pr)}
+          hue={hues.get(pr.repoFull)}
+          signals={signalsFor(pr)}
+          showAuthor={showAuthor}
+        />
       )}
     />
   )
@@ -160,12 +176,14 @@ function Row({
   now,
   badge,
   hue,
+  signals,
   showAuthor,
 }: {
   pr: PullRequest
   now: number
   badge: Badge
   hue: number | undefined
+  signals: Array<Signal>
   showAuthor?: boolean
 }) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
@@ -181,7 +199,7 @@ function Row({
               href={pr.linear.url}
               target="_blank"
               rel="noreferrer"
-              title={`Open $pr.linear.idin Linear`}
+              title={`Open ${pr.linear.id} in Linear`}
             >
               {pr.linear.id}
             </a>
@@ -212,7 +230,10 @@ function Row({
         </span>
       </span>
       <span className="pr-side">
-        <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
+        <span className="pr-side-top">
+          <RowSignals signals={signals} />
+          <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
+        </span>
         <span className="pr-diff mono">
           <span className="add">{signed(pr.additions, "+")}</span>
           <span className="del">{signed(pr.deletions, "−")}</span>
@@ -221,4 +242,38 @@ function Row({
       </span>
     </div>
   )
+}
+
+const NOTIFICATION: Record<string, { icon: ReactNode; label: string }> = {
+  comment: { icon: <CommentIcon />, label: "New comment" },
+  author: { icon: <CommentIcon />, label: "New activity" },
+  mention: { icon: <AtIcon />, label: "You were mentioned" },
+  team_mention: { icon: <AtIcon />, label: "Your team was mentioned" },
+  state_change: { icon: <ActivityIcon />, label: "Closed, merged or reopened" },
+}
+
+/**
+ * Signals per PR from unread GitHub notifications. Dismissing hides the icon at once,
+ * then marks the notification read on GitHub. If that fails, the next fetch brings it back.
+ */
+function useNotificationSignals(notifications: Array<PrNotification> | undefined) {
+  const queryClient = useQueryClient()
+  return useMemo(() => {
+    const byPr = new Map((notifications ?? []).map((n) => [n.prUrl, n]))
+    const dismiss = (n: PrNotification) => {
+      queryClient.setQueryData<Cached<Array<PrNotification>>>(
+        ["notifications"],
+        (old) => old && { ...old, data: old.data.filter((x) => x.threadId !== n.threadId) },
+      )
+      dismissNotification({ data: n.threadId })
+        .then((fresh) => queryClient.setQueryData(["notifications"], fresh))
+        .catch(() => queryClient.invalidateQueries({ queryKey: ["notifications"] }))
+    }
+    return (pr: PullRequest): Array<Signal> => {
+      const n = byPr.get(pr.url)
+      const kind = n && NOTIFICATION[n.reason]
+      if (!n || !kind) return []
+      return [{ key: n.threadId, ...kind, tone: "info", onDismiss: () => dismiss(n) }]
+    }
+  }, [notifications, queryClient])
 }

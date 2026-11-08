@@ -30,6 +30,14 @@ export interface PullRequest {
   linear: { id: string; url: string } | null
 }
 
+/** An unread GitHub notification on one of the listed PRs. */
+export interface PrNotification {
+  threadId: string
+  prUrl: string
+  reason: string
+  updatedAt: string
+}
+
 export interface PullRequests {
   mine: Array<PullRequest>
   mineTotal: number
