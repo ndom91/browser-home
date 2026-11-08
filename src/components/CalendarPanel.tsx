@@ -1,12 +1,13 @@
-import { type CSSProperties, useEffect, useRef } from "react"
+import { type CSSProperties, type RefObject, useLayoutEffect, useRef, useState } from "react"
 import { clock, countdown, hourLabel, people } from "../lib/format"
 import type { CalendarEvent } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { ArrowUpRightIcon, CalendarIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 
-const HOUR_PX = 42
 const MIN_EVENT_PX = 18
+// px per hour before the first measurement, so server and client render the same lanes.
+const GUESS_HOUR_PX = 24
 
 interface Timed extends CalendarEvent {
   startMs: number
@@ -117,8 +118,8 @@ function AllDay({ events }: { events: Array<CalendarEvent> }) {
  * Overlap uses the drawn end: a 15 min event still takes MIN_EVENT_PX, and
  * would otherwise run under the event right after it.
  */
-function placeInLanes(events: Array<Timed>): Array<Placed> {
-  const minMs = (MIN_EVENT_PX / HOUR_PX) * 3_600_000
+function placeInLanes(events: Array<Timed>, hourPx: number): Array<Placed> {
+  const minMs = (MIN_EVENT_PX / hourPx) * 3_600_000
   const drawnEnd = (e: Timed) => Math.max(e.endMs, e.startMs + minMs)
   const placed: Array<Placed> = []
   let cluster: Array<Placed> = []
@@ -158,42 +159,37 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
   dayStart.setHours(0, 0, 0, 0)
   const hourOf = (ms: number) => (ms - dayStart.getTime()) / 3_600_000
 
-  const scrollRef = useRef<HTMLDivElement>(null)
+  // Positions are percentages of the day, so all 24 hours always fill the column.
+  const pct = (hour: number) => `${(hour / 24) * 100}%`
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const hourPx = useHourPx(timelineRef)
   const hours = Array.from({ length: 24 }, (_, i) => i)
-  const trackHeight = 24 * HOUR_PX
-  const y = (ms: number) => hourOf(ms) * HOUR_PX
-  const nowY = y(now)
-
-  // Bring "now" into view once, about a third of the way down. Only on mount,
-  // so a ticking clock never yanks the scroll position.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: see above.
-  useEffect(() => {
-    const el = scrollRef.current
-    if (el) el.scrollTop = Math.max(0, nowY - el.clientHeight / 3)
-  }, [])
 
   return (
-    <div className="timeline-scroll" ref={scrollRef}>
-      <div className="timeline" style={{ height: trackHeight + 12 }}>
+    <div className="timeline-scroll">
+      <div className="timeline" ref={timelineRef}>
         {hours.map((h) => (
-          <div key={h} className="tl-hour" style={{ top: h * HOUR_PX }}>
+          <div key={h} className="tl-hour" style={{ top: pct(h) }}>
             <span>{hourLabel(h)}</span>
           </div>
         ))}
 
         <div className="tl-track">
-          {placeInLanes(events.filter((e) => hourOf(e.startMs) < 24)).map((e) => {
+          {placeInLanes(
+            events.filter((e) => hourOf(e.startMs) < 24),
+            hourPx,
+          ).map((e) => {
             // Clamp events that cross midnight to the visible day.
-            const top = Math.max(0, y(e.startMs))
-            const bottom = Math.min(y(e.endMs), trackHeight)
-            const height = Math.max(MIN_EVENT_PX, bottom - top - 3)
+            const start = Math.max(0, hourOf(e.startMs))
+            const span = Math.min(24, hourOf(e.endMs)) - start
+            const isShort = span * hourPx - 3 < 30
             const isNow = current?.id === e.id
             const isPast = !isNow && e.endMs <= now
             const declined = e.status === "declined"
             const kind = eventKind(e, isNow, isPast)
             const style = {
-              top,
-              height,
+              top: pct(start),
+              height: `max(${MIN_EVENT_PX}px, calc(${pct(span)} - 3px))`,
               left: `calc(${(e.lane / e.lanes) * 100}% + ${e.lane ? 2 : 0}px)`,
               width: `calc(${100 / e.lanes}% - ${e.lane ? 2 : 0}px)`,
             }
@@ -203,7 +199,7 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
                 // Focusable for keyboard nav; Enter forwards to the Join link.
                 tabIndex={-1}
                 data-nav-row
-                className={`tl-event ${kind}${declined ? " is-declined" : ""}${height < 30 ? " is-short" : ""}`}
+                className={`tl-event ${kind}${declined ? " is-declined" : ""}${isShort ? " is-short" : ""}`}
                 style={style}
                 title={`${e.title}\n${clock(e.startMs)}–${clock(e.endMs)}`}
               >
@@ -220,9 +216,24 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
             )
           })}
 
-          <div className="tl-now" role="img" style={{ top: nowY }} aria-label={`Now, ${clock(now)}`} />
+          <div className="tl-now" role="img" style={{ top: pct(hourOf(now)) }} aria-label={`Now, ${clock(now)}`} />
         </div>
       </div>
     </div>
   )
+}
+
+/** Measured height of one hour row, kept current on resize. */
+function useHourPx(ref: RefObject<HTMLDivElement | null>) {
+  const [hourPx, setHourPx] = useState(GUESS_HOUR_PX)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setHourPx(el.clientHeight / 24 || GUESS_HOUR_PX)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [ref])
+  return hourPx
 }

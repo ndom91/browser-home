@@ -396,8 +396,12 @@ a:focus-visible,
   /* In the 2x2 grid the chat box can float over the calendar, so leave room under it. */
   .timeline-scroll {
     padding-bottom: 50px;
-    /* The page grows here instead of the panels, so the full-day timeline needs its own cap. */
-    max-height: 560px;
+  }
+  /* The page grows here instead of the panels, so the timeline needs its own height.
+     The id outweighs the base rule further down. */
+  #calendar .timeline-scroll {
+    flex: 1 0 auto;
+    min-height: 560px;
   }
   .grid {
     grid-template-columns: 1fr 1fr;
@@ -514,6 +518,8 @@ a:focus-visible,
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .focus {
@@ -637,8 +643,12 @@ a:focus-visible,
 
 /* ---------- calendar: timeline ---------- */
 
+/* Fills the column, so the whole day shows without scrolling. Below 14px an hour,
+   labels would collide, so the scroller takes over instead. */
 .timeline {
   position: relative;
+  flex: 1;
+  min-height: calc(24 * 14px);
   margin: 22px 14px 14px 0;
 }
 
