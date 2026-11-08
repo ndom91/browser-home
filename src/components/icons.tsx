@@ -390,3 +390,18 @@ export function GripIcon(props: IconProps) {
     </svg>
   )
 }
+
+/** A sparkle, for "hand this to the AI". */
+export function SparkleIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M7 1.75c.45 2.9 1.6 4.05 4.5 4.5-2.9.45-4.05 1.6-4.5 4.5-.45-2.9-1.6-4.05-4.5-4.5 2.9-.45 4.05-1.6 4.5-4.5z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path d="M12.25 10v4M10.25 12h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  )
+}

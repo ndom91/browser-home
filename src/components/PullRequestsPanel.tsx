@@ -2,17 +2,19 @@ import { useQueryClient } from "@tanstack/react-query"
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
 import { repoHues } from "../lib/repoColor"
+import { t3ReviewLink, useReviewPrompt } from "../lib/reviewPrompt"
 import type { PrNotification, PullRequest, PullRequests } from "../lib/types"
 import type { Facet } from "../lib/useFacetFilter"
 import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { dismissNotification, refreshPRs } from "../server/fns"
 import { FilteredSection } from "./FilteredSection"
-import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, HourglassIcon, PullRequestIcon } from "./icons"
+import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, HourglassIcon, PullRequestIcon, SparkleIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { RowSignals, type Signal } from "./RowSignals"
 import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
+import { Tooltip } from "./ui/Tooltip"
 
 interface Props {
   prs: PullRequests | undefined
@@ -26,6 +28,8 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
   const notificationSignals = useNotificationSignals(notifications)
   const staleSignals = useStaleSignals(now)
   const reviewSignals = (pr: PullRequest) => [...notificationSignals(pr), ...staleSignals(pr)]
+  const { prompt } = useReviewPrompt()
+  const reviewLink = (pr: PullRequest) => t3ReviewLink(pr.url, prompt)
   // One map for both sections, so a repo has the same color in each.
   const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
@@ -54,6 +58,7 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
             hues={hues}
             now={now}
             signalsFor={reviewSignals}
+            reviewLink={reviewLink}
             tone="attention"
             showAuthor
           />
@@ -103,6 +108,7 @@ function Section({
   hues,
   now,
   signalsFor,
+  reviewLink,
   tone,
   showAuthor,
 }: {
@@ -114,6 +120,7 @@ function Section({
   hues: Map<string, number>
   now: number
   signalsFor: (pr: PullRequest) => Array<Signal>
+  reviewLink?: (pr: PullRequest) => string
   tone?: "attention"
   showAuthor?: boolean
 }) {
@@ -134,6 +141,7 @@ function Section({
           badge={badgeFor(pr)}
           hue={hues.get(pr.repoFull)}
           signals={signalsFor(pr)}
+          reviewHref={reviewLink?.(pr)}
           showAuthor={showAuthor}
         />
       )}
@@ -179,6 +187,7 @@ function Row({
   badge,
   hue,
   signals,
+  reviewHref,
   showAuthor,
 }: {
   pr: PullRequest
@@ -186,6 +195,7 @@ function Row({
   badge: Badge
   hue: number | undefined
   signals: Array<Signal>
+  reviewHref?: string
   showAuthor?: boolean
 }) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
@@ -234,6 +244,13 @@ function Row({
       <span className="pr-side">
         <span className="pr-side-top">
           <RowSignals signals={signals} />
+          {reviewHref && (
+            <Tooltip content="Review in T3 Code">
+              <a className="row-action" href={reviewHref} aria-label={`Review ${pr.repo}#${pr.number} in T3 Code`}>
+                <SparkleIcon />
+              </a>
+            </Tooltip>
+          )}
           <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
         </span>
         <span className="pr-diff mono">

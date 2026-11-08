@@ -1,6 +1,7 @@
 import { Radio } from "@base-ui/react/radio"
 import { RadioGroup } from "@base-ui/react/radio-group"
 import { type CSSProperties, type DragEvent, type KeyboardEvent, useState } from "react"
+import { DEFAULT_REVIEW_PROMPT, REVIEW_PROMPT_MAX, useReviewPrompt } from "../lib/reviewPrompt"
 import type { ColumnId, Settings, Theme } from "../lib/settings"
 import type { Features } from "../lib/types"
 import { useSettings } from "../lib/useSettings"
@@ -40,6 +41,12 @@ export function SettingsDialog({ open, onOpenChange, features }: Props) {
         <section>
           <h3>Workday</h3>
           <WorkdayFields value={settings.workday} onChange={(workday) => update({ ...settings, workday })} />
+        </section>
+        <section>
+          <h3>
+            <label htmlFor="review-prompt">Review prompt</label>
+          </h3>
+          <ReviewPromptField />
         </section>
       </div>
     </Dialog>
@@ -191,5 +198,26 @@ function WorkdayFields({
       </label>
       {invalid && <span className="workday-error">The day must end after it starts.</span>}
     </div>
+  )
+}
+
+/** Prompt for "Review in T3 Code" on PR rows. Empty means the default, shown as the placeholder. */
+function ReviewPromptField() {
+  const { custom, setCustom } = useReviewPrompt()
+  return (
+    <>
+      <textarea
+        id="review-prompt"
+        className="capture-input review-prompt"
+        value={custom}
+        placeholder={DEFAULT_REVIEW_PROMPT}
+        maxLength={REVIEW_PROMPT_MAX}
+        rows={4}
+        onChange={(e) => setCustom(e.target.value)}
+      />
+      <p className="settings-hint">
+        T3 Code adds the PR's branch and review comments itself. Leave empty for the default.
+      </p>
+    </>
   )
 }
