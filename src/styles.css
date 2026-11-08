@@ -64,12 +64,13 @@
   --b-red-fg: light-dark(#c62e2e, #ff9b98);
   --b-gray-bg: light-dark(#efeff2, #26262b);
   --b-gray-fg: light-dark(#6b6b75, #a0a0a9);
-  /* PR size badges: one amber hue that deepens with size. XS stays plain. */
-  --size-s-bg: light-dark(oklch(0.96 0.02 80), oklch(0.27 0.02 80));
-  --size-m-bg: light-dark(oklch(0.93 0.05 75), oklch(0.3 0.045 75));
-  --size-l-bg: light-dark(oklch(0.89 0.09 70), oklch(0.34 0.08 70));
-  --size-xl-bg: light-dark(oklch(0.85 0.13 60), oklch(0.38 0.11 60));
-  --size-heavy-fg: light-dark(oklch(0.42 0.1 55), oklch(0.88 0.08 70));
+  /* PR size badges: one cool sky hue that deepens with size. XS stays plain. Kept far
+     from the red and green diff numbers right beside them. */
+  --size-s-bg: light-dark(oklch(0.96 0.02 220), oklch(0.27 0.02 220));
+  --size-m-bg: light-dark(oklch(0.93 0.04 222), oklch(0.3 0.04 222));
+  --size-l-bg: light-dark(oklch(0.89 0.07 226), oklch(0.34 0.065 226));
+  --size-xl-bg: light-dark(oklch(0.85 0.1 230), oklch(0.38 0.09 230));
+  --size-heavy-fg: light-dark(oklch(0.4 0.09 235), oklch(0.88 0.07 222));
   --count-bg: light-dark(#fdf0c2, #3a2e07);
   --count-fg: light-dark(#876500, #f5cf55);
 
