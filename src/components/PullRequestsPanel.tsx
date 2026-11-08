@@ -163,7 +163,17 @@ function prFacets(badgeFor: (pr: PullRequest) => Badge, hues: Map<string, number
     { key: "author", label: "Author", get: (pr) => pr.author },
     { key: "status", label: "Status", get: (pr) => badgeFor(pr).label },
     { key: "checks", label: "Checks", get: (pr) => (pr.checks ? CHECKS[pr.checks].label : "No checks") },
+    { key: "activity", label: "Last activity", get: (pr) => lastActivity(pr.updatedAt), order: ACTIVITY },
   ]
+}
+
+const ACTIVITY = ["Today", "Last 7 days", "Older"]
+
+/** Which bucket a PR's last update falls in. "Today" starts at local midnight. */
+function lastActivity(updatedAt: string) {
+  const updated = Date.parse(updatedAt)
+  if (updated >= new Date().setHours(0, 0, 0, 0)) return ACTIVITY[0]
+  return Date.now() - updated < 7 * 24 * 60 * 60_000 ? ACTIVITY[1] : ACTIVITY[2]
 }
 
 /** "org/repo" -> "repo", unless two orgs share that repo name. */

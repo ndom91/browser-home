@@ -12,6 +12,8 @@ export interface Facet<T> {
   leading?: (value: string) => ReactNode
   /** Keep the facet in the menu even with a single option. Others hide below two. */
   always?: boolean
+  /** Fixed option order, for values that don't sort alphabetically ("Today" before "Older"). */
+  order?: Array<string>
 }
 
 /**
@@ -26,7 +28,10 @@ export function useFacetFilter<T>(storageKey: string, items: Array<T>, facets: A
     () =>
       facets
         .map((f) => {
-          const values = [...new Set(items.map(f.get).filter((v) => v != null))].sort()
+          const values = [...new Set(items.map(f.get).filter((v) => v != null))]
+          const { order } = f
+          if (order) values.sort((a, b) => order.indexOf(a) - order.indexOf(b))
+          else values.sort()
           return {
             key: f.key,
             label: f.label,
