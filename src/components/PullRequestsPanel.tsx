@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { type CSSProperties, type ReactNode, useMemo } from "react"
+import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from "react"
 import { age, prSize, signed, synced } from "../lib/format"
 import { repoHues } from "../lib/repoColor"
 import type { PrNotification, PullRequest, PullRequests } from "../lib/types"
@@ -8,7 +8,7 @@ import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { dismissNotification, refreshPRs } from "../server/fns"
 import { FilteredSection } from "./FilteredSection"
-import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, PullRequestIcon } from "./icons"
+import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, HourglassIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { RowSignals, type Signal } from "./RowSignals"
 import { SwapText } from "./ui/motion"
@@ -23,7 +23,9 @@ interface Props {
 
 export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Props) {
   const now = useNow()
-  const signalsFor = useNotificationSignals(notifications)
+  const notificationSignals = useNotificationSignals(notifications)
+  const staleSignals = useStaleSignals(now)
+  const reviewSignals = (pr: PullRequest) => [...notificationSignals(pr), ...staleSignals(pr)]
   // One map for both sections, so a repo has the same color in each.
   const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
@@ -51,7 +53,7 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
             badgeFor={reviewBadge}
             hues={hues}
             now={now}
-            signalsFor={signalsFor}
+            signalsFor={reviewSignals}
             tone="attention"
             showAuthor
           />
@@ -63,7 +65,7 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
             badgeFor={ownBadge}
             hues={hues}
             now={now}
-            signalsFor={signalsFor}
+            signalsFor={notificationSignals}
           />
         </>
       )}
@@ -276,4 +278,45 @@ function useNotificationSignals(notifications: Array<PrNotification> | undefined
       return [{ key: n.threadId, ...kind, tone: "info", onDismiss: () => dismiss(n) }]
     }
   }, [notifications, queryClient])
+}
+
+/** A review request with no activity for this long gets an hourglass. */
+const STALE_MS = 3 * 60 * 60_000
+const STALE_KEY = "stale-dismissed"
+
+/**
+ * Hourglass signals for review requests that sat for 3 h. Only the "Review requested"
+ * section uses them. Dismissals are keyed by URL and updatedAt, so new activity
+ * on the PR lets a later stale spell show again.
+ */
+function useStaleSignals(now: number) {
+  // Read after mount, so server and client render the same first frame.
+  const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set())
+  useEffect(() => {
+    try {
+      setDismissed(new Set(JSON.parse(localStorage.getItem(STALE_KEY) ?? "[]")))
+    } catch {}
+  }, [])
+
+  return (pr: PullRequest): Array<Signal> => {
+    const key = `${pr.url}@${pr.updatedAt}`
+    const updated = Date.parse(pr.updatedAt)
+    if (pr.reviewedByMe || now - updated < STALE_MS || dismissed.has(key)) return []
+    const dismiss = () =>
+      setDismissed((prev) => {
+        const next = new Set(prev).add(key)
+        // Old entries only match PRs that have moved on, so keep the newest few.
+        localStorage.setItem(STALE_KEY, JSON.stringify([...next].slice(-200)))
+        return next
+      })
+    return [
+      {
+        key: "stale",
+        icon: <HourglassIcon />,
+        label: `Waiting on you, no activity for ${age(updated, now)}`,
+        tone: "warn",
+        onDismiss: dismiss,
+      },
+    ]
+  }
 }

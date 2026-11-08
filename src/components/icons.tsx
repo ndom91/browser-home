@@ -323,3 +323,17 @@ export function ActivityIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function HourglassIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path
+        d="M3.75 1.75h8.5M3.75 14.25h8.5M4.75 1.75v2.1c0 1.1.55 2.12 1.47 2.73L8 7.75l1.78-1.17a3.27 3.27 0 0 0 1.47-2.73v-2.1M4.75 14.25v-2.1c0-1.1.55-2.12 1.47-2.73L8 8.25l1.78 1.17a3.27 3.27 0 0 1 1.47 2.73v2.1"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
