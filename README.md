@@ -4,15 +4,17 @@
 
 A new-tab page that runs on your own Mac. One glance shows:
 
-- **Today**: your calendar as a timeline, with a countdown to the next meeting and a Join button.
+- **Today**: your calendar as a timeline, with a countdown to the next meeting, a Join button, and how much free time is left in your workday.
 - **My issues** (optional): your Linear issues in progress, todo and backlog, with a chip when one of your PRs names the issue.
-- **Pull requests**: PRs waiting for your review, and your own, with CI status and size.
+- **Pull requests**: PRs waiting for your review, and your own, with CI status and size. Small icons flag new comments or mentions, and review requests that sat for 3 hours. Click an icon to dismiss it. A dismissed comment icon is also marked read on GitHub.
 - **Hacker News**: the top stories, with a built-in threaded comment viewer.
 - **Weather**: today's forecast for Berlin.
 - **Quick question** (optional): a chat box at the bottom that asks your local LLM.
 - **Quick capture**: press `c` to add a bullet to this week's Obsidian note.
 
-The tab title shows a count, like `(3) Home`, when PRs wait for your review or your own PRs fail CI.
+The tab title shows a count, like `(3) Home`, when PRs wait for your review, your own PRs fail CI, or a listed PR has unread activity.
+
+The cog next to the search box opens **Settings**: light or dark theme, which columns show and in what order (drag the rows), and your workday hours.
 
 It runs at `http://localhost:6464`. It needs no browser extension, no OAuth app, and no cloud service. It reuses logins you already have: the macOS Calendar app and the `gh` CLI. Only your own machine can reach it.
 
@@ -57,6 +59,7 @@ Press `?` for the full list. The main ones:
 | `j` / `k`, `↵`     | Move through rows, open one                           |
 | `f` / `r`          | Filter the section / refresh the column               |
 | `c`                | Quick capture to this week's note                     |
+| `,`                | Settings                                              |
 | `/`                | Ask the local LLM                                     |
 | `Esc`              | Leave the column, hide the chat, or leave HN comments |
 

@@ -48,7 +48,7 @@ src/
     fns.ts             createServerFn wrappers, each behind cached(); getFeatures
     cache.ts           stale-while-revalidate memo (cached, cachedBy)
     calendar.ts        runs bin/agenda, parses events, detects meeting links
-    github.ts          GraphQL search for your PRs
+    github.ts          GraphQL search for your PRs, REST notifications
     linear.ts          GraphQL query for your assigned issues
     hn.ts              top stories + comment threads
     capture.ts         appends quick-capture notes to this week's Obsidian note
@@ -56,10 +56,11 @@ src/
     llm.ts             OpenAI-compatible adapter from env vars
     sanitize.ts        allowlist sanitizer for HN comment HTML
     demo.ts            fixtures for dev:demo
-  components/          one file per panel, plus Panel, FilteredSection, ChatWidget, QuickCapture, Shortcuts
+  components/          one file per panel, plus Panel, FilteredSection, RowSignals, ChatWidget, QuickCapture,
+                       Shortcuts, SettingsDialog, and columns.tsx (column names and icons)
     ui/                Base UI wrappers (FilterMenu, Dialog, Tooltip), RefreshButton, motion.tsx
-  lib/                 shared by client and server: types, format, ttl, hn, and the client hooks
-                       (useFacetFilter, useKeyboardNav, useTitleCount, useNow)
+  lib/                 shared by client and server: types, format, ttl, hn, settings, freeTime, and the
+                       client hooks (useFacetFilter, useKeyboardNav, useTitleCount, useNow, useSettings)
 calendar/agenda.swift  EventKit CLI that prints a day's events as JSON
 serve.js               production Node server around dist/server/server.js
 launchd/ + scripts/    run at login
@@ -67,7 +68,7 @@ launchd/ + scripts/    run at login
 
 ### Data flow
 
-1. The route loader first asks `getFeatures()` which optional parts are set up (chat, Linear). A part without its env vars never renders and never fetches. Then it calls every server function it needs. It waits at most `SSR_BUDGET_MS` (1.5 s) per source, then renders. A slow source loads in the browser instead.
+1. The root route's `beforeLoad` reads the settings cookie (`getSettings()`), so theme and column layout are right on the first paint. The page loader then asks `getFeatures()` which optional parts are set up (chat, Linear). A column that is hidden, or lacks its env vars, never renders and never fetches. Then the loader calls every server function it needs. It waits at most `SSR_BUDGET_MS` (1.5 s) per source, then renders. A slow source loads in the browser instead.
 2. On the server, each source sits behind `cached()`. Stale data is returned at once while one background refresh runs. Many tabs never multiply upstream calls.
 3. On the client, `useSource()` seeds React Query with the server-rendered value. `staleTime` and `refetchInterval` come from `src/lib/ttl.ts`, the same table the server cache uses. So a new tab makes no data requests until its data expires.
 
@@ -113,6 +114,19 @@ launchd/ + scripts/    run at login
 - Weekly notes don't always start on Monday (there's a `2026-10-13.md`). Any `YYYY-MM-DD.md` dated inside the current week counts as this week's note.
 - With no note for the week, `capture.ts` copies `template.md` and fills in `week:`. It writes with `flag: "wx"`, so it never overwrites a note Obsidian created a moment earlier.
 
+### Notifications and row signals
+
+- Notifications poll every 60 s, as GitHub's `X-Poll-Interval` asks. Requests send `If-Modified-Since`. A `304` costs no rate limit, and `fetchNotifications()` replays the last list.
+- `review_requested` notifications are skipped on purpose. The "Review requested" section already shows them.
+- Most unread notifications belong to merged or closed PRs, which aren't listed. No icon on any row is normal.
+- Stale dismissals live in localStorage, keyed by `url@updatedAt`. Demo fixtures get fresh timestamps every 2 minutes, so a dismissal there doesn't last.
+
+### Settings and theme
+
+- Settings are a JSON cookie (`bh-settings`), written by the browser with `document.cookie` and only read by the server. `parseSettings()` drops bad values and appends columns added later.
+- Cookies are per host, not per port. Dev servers on `127.0.0.1:6477` and `:6478` share one settings cookie. Clear it after testing.
+- Colors use `light-dark()`, driven by `color-scheme`. `data-theme` on `<html>` overrides it; "System" sets no attribute. Shadows can't use `light-dark()`, so `--shadow-popover` has its own dark override.
+
 ### Keyboard and motion
 
 - `useKeyboardNav` finds its targets only through `data-nav-*`, `data-filter-trigger`, `data-refresh` and `data-refresh-default`. Never key a shortcut off a class name or an id.
@@ -131,7 +145,7 @@ launchd/ + scripts/    run at login
 ## Code style
 
 - Biome enforces formatting: no semicolons, double quotes, 2-space indent, 120 columns. Run `pnpm format`. Never hand-format.
-- CSS lives in `src/styles.css`. Colors are tokens in `:root`, with dark values in the `prefers-color-scheme: dark` block. Add new colors as token pairs, never as one-off hex values.
+- CSS lives in `src/styles.css`. Colors are tokens in `:root`, written as `light-dark(light, dark)`. Add new colors as tokens, never as one-off hex values. Never add a `prefers-color-scheme` block for colors: it would ignore the theme setting.
 - Icons live in `src/components/icons.tsx`: 16×16 viewBox, `currentColor`, `aria-hidden`.
 - Panels use `<Panel>` from `src/components/Panel.tsx` for the header, meta text, and scroll body.
 - Types shared by client and server go in `src/lib/types.ts`. Server-only code stays in `src/server/`.
