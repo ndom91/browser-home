@@ -1674,13 +1674,6 @@ a:focus-visible,
   outline: 0;
 }
 
-.menu-label {
-  padding: 5px 8px 4px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
 .menu-item {
   display: flex;
   align-items: center;

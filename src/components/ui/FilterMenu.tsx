@@ -82,43 +82,40 @@ export function FilterMenu({ label, facets, value, onChange }: Props) {
         <Menu.Portal>
           <Menu.Positioner className="menu-positioner" side="bottom" align="end" sideOffset={4}>
             <Menu.Popup className="menu-popup">
-              <Menu.Group>
-                <Menu.GroupLabel className="menu-label">Filter by</Menu.GroupLabel>
-                {facets.map((facet) => {
-                  const selected = value[facet.key] ?? []
-                  return (
-                    <Menu.SubmenuRoot key={facet.key}>
-                      <Menu.SubmenuTrigger className="menu-item" disabled={facet.options.length === 0}>
-                        <span className="menu-item-label">{facet.label}</span>
-                        {selected.length > 0 && <span className="menu-item-hint">{selected.length}</span>}
-                        <ChevronRightIcon className="menu-item-chevron" />
-                      </Menu.SubmenuTrigger>
-                      <Menu.Portal>
-                        <Menu.Positioner className="menu-positioner" alignOffset={-4} sideOffset={2}>
-                          <Menu.Popup className="menu-popup">
-                            {facet.options.map((o) => (
-                              <Menu.CheckboxItem
-                                key={o.value}
-                                className="menu-item"
-                                checked={selected.includes(o.value)}
-                                onCheckedChange={(on) => toggle(facet.key, o.value, on)}
-                                closeOnClick={false}
-                              >
-                                {/* Kept mounted so the tick can draw in and out (transitions.dev checkbox-check). */}
-                                <Menu.CheckboxItemIndicator className="menu-check t-check" keepMounted>
-                                  <CheckIcon />
-                                </Menu.CheckboxItemIndicator>
-                                {o.leading}
-                                <span className="menu-item-label">{o.label}</span>
-                              </Menu.CheckboxItem>
-                            ))}
-                          </Menu.Popup>
-                        </Menu.Positioner>
-                      </Menu.Portal>
-                    </Menu.SubmenuRoot>
-                  )
-                })}
-              </Menu.Group>
+              {facets.map((facet) => {
+                const selected = value[facet.key] ?? []
+                return (
+                  <Menu.SubmenuRoot key={facet.key}>
+                    <Menu.SubmenuTrigger className="menu-item" disabled={facet.options.length === 0}>
+                      <span className="menu-item-label">{facet.label}</span>
+                      {selected.length > 0 && <span className="menu-item-hint">{selected.length}</span>}
+                      <ChevronRightIcon className="menu-item-chevron" />
+                    </Menu.SubmenuTrigger>
+                    <Menu.Portal>
+                      <Menu.Positioner className="menu-positioner" alignOffset={-4} sideOffset={2}>
+                        <Menu.Popup className="menu-popup">
+                          {facet.options.map((o) => (
+                            <Menu.CheckboxItem
+                              key={o.value}
+                              className="menu-item"
+                              checked={selected.includes(o.value)}
+                              onCheckedChange={(on) => toggle(facet.key, o.value, on)}
+                              closeOnClick={false}
+                            >
+                              {/* Kept mounted so the tick can draw in and out (transitions.dev checkbox-check). */}
+                              <Menu.CheckboxItemIndicator className="menu-check t-check" keepMounted>
+                                <CheckIcon />
+                              </Menu.CheckboxItemIndicator>
+                              {o.leading}
+                              <span className="menu-item-label">{o.label}</span>
+                            </Menu.CheckboxItem>
+                          ))}
+                        </Menu.Popup>
+                      </Menu.Positioner>
+                    </Menu.Portal>
+                  </Menu.SubmenuRoot>
+                )
+              })}
               {active > 0 && (
                 <>
                   <Menu.Separator className="menu-separator" />
