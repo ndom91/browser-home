@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { age, plural } from "../lib/format"
-import { countComments, itemUrl } from "../lib/hn"
+import { countComments, itemUrl, readableUrl } from "../lib/hn"
 import { TTL } from "../lib/ttl"
 import type { HNComment, HNThread as HNThreadData, Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
@@ -33,7 +33,7 @@ export function HNThread({ story, onBack }: { story: Story; onBack: () => void }
       </nav>
 
       <header className="hn-story">
-        <a className="hn-story-title" href={story.url} target="_blank" rel="noreferrer">
+        <a className="hn-story-title" href={readableUrl(story.url)} target="_blank" rel="noreferrer">
           {story.title}
         </a>
         <p className="hn-meta">

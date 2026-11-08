@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { age, clock, plural } from "../lib/format"
+import { readableUrl } from "../lib/hn"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { refreshHN } from "../server/fns"
@@ -113,7 +114,7 @@ function StoryList({
         <li key={s.id} className="hn-item" data-nav-item>
           <span className="hn-rank mono">{i + 1}</span>
           <div className="hn-main">
-            <a className="hn-title" href={s.url} target="_blank" rel="noreferrer" data-nav-row>
+            <a className="hn-title" href={readableUrl(s.url)} target="_blank" rel="noreferrer" data-nav-row>
               {s.title}
             </a>
             <p className="hn-meta">
