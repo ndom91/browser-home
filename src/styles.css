@@ -76,7 +76,7 @@
   --radius: 10px;
   /* Space between columns, and between the columns and the window edge. */
   --gutter: 14px;
-  --header-space: 20px;
+  --header-space: 14px;
 }
 
 /* Settings > Theme sets data-theme. Without it, the OS decides. light-dark() follows color-scheme. */
