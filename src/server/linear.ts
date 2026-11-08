@@ -1,4 +1,4 @@
-import type { LinearIssue, LinearIssues } from "../lib/types"
+import type { LinearIssue, LinearIssues, StandupItem } from "../lib/types"
 
 const API = "https://api.linear.app/graphql"
 const KEY = process.env.LINEAR_API_KEY?.trim()
@@ -34,24 +34,28 @@ interface RawIssue {
   cycle: { number: number } | null
 }
 
-export async function fetchLinear(): Promise<LinearIssues> {
+async function linearQuery<T>(query: string): Promise<T> {
   if (!KEY) throw new Error("LINEAR_API_KEY is unset")
   const res = await fetch(API, {
     method: "POST",
     // Personal API keys go in as-is, without "Bearer".
     headers: { Authorization: KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ query: QUERY }),
+    body: JSON.stringify({ query }),
     signal: AbortSignal.timeout(15_000),
   })
   if (!res.ok) throw new Error(`Linear ${res.status}: ${await res.text()}`)
-  const body = (await res.json()) as {
-    data?: { viewer: { assignedIssues: { nodes: Array<RawIssue> } } }
-    errors?: Array<{ message: string }>
-  }
+  const body = (await res.json()) as { data?: T; errors?: Array<{ message: string }> }
   if (body.errors?.length || !body.data)
     throw new Error(body.errors?.map((e) => e.message).join("; ") ?? "Linear: no data")
+  return body.data
+}
+
+type Assigned<N> = { viewer: { assignedIssues: { nodes: Array<N> } } }
+
+export async function fetchLinear(): Promise<LinearIssues> {
+  const data = await linearQuery<Assigned<RawIssue>>(QUERY)
   return {
-    issues: body.data.viewer.assignedIssues.nodes.map((i) => ({
+    issues: data.viewer.assignedIssues.nodes.map((i) => ({
       id: i.identifier,
       title: i.title,
       url: i.url,
@@ -64,4 +68,16 @@ export async function fetchLinear(): Promise<LinearIssues> {
       cycle: i.cycle?.number ?? null,
     })),
   }
+}
+
+/** Your issues marked done since `since` (ISO time), for the standup card. */
+export async function fetchCompletedIssues(since: string): Promise<Array<StandupItem>> {
+  const data = await linearQuery<Assigned<{ identifier: string; title: string; url: string }>>(`query {
+    viewer {
+      assignedIssues(first: 20, orderBy: updatedAt, filter: { completedAt: { gte: ${JSON.stringify(since)} } }) {
+        nodes { identifier title url }
+      }
+    }
+  }`)
+  return data.viewer.assignedIssues.nodes.map((i) => ({ kind: "issue", id: i.identifier, title: i.title, url: i.url }))
 }

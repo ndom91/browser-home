@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
-import type { PrNotification, PullRequest, PullRequests, Viewer } from "../lib/types"
+import type { PrNotification, PullRequest, PullRequests, StandupItem, Viewer } from "../lib/types"
 
 const run = promisify(execFile)
 
@@ -188,4 +188,37 @@ export async function markNotificationRead(threadId: string) {
   const res = await rest(`notifications/threads/${encodeURIComponent(threadId)}`, { method: "PATCH" })
   if (!res.ok && res.status !== 304) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
   lastNotifications = lastNotifications.filter((n) => n.threadId !== threadId)
+}
+
+interface RawShipped {
+  number: number
+  title: string
+  body: string
+  url: string
+  repository: { name: string }
+}
+
+export interface ShippedPR extends StandupItem {
+  linearId: string | null
+}
+
+/**
+ * Your PRs merged, and opened, since `since` (ISO time), for the standup card. One query
+ * with two small searches and no diff stats or CI rollups, so it stays fast.
+ */
+export async function fetchMyPRsSince(since: string) {
+  const search = (qualifier: string) => `search(
+    query: "is:pr author:@me ${qualifier}>=${since} ${FILTER}", type: ISSUE, first: 20
+  ) { nodes { ... on PullRequest { number title body url repository { name } } } }`
+  const data = await graphql<{ merged: { nodes: Array<RawShipped> }; opened: { nodes: Array<RawShipped> } }>(
+    `query { merged: ${search("is:merged merged:")} opened: ${search("created:")} }`,
+  )
+  const item = (pr: RawShipped): ShippedPR => ({
+    kind: "pr",
+    id: `${pr.repository.name}#${pr.number}`,
+    title: pr.title,
+    url: pr.url,
+    linearId: linearIssue(pr.title, pr.body)?.id ?? null,
+  })
+  return { merged: data.merged.nodes.map(item), opened: data.opened.nodes.map(item) }
 }

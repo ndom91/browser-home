@@ -14,6 +14,7 @@ import {
   demoLinear,
   demoNotifications,
   demoPRs,
+  demoStandup,
   demoThread,
   demoViewer,
   demoWeather,
@@ -22,12 +23,20 @@ import { fetchNotifications, fetchPRs, fetchViewer, markNotificationRead } from 
 import { fetchHN, fetchThread } from "./hn"
 import { fetchLinear, linearConfigured } from "./linear"
 import { missingLlmVars } from "./llm"
+import { fetchStandup } from "./standup"
 import { fetchWeather } from "./weather"
 
 const calendar = cached(DEMO ? async () => demoCalendar() : fetchCalendar, TTL.calendar)
 const prs = cached(DEMO ? async () => demoPRs() : fetchPRs, TTL.prs)
 const notifications = cached(DEMO ? async () => demoNotifications() : fetchNotifications, TTL.notifications)
 const linear = cached(DEMO ? async () => demoLinear() : fetchLinear, TTL.linear)
+// Keyed by the standup's start, so the hour before each standup gets its own fetch.
+const standup = cachedBy(
+  DEMO
+    ? async () => demoStandup()
+    : async (start: string) => fetchStandup(start, linearConfigured ? (await linear()).data.issues : []),
+  TTL.standup,
+)
 const hn = cached(DEMO ? async () => demoHN() : fetchHN, TTL.hn)
 const thread = cachedBy(DEMO ? async (id: number) => demoThread(id) : fetchThread, TTL.hnThread)
 const weather = cached(DEMO ? async () => demoWeather : fetchWeather, TTL.weather)
@@ -66,6 +75,13 @@ export const dismissNotification = createServerFn({ method: "POST" })
 export const getLinear = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => linear({ wait: data }))
+/** The standup card, for the standup that starts at the given ISO time. */
+export const getStandup = createServerFn({ method: "GET" })
+  .validator((start: unknown) => {
+    if (typeof start !== "string" || Number.isNaN(Date.parse(start))) throw new Error("Invalid standup start")
+    return start
+  })
+  .handler(({ data }) => standup(data))
 export const getHN = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => hn({ wait: data }))

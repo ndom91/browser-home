@@ -4,7 +4,7 @@
 
 A new-tab page that runs on your own Mac. One glance shows:
 
-- **Today**: your calendar as a timeline, with a countdown to the next meeting, a Join button, and how much free time is left in your workday.
+- **Today**: your calendar as a timeline, with a countdown to the next meeting, a Join button, and how much free time is left in your workday. In the hour before a standup, it also lists what you finished, opened, and have in progress since the last one.
 - **My issues** (optional): your Linear issues in progress, todo and backlog, with a chip when one of your PRs names the issue.
 - **Pull requests**: PRs waiting for your review, and your own, with CI status and size. Small icons flag new comments or mentions, and review requests that sat for 3 hours. Click an icon to dismiss it. A dismissed comment icon is also marked read on GitHub.
 - **Hacker News**: the top stories, with a built-in threaded comment viewer.

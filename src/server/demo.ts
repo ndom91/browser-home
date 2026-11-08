@@ -6,6 +6,7 @@ import type {
   PrNotification,
   PullRequest,
   PullRequests,
+  Standup,
   Story,
   Viewer,
   Weather,
@@ -32,7 +33,8 @@ export function demoCalendar(): Array<CalendarEvent> {
       ...base,
       id: "standup",
       title: "Platform standup",
-      ...at(-90, 15),
+      // Right after the design review, so the standup card shows in the demo.
+      ...at(30, 15),
       attendees: ["Dana", "Lee"],
       meeting: zoom,
       provider: "Zoom",
@@ -294,6 +296,50 @@ export function demoThread(id: number): HNThread {
         ],
       },
       { id: 4, author: "patio11", time: at(25), html: "<p>Shipping beats perfect.</p>", children: [] },
+    ],
+  }
+}
+
+export function demoStandup(): Standup {
+  const since = new Date(Date.now() - 24 * HOUR).toISOString()
+  return {
+    since,
+    done: [
+      {
+        kind: "issue",
+        id: "SUP-205",
+        title: "Snooze presets in the thread menu",
+        url: "https://linear.app/acme/issue/SUP-205",
+        pr: "https://github.com/acme/support-app/pull/4790",
+      },
+      {
+        kind: "pr",
+        id: "api#1198",
+        title: "Rate-limit the events export",
+        url: "https://github.com/acme/api/pull/1198",
+      },
+    ],
+    opened: [
+      {
+        kind: "pr",
+        id: "support-app#4821",
+        title: "Add keyboard shortcuts to thread composer",
+        url: "https://github.com/acme/support-app/pull/4821",
+      },
+    ],
+    inProgress: [
+      {
+        kind: "issue",
+        id: "CORE-881",
+        title: "SLA breach warnings in thread list",
+        url: "https://linear.app/acme/issue/CORE-881",
+      },
+      {
+        kind: "issue",
+        id: "SUP-198",
+        title: "Add keyboard shortcuts to thread composer",
+        url: "https://linear.app/acme/issue/SUP-198",
+      },
     ],
   }
 }

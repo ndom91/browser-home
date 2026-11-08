@@ -1,10 +1,10 @@
 import { type CSSProperties, type RefObject, useLayoutEffect, useRef, useState } from "react"
 import { clock, countdown, duration, hourLabel, people } from "../lib/format"
 import { freeTime } from "../lib/freeTime"
-import type { CalendarEvent } from "../lib/types"
+import type { CalendarEvent, Standup, StandupItem } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { useSettings } from "../lib/useSettings"
-import { ArrowUpRightIcon, CalendarIcon } from "./icons"
+import { ArrowUpRightIcon, CalendarIcon, PullRequestIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 
 const MIN_EVENT_PX = 18
@@ -23,10 +23,12 @@ interface Placed extends Timed {
 
 interface Props {
   events: Array<CalendarEvent> | undefined
+  /** Set only in the hour before a standup. */
+  standup: Standup | undefined
   error: unknown
 }
 
-export function CalendarPanel({ events, error }: Props) {
+export function CalendarPanel({ events, standup, error }: Props) {
   const now = useNow()
 
   const timed: Array<Timed> = (events ?? [])
@@ -53,6 +55,7 @@ export function CalendarPanel({ events, error }: Props) {
       ) : (
         <>
           <FocusCard current={current} next={next} now={now} />
+          {standup && <StandupCard standup={standup} now={now} />}
           <FreeTime busy={live} now={now} />
           <Timeline events={timed} current={current} now={now} />
         </>
@@ -112,6 +115,67 @@ function FreeTime({ busy, now }: { busy: Array<Timed>; now: number }) {
       )}
       <strong>{duration(free.totalMs)}</strong> free today
     </p>
+  )
+}
+
+// Short lists keep the card from squeezing the day timeline below it.
+const MAX_STANDUP_ITEMS = 3
+const weekday = new Intl.DateTimeFormat("en-US", { weekday: "long" })
+
+/** "yesterday", or the weekday ("Friday") when the last workday was further back. */
+function sinceLabel(since: string, now: number) {
+  const yesterday = new Date(now)
+  yesterday.setDate(yesterday.getDate() - 1)
+  return new Date(since).toDateString() === yesterday.toDateString() ? "yesterday" : weekday.format(Date.parse(since))
+}
+
+/** What to say at standup: done and opened since the last one, and what's in progress. */
+function StandupCard({ standup, now }: { standup: Standup; now: number }) {
+  const groups: Array<[string, Array<StandupItem>]> = [
+    ["Done", standup.done],
+    ["Opened", standup.opened],
+    ["In progress", standup.inProgress],
+  ]
+  const filled = groups.filter(([, items]) => items.length > 0)
+  return (
+    <section className="standup" aria-label="Standup notes">
+      <h3 className="standup-head">Since {sinceLabel(standup.since, now)}</h3>
+      {filled.length === 0 && <p className="standup-empty">Nothing to report yet.</p>}
+      {filled.map(([title, items]) => (
+        <StandupGroup key={title} title={title} items={items} />
+      ))}
+    </section>
+  )
+}
+
+function StandupGroup({ title, items }: { title: string; items: Array<StandupItem> }) {
+  const [expanded, setExpanded] = useState(false)
+  const shown = expanded ? items : items.slice(0, MAX_STANDUP_ITEMS)
+  return (
+    <div className="standup-group">
+      <h4>
+        {title} <span className="count">{items.length}</span>
+      </h4>
+      <ul>
+        {shown.map((item) => (
+          <li key={item.url} className="standup-item">
+            <a href={item.url} target="_blank" rel="noreferrer" title={item.title} data-nav-row>
+              <span className="standup-id mono">{item.id}</span> {item.title}
+            </a>
+            {item.pr && (
+              <a className="issue-pr" href={item.pr} target="_blank" rel="noreferrer" title="Open the merged PR">
+                <PullRequestIcon width={11} height={11} /> PR
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+      {!expanded && items.length > MAX_STANDUP_ITEMS && (
+        <button type="button" className="standup-more" onClick={() => setExpanded(true)}>
+          +{items.length - MAX_STANDUP_ITEMS} more
+        </button>
+      )}
+    </div>
   )
 }
 

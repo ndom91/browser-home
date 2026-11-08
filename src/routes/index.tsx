@@ -11,6 +11,7 @@ import { QuickCapture } from "../components/QuickCapture"
 import { SettingsDialog } from "../components/SettingsDialog"
 import { Shortcuts } from "../components/Shortcuts"
 import type { ColumnId } from "../lib/settings"
+import { upcomingStandup } from "../lib/standup"
 import { TTL } from "../lib/ttl"
 import { useKeyboardNav } from "../lib/useKeyboardNav"
 import { NowContext, useTicker } from "../lib/useNow"
@@ -24,6 +25,7 @@ import {
   getLinear,
   getNotifications,
   getPRs,
+  getStandup,
   getViewer,
   getWeather,
 } from "../server/fns"
@@ -57,7 +59,22 @@ export const Route = createFileRoute("/")({
       within("viewer", getViewer()),
       within("weather", getWeather()),
     ])
-    return { now: Date.now(), features, calendar, prs, notifications, linear, hn, viewer, weather }
+    // Only in the hour before a standup. It needs the calendar, so it runs after the rest.
+    const upcoming = calendar && upcomingStandup(calendar.data, Date.now())
+    const standup = upcoming ? await within("standup", getStandup({ data: upcoming.start })) : undefined
+    return {
+      now: Date.now(),
+      features,
+      calendar,
+      prs,
+      notifications,
+      linear,
+      hn,
+      viewer,
+      weather,
+      standup,
+      standupStart: upcoming?.start,
+    }
   },
   staleTime: Infinity,
   component: Home,
@@ -91,6 +108,17 @@ function Home() {
   )
   const linear = useSource("linear", getLinear, initial.linear, TTL.linear, show.has("linear"))
   const hn = useSource("hn", getHN, initial.hn, TTL.hn, show.has("hn"))
+  // Keyed by the standup's start, so each standup gets its own data.
+  const upcoming = show.has("calendar") ? upcomingStandup(calendar.data?.data ?? [], now) : undefined
+  const standup = useQuery({
+    queryKey: ["standup", upcoming?.start],
+    queryFn: () => getStandup({ data: upcoming?.start ?? "" }),
+    enabled: upcoming != null,
+    initialData: upcoming && upcoming.start === initial.standupStart ? initial.standup : undefined,
+    initialDataUpdatedAt: initial.standup?.fetchedAt,
+    staleTime: TTL.standup,
+    refetchInterval: TTL.standup,
+  })
   const weather = useSource("weather", getWeather, initial.weather, TTL.weather)
   // The name barely changes, so it never refetches.
   const viewer = useSource("viewer", getViewer, initial.viewer, Infinity)
@@ -106,7 +134,14 @@ function Home() {
   const panel = (id: ColumnId) => {
     switch (id) {
       case "calendar":
-        return <CalendarPanel key={id} events={calendar.data?.data} error={calendar.error} />
+        return (
+          <CalendarPanel
+            key={id}
+            events={calendar.data?.data}
+            standup={upcoming ? standup.data?.data : undefined}
+            error={calendar.error}
+          />
+        )
       case "linear":
         return (
           <LinearPanel

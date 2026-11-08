@@ -7,6 +7,7 @@ export const TTL = {
   notifications: 60_000,
   linear: 2 * 60_000,
   hn: 5 * 60_000,
+  standup: 5 * 60_000,
   viewer: 24 * 60 * 60_000,
   weather: 30 * 60_000,
   hnThread: 2 * 60_000,

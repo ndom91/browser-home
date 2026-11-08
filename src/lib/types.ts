@@ -106,6 +106,24 @@ export interface LinearIssue {
   cycle: number | null
 }
 
+/** A line on the standup card. `id` is "CORE-123" for an issue, "repo#12" for a PR. */
+export interface StandupItem {
+  kind: "issue" | "pr"
+  id: string
+  title: string
+  url: string
+  /** A done issue's merged PR, shown as a link instead of its own row. */
+  pr?: string
+}
+
+/** What you did since the previous workday's standup, for today's. */
+export interface Standup {
+  since: string
+  done: Array<StandupItem>
+  opened: Array<StandupItem>
+  inProgress: Array<StandupItem>
+}
+
 export interface LinearIssues {
   issues: Array<LinearIssue>
 }

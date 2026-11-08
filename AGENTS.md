@@ -114,6 +114,13 @@ launchd/ + scripts/    run at login
 - Weekly notes don't always start on Monday (there's a `2026-10-13.md`). Any `YYYY-MM-DD.md` dated inside the current week counts as this week's note.
 - With no note for the week, `capture.ts` copies `template.md` and fills in `week:`. It writes with `flag: "wx"`, so it never overwrites a note Obsidian created a moment earlier.
 
+### Standup card
+
+- Shows from 1 h before a timed event whose title matches `/stand[\s-]?up/i` until it ends (`src/lib/standup.ts`).
+- "Since" is the same clock time on the previous workday, so Monday looks back to Friday.
+- `cachedBy` keys it by the standup's start time. Demo mode moves "Platform standup" to 30 min from now so the card shows.
+- PRs in repos that `GH_SEARCH_FILTER` excludes don't appear. Done issues come from Linear's `completedAt`.
+
 ### Notifications and row signals
 
 - Notifications poll every 60 s, as GitHub's `X-Poll-Interval` asks. Requests send `If-Modified-Since`. A `304` costs no rate limit, and `fetchNotifications()` replays the last list.

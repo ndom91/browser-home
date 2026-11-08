@@ -536,6 +536,81 @@ a:focus-visible,
   color: var(--muted);
 }
 
+/* Standup notes: in the hour before a standup, under the focus card. */
+.standup {
+  flex: none;
+  display: grid;
+  /* minmax(0, …) lets long titles truncate instead of widening the card. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin: 10px 14px 0;
+  padding: 11px 12px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-sub);
+}
+
+.standup-head {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.standup-empty {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.standup-group h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 1px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.standup-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 19px;
+}
+
+.standup-item > a:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-2);
+}
+
+.standup-item > a:first-child:hover {
+  color: var(--text);
+}
+
+.standup-id {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.standup-more {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.standup-more:hover {
+  color: var(--text);
+}
+
 /* One quiet line under the focus card. */
 .free-time {
   flex: none;
