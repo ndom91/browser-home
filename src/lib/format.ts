@@ -36,6 +36,15 @@ export function synced(ms: number | undefined, now: number) {
   return a === "now" ? "synced just now" : `synced ${a} ago`
 }
 
+/** A rough length of time: "45m", "2h", "1h 40m". Rounds down to the minute. */
+export function duration(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 60_000))
+  const h = Math.floor(total / 60)
+  const m = total % 60
+  if (h === 0) return `${m}m`
+  return m === 0 ? `${h}h` : `${h}h ${m}m`
+}
+
 /** Countdown: "17:24" under an hour, "1:05:09" above. */
 export function countdown(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000))
