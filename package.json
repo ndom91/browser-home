@@ -10,6 +10,7 @@
     "dev": "vite dev",
     "dev:demo": "BROWSER_HOME_DEMO=1 vite dev",
     "build": "vite build",
+    "deploy": "pnpm build && pnpm reload",
     "start": "node serve.js",
     "reload": "launchctl kickstart -k gui/$(id -u)/com.ndom91.browser-home",
     "typecheck": "tsc --noEmit",
@@ -23,8 +24,8 @@
     "@tanstack/ai": "^1.0.1",
     "@tanstack/ai-openai": "^1.0.1",
     "@tanstack/ai-react": "^1.0.1",
-    "@tanstack/markdown": "^1.0.0",
-    "@tanstack/react-query": "^5.105.0",
+    "@tanstack/markdown": "^1.1.1",
+    "@tanstack/react-query": "^5.105.1",
     "@tanstack/react-router": "^1.170.46",
     "@tanstack/react-start": "^1.169.4",
     "react": "^19.3.1",
@@ -35,7 +36,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
+    "@vitejs/plugin-react": "^6.2.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.5"
   }
