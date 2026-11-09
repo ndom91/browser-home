@@ -242,7 +242,11 @@ function Row({
           <span className="repo-badge mono" style={hueStyle(hue)}>
             {pr.repo}#{pr.number}
           </span>
-          {showAuthor && pr.author && <span className="mono">{pr.author}</span>}
+          {showAuthor && pr.author && (
+            <span className="pr-author mono" title={pr.author}>
+              {pr.author}
+            </span>
+          )}
           <span className="mono">{age(Date.parse(pr.updatedAt), now)}</span>
           {checks && (
             <span className={`checks checks-${checks.tone}`}>
