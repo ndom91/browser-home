@@ -12,7 +12,7 @@ export async function fetchStandup(start: string, assigned: Array<LinearIssue>):
   const since = new Date(previousWorkday(Date.parse(start))).toISOString().replace(/\.\d{3}Z$/, "Z")
   const [prs, issues] = await Promise.all([
     fetchMyPRsSince(since),
-    linearConfigured ? fetchCompletedIssues(since) : Promise.resolve([]),
+    linearConfigured() ? fetchCompletedIssues(since) : Promise.resolve([]),
   ])
 
   // A merged PR for an issue that's already listed as done becomes that issue's PR link.

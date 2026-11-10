@@ -37,7 +37,7 @@ You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logge
 
    It prints today's events. No prompt? Check System Settings → Privacy & Security → Calendars.
 
-3. Optional: copy `.env.example` to `.env` and fill in what you want. The chat box needs your LLM's URL, model and API key. The Linear column needs an API key and your workspace slug. Each one stays hidden until its settings are there.
+3. Optional: copy `config.example.yaml` to `config.yaml`, and `.env.example` to `.env`. Settings go in `config.yaml`. Secrets go in `.env`, and `config.yaml` reads them with `${VAR}`. The chat box needs your LLM's URL, model and API key. The Linear column needs an API key and your workspace slug. Each one stays hidden until its settings are there.
 
 4. Build it, and start it at every login:
 
@@ -76,18 +76,19 @@ Edit `launchd/com.ndom91.browser-home.plist`, then re-run `./scripts/install-lau
 | `PORT`   | `6464`                 | Port the page runs on |
 | `GH_BIN` | `/opt/homebrew/bin/gh` | Where `gh` lives      |
 
-These live in `.env`. See `.env.example` for details:
+These live in `config.yaml`. See `config.example.yaml` for details. Edits apply on the next page load, with no restart:
 
-| Setting                                    | Default                            | What it does                                                 |
-| ------------------------------------------ | ---------------------------------- | ------------------------------------------------------------ |
-| `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` | none                               | The chat box. Hidden unless all three are set                |
-| `LINEAR_API_KEY`, `LINEAR_WORKSPACE`       | none                               | The Linear column and PR-to-issue links. Hidden without both |
-| `CAPTURE_DIR`                              | `~/obsidian/Plain/Weekly Notes`    | Folder of weekly notes for quick capture                     |
-| `GREETING_NAME`                            | your GitHub name                   | Name in the greeting                                         |
-| `GH_SEARCH_FILTER`                         | none                               | Extra GitHub search qualifiers, e.g. `org:acme`              |
-| `VITE_SEARCH_URL`                          | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL             |
+| Setting                                    | Default                            | What it does                                                   |
+| ------------------------------------------ | ---------------------------------- | -------------------------------------------------------------- |
+| `llm.base_url`, `llm.model`, `llm.api_key` | none                               | The chat box. Hidden unless all three are set                  |
+| `mcp.servers`                              | none                               | MCP servers whose tools the chat can call, e.g. Home Assistant |
+| `linear.api_key`, `linear.workspace`       | none                               | The Linear column and PR-to-issue links. Hidden without both   |
+| `capture.dir`                              | none                               | Folder of weekly notes for quick capture                       |
+| `greeting_name`                            | your GitHub name                   | Name in the greeting                                           |
+| `github.search_filter`                     | none                               | Extra GitHub search qualifiers, e.g. `org:acme`                |
+| `search_url`                               | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL               |
 
-Run `pnpm build` again after changing `VITE_SEARCH_URL`. It is baked into the page at build time.
+Set `BH_CONFIG` to keep the file somewhere other than the repo root.
 
 ## After updating
 
@@ -98,14 +99,14 @@ pnpm build
 pnpm reload
 ```
 
-`pnpm reload` restarts the launchd service. Run it alone after changing `.env`.
+`pnpm reload` restarts the launchd service. Run it alone after changing `.env`. `config.yaml` needs no restart.
 
 ## Troubleshooting
 
 - **Calendar says "timed out" or "access denied".** Run `./bin/agenda` in a terminal and click Allow. Rebuilding the helper can make macOS ask again.
 - **No pull requests.** Run `gh auth status`. Your org may need SSO authorized for the `gh` token.
-- **No chat box or Linear column.** Its settings are missing from `.env`. Add them, then run `pnpm reload`.
-- **Quick capture fails.** Check that `CAPTURE_DIR` exists. The first capture of a week also needs `template.md` in it.
+- **No chat box or Linear column.** Its settings are missing from `config.yaml`, or a `${VAR}` it uses is missing from `.env`. The log names what's missing.
+- **Quick capture fails.** Check that `capture.dir` exists. The first capture of a week also needs `template.md` in it.
 - **Moved the repo or switched Node managers.** Re-run `./scripts/install-launchd.sh`.
 - **Logs** are in `~/Library/Logs/browser-home.log`.
 

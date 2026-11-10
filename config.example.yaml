@@ -1,0 +1,46 @@
+# Copy to config.yaml (gitignored) and fill in what you want. Changes apply on the
+# next page load, with no restart. Set BH_CONFIG to keep the file somewhere else.
+#
+# Keep secrets in .env and pull them in with ${VAR}: config.yaml can then be shared
+# or backed up without leaking tokens.
+
+# Name in the greeting. Empty uses the first name on your GitHub profile.
+greeting_name:
+
+# Search engine for the header search box. The query is appended to this URL.
+search_url: https://www.google.com/search?q=
+
+# Any OpenAI-compatible endpoint. Without all three, the chat box is hidden.
+llm:
+  base_url: http://localhost:8080/v1
+  model: gemma-4-26B-A4B
+  api_key: ${LLM_API_KEY}
+
+# MCP servers whose tools the chat can call (streamable HTTP). A server that's down
+# is skipped; the chat still answers without its tools.
+mcp:
+  servers:
+    # Home Assistant: enable the "Model Context Protocol Server" integration, then
+    # create a long-lived access token under your profile → Security.
+    - name: homeassistant # letters, digits, - and _; also prefixes its tool names
+      url: https://homeassistant.local:8123/api/mcp
+      headers:
+        Authorization: Bearer ${HA_TOKEN}
+      enabled: false
+
+github:
+  # Extra search qualifiers for the PR column, e.g. org:acme or -repo:acme/noisy.
+  search_filter:
+
+# Shows your assigned In progress, Todo and Backlog issues, and links PRs to their
+# issue. Without both keys, the Linear column is hidden.
+linear:
+  # Personal API key: Settings → Account → Security & access.
+  api_key: ${LINEAR_API_KEY}
+  # Workspace slug, as in linear.app/<slug>/issue/ABC-123.
+  workspace:
+
+# Quick capture ("c") appends to this week's note in this folder: any YYYY-MM-DD.md
+# dated this week, else a new <Monday>.md made from template.md. ~ is allowed.
+capture:
+  dir: ~/Notes/Weekly

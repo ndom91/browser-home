@@ -1,3 +1,4 @@
+import { useRouteContext } from "@tanstack/react-router"
 import { type FormEvent, useEffect, useRef } from "react"
 import { clock, firstName, greeting, longDay } from "../lib/format"
 import type { Weather } from "../lib/types"
@@ -9,14 +10,11 @@ import { Tooltip } from "./ui/Tooltip"
 // "example.com", "localhost:3000/x", "192.168.1.1" — anything URL-shaped without spaces.
 const HOSTLIKE = /^(localhost|[\w-]+(\.[\w-]+)+|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/\S*)?$/i
 
-// Baked in at build time: Vite inlines VITE_ variables into the client bundle.
-const SEARCH_URL = import.meta.env.VITE_SEARCH_URL || "https://www.google.com/search?q="
-
-function destination(input: string) {
+function destination(input: string, searchUrl: string) {
   const q = input.trim()
   if (/^[a-z][\w+.-]*:\/\//i.test(q)) return q
   if (HOSTLIKE.test(q)) return `${q.startsWith("localhost") ? "http" : "https"}://${q}`
-  return SEARCH_URL + encodeURIComponent(q)
+  return searchUrl + encodeURIComponent(q)
 }
 
 export function Header({
@@ -29,6 +27,7 @@ export function Header({
   onSettings: () => void
 }) {
   const now = useNow()
+  const { searchUrl } = useRouteContext({ from: "__root__" })
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -47,7 +46,7 @@ export function Header({
     e.preventDefault()
     const input = inputRef.current
     if (!input?.value.trim()) return
-    window.open(destination(input.value), "_blank", "noopener,noreferrer")
+    window.open(destination(input.value, searchUrl), "_blank", "noopener,noreferrer")
     input.value = ""
   }
 

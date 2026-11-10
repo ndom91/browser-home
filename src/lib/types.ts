@@ -128,7 +128,7 @@ export interface LinearIssues {
   issues: Array<LinearIssue>
 }
 
-/** Optional parts of the page. Each is on only when its env vars are set. */
+/** Optional parts of the page. Each is on only when its config.yaml settings are there. */
 export interface Features {
   chat: boolean
   linear: boolean

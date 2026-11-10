@@ -6,6 +6,7 @@ import type { Features } from "../lib/types"
 import { cached, cachedBy } from "./cache"
 import { fetchCalendar } from "./calendar"
 import { capture, MAX_CAPTURE } from "./capture"
+import { config } from "./config"
 import {
   DEMO,
   demoCalendar,
@@ -22,7 +23,7 @@ import {
 import { fetchNotifications, fetchPRs, fetchViewer, markNotificationRead } from "./github"
 import { fetchHN, fetchThread } from "./hn"
 import { fetchLinear, linearConfigured } from "./linear"
-import { missingLlmVars } from "./llm"
+import { missingLlmKeys } from "./llm"
 import { fetchStandup } from "./standup"
 import { fetchWeather } from "./weather"
 
@@ -34,7 +35,7 @@ const linear = cached(DEMO ? async () => demoLinear() : fetchLinear, TTL.linear)
 const standup = cachedBy(
   DEMO
     ? async () => demoStandup()
-    : async (start: string) => fetchStandup(start, linearConfigured ? (await linear()).data.issues : []),
+    : async (start: string) => fetchStandup(start, linearConfigured() ? (await linear()).data.issues : []),
   TTL.standup,
 )
 const hn = cached(DEMO ? async () => demoHN() : fetchHN, TTL.hn)
@@ -48,10 +49,12 @@ const waitFlag = (wait: unknown) => wait === true
 
 // Demo mode shows Linear from fixtures. Chat always needs a real model.
 export const getFeatures = createServerFn({ method: "GET" }).handler(
-  (): Features => ({ chat: missingLlmVars().length === 0, linear: DEMO || linearConfigured }),
+  (): Features => ({ chat: missingLlmKeys().length === 0, linear: DEMO || linearConfigured() }),
 )
 /** The settings cookie, read on the server so the first paint already uses it. */
 export const getSettings = createServerFn({ method: "GET" }).handler(() => parseSettings(getCookie(SETTINGS_COOKIE)))
+/** The search engine URL for the header search box. The query is appended to it. */
+export const getSearchUrl = createServerFn({ method: "GET" }).handler(() => config().search_url)
 export const getCalendar = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => calendar({ wait: data }))
@@ -91,7 +94,12 @@ export const refreshPRs = createServerFn({ method: "POST" }).handler(() => prs({
 export const refreshLinear = createServerFn({ method: "POST" }).handler(() => linear({ force: true }))
 export const getViewer = createServerFn({ method: "GET" })
   .validator(waitFlag)
-  .handler(({ data }) => viewer({ wait: data }))
+  // The greeting override applies here, not in the day-long cache, so a config edit shows at once.
+  .handler(async ({ data }) => {
+    const result = await viewer({ wait: data })
+    const name = config().greeting_name
+    return name ? { ...result, data: { ...result.data, name } } : result
+  })
 export const getWeather = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => weather({ wait: data }))

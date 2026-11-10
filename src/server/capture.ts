@@ -1,7 +1,7 @@
 import { appendFile, readdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
+import { CONFIG_PATH, config } from "./config"
 
-const DIR = process.env.CAPTURE_DIR?.trim() || "/Users/ndom91/obsidian/Plain/Weekly Notes"
 const TEMPLATE = "template.md"
 export const MAX_CAPTURE = 2000
 
@@ -24,18 +24,18 @@ function weekRange(now: Date) {
  * This week's note. Notes don't always start on Monday (there's a 2026-10-13), so any
  * dated note inside the week counts. With none, create one from the template.
  */
-async function weeklyNote(now: Date): Promise<string> {
+async function weeklyNote(dir: string, now: Date): Promise<string> {
   const { monday, sunday } = weekRange(now)
-  const existing = (await readdir(DIR))
+  const existing = (await readdir(dir))
     .map((f) => f.match(/^(\d{4}-\d{2}-\d{2})\.md$/)?.[1])
     .filter((d): d is string => d != null && d >= monday && d <= sunday)
     .sort()
   if (existing.length) return `${existing[0]}.md`
 
   const name = `${monday}.md`
-  const template = await readFile(join(DIR, TEMPLATE), "utf8")
+  const template = await readFile(join(dir, TEMPLATE), "utf8")
   // flag "wx": never overwrite, in case Obsidian created it a moment ago.
-  await writeFile(join(DIR, name), template.replace(/^week:.*$/m, `week: ${monday}`), { flag: "wx" }).catch(
+  await writeFile(join(dir, name), template.replace(/^week:.*$/m, `week: ${monday}`), { flag: "wx" }).catch(
     (err: NodeJS.ErrnoException) => {
       if (err.code !== "EEXIST") throw err
     },
@@ -47,8 +47,10 @@ async function weeklyNote(now: Date): Promise<string> {
 export async function capture(text: string, now = new Date()): Promise<string> {
   const [first, ...rest] = text.trim().split(/\r?\n/)
   const bullet = [`- ${first}`, ...rest.map((line) => `  ${line}`)].join("\n")
-  const name = await weeklyNote(now)
-  const path = join(DIR, name)
+  const dir = config().capture.dir
+  if (!dir) throw new Error(`Set capture.dir in ${CONFIG_PATH}`)
+  const name = await weeklyNote(dir, now)
+  const path = join(dir, name)
   const current = await readFile(path, "utf8")
   await appendFile(path, `${current.endsWith("\n") || current === "" ? "" : "\n"}${bullet}\n`)
   return name

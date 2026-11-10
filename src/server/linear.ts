@@ -1,10 +1,9 @@
 import type { LinearIssue, LinearIssues, StandupItem } from "../lib/types"
+import { config } from "./config"
 
 const API = "https://api.linear.app/graphql"
-const KEY = process.env.LINEAR_API_KEY?.trim()
-
 /** The page shows the Linear column only with both the key and the workspace slug. */
-export const linearConfigured = Boolean(KEY && process.env.LINEAR_WORKSPACE?.trim())
+export const linearConfigured = () => Boolean(config().linear.api_key && config().linear.workspace)
 
 // In progress, Todo and Backlog. Done and canceled stay out.
 const QUERY = `query {
@@ -35,11 +34,12 @@ interface RawIssue {
 }
 
 async function linearQuery<T>(query: string): Promise<T> {
-  if (!KEY) throw new Error("LINEAR_API_KEY is unset")
+  const key = config().linear.api_key
+  if (!key) throw new Error("linear.api_key is unset in config.yaml")
   const res = await fetch(API, {
     method: "POST",
     // Personal API keys go in as-is, without "Bearer".
-    headers: { Authorization: KEY, "Content-Type": "application/json" },
+    headers: { Authorization: key, "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
     signal: AbortSignal.timeout(15_000),
   })

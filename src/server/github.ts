@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 import type { PrNotification, PullRequest, PullRequests, StandupItem, Viewer } from "../lib/types"
+import { config } from "./config"
 
 const run = promisify(execFile)
 
@@ -60,24 +61,24 @@ const PR_FIELDS = `
 
 const PAGE_SIZE = 20
 // Extra search qualifiers, e.g. "org:my-company" to hide open-source noise.
-const FILTER = process.env.GH_SEARCH_FILTER?.trim() ?? ""
+const filter = () => config().github.search_filter
 
-// Linear issue links need the workspace slug, as in linear.app/<slug>/issue/CORE-123.
-const LINEAR_WORKSPACE = process.env.LINEAR_WORKSPACE?.trim()
 const ISSUE_ID = /\b[A-Z][A-Z0-9]+-\d+\b/
 const LINEAR_URL = /linear\.app\/[\w-]+\/issue\/([A-Z][A-Z0-9]+-\d+)/i
 
 // The title is the reliable source. The body is a fallback: a Linear URL first, then any
 // bare ID, which can misfire on strings like "SHA-256".
 function linearIssue(title: string, body: string): PullRequest["linear"] {
-  if (!LINEAR_WORKSPACE) return null
+  // Linear issue links need the workspace slug, as in linear.app/<slug>/issue/CORE-123.
+  const workspace = config().linear.workspace
+  if (!workspace) return null
   const id = title.match(ISSUE_ID)?.[0] ?? body.match(LINEAR_URL)?.[1]?.toUpperCase() ?? body.match(ISSUE_ID)?.[0]
-  return id ? { id, url: `https://linear.app/${LINEAR_WORKSPACE}/issue/${id}` } : null
+  return id ? { id, url: `https://linear.app/${workspace}/issue/${id}` } : null
 }
 
 const searchQuery = (q: string) => `
   query {
-    search(query: "${q} ${FILTER} archived:false sort:updated-desc", type: ISSUE, first: ${PAGE_SIZE}) {
+    search(query: "${q} ${filter()} archived:false sort:updated-desc", type: ISSUE, first: ${PAGE_SIZE}) {
       issueCount
       nodes { ${PR_FIELDS} }
     }
@@ -140,7 +141,7 @@ export async function fetchPRs(): Promise<PullRequests> {
 
 export async function fetchViewer(): Promise<Viewer> {
   const data = await graphql<{ viewer: { login: string; name: string | null } }>(`query { viewer { login name } }`)
-  return { login: data.viewer.login, name: process.env.GREETING_NAME?.trim() || data.viewer.name }
+  return { login: data.viewer.login, name: data.viewer.name }
 }
 
 // Activity worth a row icon. "review_requested" is left out: the "Review requested"
@@ -208,7 +209,7 @@ export interface ShippedPR extends StandupItem {
  */
 export async function fetchMyPRsSince(since: string) {
   const search = (qualifier: string) => `search(
-    query: "is:pr author:@me ${qualifier}>=${since} ${FILTER}", type: ISSUE, first: 20
+    query: "is:pr author:@me ${qualifier}>=${since} ${filter()}", type: ISSUE, first: 20
   ) { nodes { ... on PullRequest { number title body url repository { name } } } }`
   const data = await graphql<{ merged: { nodes: Array<RawShipped> }; opened: { nodes: Array<RawShipped> } }>(
     `query { merged: ${search("is:merged merged:")} opened: ${search("created:")} }`,

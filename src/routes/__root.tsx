@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
 import { type ReactNode, useState } from "react"
 import { SettingsProvider, useSettingsState } from "../lib/useSettings"
-import { getSettings } from "../server/fns"
+import { getSearchUrl, getSettings } from "../server/fns"
 import appCss from "../styles.css?url"
 
 const FAVICON =
@@ -11,7 +11,10 @@ const FAVICON =
 
 export const Route = createRootRoute({
   // Read here, so the whole page (theme included) renders with them from the first paint.
-  beforeLoad: async () => ({ settings: await getSettings() }),
+  beforeLoad: async () => {
+    const [settings, searchUrl] = await Promise.all([getSettings(), getSearchUrl()])
+    return { settings, searchUrl }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

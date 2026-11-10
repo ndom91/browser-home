@@ -8,7 +8,7 @@ Context for coding agents working in this repo. The README covers setup and use.
 - **Comments are for the non-obvious.** Never restate the code. Comment the _why_: a constraint, a gotcha, a workaround. When in doubt, leave it out.
 - **Audit before calling a large piece of work done.** Reread the diff for duplication, dead code, and simpler shapes, and for comments that restate code. Skip this for small changes.
 - **Commit straight to `main`, and push.** No branches, PRs, or tickets. Commit each logical chunk as you go. Keep formatting-only changes in their own commit.
-- **Never commit `.env`.** It holds the LLM API key. Only `.env.example` is tracked.
+- **Never commit `.env` or `config.yaml`.** They hold secrets and personal settings. Only the `.example` files are tracked.
 - **Other sessions may share this checkout.** Run `git status` before you commit. Stage only your own changes, and never commit another session's half-done files. If they share a file with yours, stage your hunks alone, for example with `git hash-object -w` plus `git update-index --cacheinfo`.
 
 ## Commands
@@ -53,7 +53,8 @@ src/
     hn.ts              top stories + comment threads
     capture.ts         appends quick-capture notes to this week's Obsidian note
     weather.ts         Open-Meteo daily forecast
-    llm.ts             OpenAI-compatible adapter from env vars
+    config.ts          config.yaml loader: zod schema, ${VAR} from env, reload on change
+    llm.ts             OpenAI-compatible adapter and MCP clients, from config
     sanitize.ts        allowlist sanitizer for HN comment HTML
     demo.ts            fixtures for dev:demo
   components/          one file per panel, plus Panel, FilteredSection, RowSignals, ChatWidget, QuickCapture,
@@ -68,11 +69,11 @@ launchd/ + scripts/    run at login
 
 ### Data flow
 
-1. The root route's `beforeLoad` reads the settings cookie (`getSettings()`), so theme and column layout are right on the first paint. The page loader then asks `getFeatures()` which optional parts are set up (chat, Linear). A column that is hidden, or lacks its env vars, never renders and never fetches. Then the loader calls every server function it needs. It waits at most `SSR_BUDGET_MS` (1.5 s) per source, then renders. A slow source loads in the browser instead.
+1. The root route's `beforeLoad` reads the settings cookie (`getSettings()`), so theme and column layout are right on the first paint. The page loader then asks `getFeatures()` which optional parts are set up (chat, Linear). A column that is hidden, or lacks its config, never renders and never fetches. Then the loader calls every server function it needs. It waits at most `SSR_BUDGET_MS` (1.5 s) per source, then renders. A slow source loads in the browser instead.
 2. On the server, each source sits behind `cached()`. Stale data is returned at once while one background refresh runs. Many tabs never multiply upstream calls.
 3. On the client, `useSource()` seeds React Query with the server-rendered value. `staleTime` and `refetchInterval` come from `src/lib/ttl.ts`, the same table the server cache uses. So a new tab makes no data requests until its data expires.
 
-**Adding a source:** write `fetchX()` in `src/server/`, wrap it in `cached()` in `fns.ts` with a `TTL` entry, add a fixture in `demo.ts`, then load it in the route loader and read it with `useSource()`. If the source needs env vars, add a flag to `Features` and gate it like Linear.
+**Adding a source:** write `fetchX()` in `src/server/`, wrap it in `cached()` in `fns.ts` with a `TTL` entry, add a fixture in `demo.ts`, then load it in the route loader and read it with `useSource()`. If the source needs settings, add them to the schema in `config.ts` and to `config.example.yaml`, add a flag to `Features`, and gate it like Linear. Read `config()` at call time, never into a module constant, or edits won't apply.
 
 ## Gotchas already found
 
@@ -88,7 +89,6 @@ launchd/ + scripts/    run at login
 ### GitHub
 
 - Search with diff stats and CI rollups is slow (3–8 s) and sometimes returns 502. Two parallel searches of 20, one retry on 502/504, and the cache keep it usable. Don't add heavy nested fields such as `latestReviews`. `viewerLatestReview` is the cheap way to spot a re-review.
-- `GH_SEARCH_FILTER` lives in `.env`, not the plist. `process.loadEnvFile()` never overrides a variable that is already set, even to an empty string, so a plist entry would hide the `.env` value.
 
 ### Hacker News
 
@@ -102,12 +102,13 @@ launchd/ + scripts/    run at login
 - Vite loads only `VITE_`-prefixed variables, so both `vite.config.ts` and `serve.js` call `process.loadEnvFile()`. Variables already set (for example from launchd) win.
 - `serve.js` aborts the request when the browser disconnects, so Stop also stops the upstream call.
 - Answers render with `@tanstack/markdown` and its streaming extension. Raw HTML stays off.
-- `MCP_URL` adds one MCP server's tools to the chat (`mcpOptions()` in `llm.ts`), connected per request. A failed connect only logs, so chat still works without tools. HA's `/api/mcp` exposes every LLM API selected in its MCP Server integration options, write tools included.
+- `mcp.servers` adds MCP tools to the chat (`mcpOptions()` in `llm.ts`). Every server connects in parallel on each request. A server that fails only logs, and the rest still serve tools. Tool names are `<server>__<tool>`; the chat strips everything up to the last `__` for display.
+- HA's `/api/mcp` exposes every LLM API selected in its MCP Server integration options, write tools included.
 
 ### Linear
 
 - Personal API keys go in the `Authorization` header as-is, without `Bearer`.
-- The column needs both `LINEAR_API_KEY` and `LINEAR_WORKSPACE`. Demo mode shows it from fixtures either way.
+- The column needs both `linear.api_key` and `linear.workspace`. Demo mode shows it from fixtures either way.
 - PRs link to issues through the issue ID in the PR title or body (`github.ts`). The Linear column reuses those IDs for its PR chip, so it makes no extra GitHub call.
 
 ### Quick capture
@@ -120,7 +121,7 @@ launchd/ + scripts/    run at login
 - Shows from 1 h before a timed event whose title matches `/stand[\s-]?up/i` until it ends (`src/lib/standup.ts`).
 - "Since" is the same clock time on the previous workday, so Monday looks back to Friday.
 - `cachedBy` keys it by the standup's start time. Demo mode moves "Platform standup" to 30 min from now so the card shows.
-- PRs in repos that `GH_SEARCH_FILTER` excludes don't appear. Done issues come from Linear's `completedAt`.
+- PRs in repos that `github.search_filter` excludes don't appear. Done issues come from Linear's `completedAt`.
 
 ### Notifications and row signals
 
@@ -141,6 +142,13 @@ launchd/ + scripts/    run at login
 - The handler checks `e.target.closest()`. To test a key from a script, dispatch the `keydown` on an element, not on `window`.
 - Transitions follow transitions.dev snippets in the motion section of `styles.css`. JS timing reads the same CSS tokens through `cssMs()`, so change durations in CSS only.
 - `AnimatedList` keeps leaving rows mounted (and `inert`) until their collapse finishes. Code that walks rows must skip `[inert]`, as `useKeyboardNav` does.
+
+### Config
+
+- `config()` stats `config.yaml` on every call and re-parses only when its mtime changes. Edits apply on the next request. Cached sources pick them up at their next refresh, except the greeting, which `getViewer` applies outside the cache.
+- A file that fails to parse or validate logs the error and keeps the last good config. With no file at all, defaults apply, which hides chat and Linear.
+- `${VAR}` reads `process.env`, so the `.env` rules still hold: `process.loadEnvFile()` never overrides a variable that is already set, even to an empty string. A plist entry hides the `.env` value.
+- An unset `${VAR}` becomes `""` and logs a warning naming it.
 
 ### Server and tooling
 
