@@ -2,7 +2,7 @@ import { fetchServerSentEvents, type UIMessage, useChat } from "@tanstack/ai-rea
 import { streamingMarkdownExtension } from "@tanstack/markdown/extensions/streaming"
 import { Markdown } from "@tanstack/markdown/react"
 import { type FormEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { ArrowUpIcon, ChevronDownIcon, SparkHexIcon, StopIcon } from "./icons"
+import { ArrowUpIcon, CheckIcon, ChevronDownIcon, ChevronRightIcon, SparkHexIcon, StopIcon } from "./icons"
 import { STREAMING_COMPONENTS, ThinkingLine } from "./ui/motion"
 
 const connection = fetchServerSentEvents("/api/ask")
@@ -15,6 +15,12 @@ const textOf = (m: UIMessage) =>
     .join("")
     .trim()
 
+type Part = UIMessage["parts"][number]
+type ToolCall = Extract<Part, { type: "tool-call" }>
+type ToolResult = Extract<Part, { type: "tool-result" }>
+
+const hasTools = (m: UIMessage) => m.parts.some((p) => p.type === "tool-call")
+
 /**
  * Floating "Quick question" box for the local LLM. It's anchored to the bottom
  * of the page and the thread grows upward, so the input never moves.
@@ -26,11 +32,13 @@ export function ChatWidget() {
   const [collapsed, setCollapsed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const visible = messages.filter((m) => m.role === "user" || textOf(m))
+  const visible = messages.filter((m) => m.role === "user" || textOf(m) || hasTools(m))
   const open = visible.length > 0 && !collapsed
   const last = messages.at(-1)
-  // "Thinking" until the first token of the answer arrives.
-  const thinking = isLoading && (!last || last.role === "user" || !textOf(last))
+  const lastPart = last?.role === "assistant" ? last.parts.at(-1) : undefined
+  // "Thinking" until text streams, except while a tool row shows its own spinner.
+  const toolRunning = lastPart?.type === "tool-call"
+  const thinking = isLoading && !toolRunning && !(lastPart?.type === "text" && lastPart.content.trim())
 
   // "/" focuses the box from anywhere, unless you're already typing somewhere.
   useEffect(() => {
@@ -165,12 +173,13 @@ function Thread({
   // Follow the stream, unless the user scrolled up to read.
   const last = messages.at(-1)
   const lastText = last ? textOf(last) : ""
+  const lastParts = last?.parts.length ?? 0
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run on new content, which these values track.
   useLayoutEffect(() => {
     const el = scrollRef.current
     if (el && stickToBottom.current) el.scrollTop = el.scrollHeight
     onScroll()
-  }, [messages.length, lastText, thinking, failed])
+  }, [messages.length, lastText, lastParts, thinking, failed])
 
   return (
     <div className="chat-thread" ref={scrollRef} onScroll={onScroll}>
@@ -186,12 +195,7 @@ function Thread({
           </p>
         ) : (
           <div key={m.id} className="chat-msg chat-answer">
-            <Markdown
-              extensions={markdownExtensions}
-              components={streaming && i === messages.length - 1 ? STREAMING_COMPONENTS : undefined}
-            >
-              {textOf(m)}
-            </Markdown>
+            <AnswerParts message={m} streaming={streaming && i === messages.length - 1} />
           </div>
         ),
       )}
@@ -210,5 +214,114 @@ function Thread({
         </p>
       )}
     </div>
+  )
+}
+
+/** Text and tool calls in the order the model produced them. Results attach to their call. */
+function AnswerParts({ message, streaming }: { message: UIMessage; streaming: boolean }) {
+  const results = new Map<string, ToolResult>()
+  for (const p of message.parts) if (p.type === "tool-result") results.set(p.toolCallId, p)
+
+  return message.parts.map((p, i) => {
+    const key = `${message.id}-${i}`
+    if (p.type === "tool-call") return <ToolRow key={key} call={p} result={results.get(p.id)} streaming={streaming} />
+    if (p.type !== "text" || !p.content.trim()) return null
+    return (
+      <Markdown key={key} extensions={markdownExtensions} components={streaming ? STREAMING_COMPONENTS : undefined}>
+        {p.content}
+      </Markdown>
+    )
+  })
+}
+
+// "homeassistant__HassTurnOn" → "Turn on", "GetLiveContext" → "Get live context".
+const toolLabel = (name: string) => {
+  const words = (name.split("__").at(-1) ?? name)
+    .replace(/^Hass(?=[A-Z])/, "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+const parseJson = (raw: string): unknown => {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return raw
+  }
+}
+
+const pretty = (value: unknown) => (typeof value === "string" ? value : JSON.stringify(value, null, 2))
+
+/** One-line "key: value · key: value" from the scalar arguments. */
+const argSummary = (args: unknown) =>
+  args && typeof args === "object"
+    ? Object.entries(args)
+        .filter(([, v]) => v !== null && v !== "" && typeof v !== "object")
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(" · ")
+    : ""
+
+const resultText = (result: ToolResult | undefined, call: ToolCall) => {
+  if (result?.error) return result.error
+  const raw = result
+    ? typeof result.content === "string"
+      ? result.content
+      : result.content.map((c) => (c.type === "text" ? c.content : "")).join("\n")
+    : call.output
+  if (raw === undefined) return ""
+  return pretty(unwrap(typeof raw === "string" ? parseJson(raw) : raw))
+}
+
+// Results often arrive wrapped: HA's { result: "…" } or raw MCP { content: [{ type: "text", text: "<json>" }] }.
+// Peel those layers so the row shows the payload itself.
+const unwrap = (value: unknown): unknown => {
+  if (!value || typeof value !== "object") return value
+  const v = value as { result?: unknown; content?: unknown }
+  if (Object.keys(v).length === 1 && "result" in v) return unwrap(v.result)
+  if (Array.isArray(v.content) && v.content.every((c) => c?.type === "text")) {
+    const texts = v.content.map((c: { text: string }) => c.text)
+    return texts.length === 1 ? unwrap(parseJson(texts[0])) : texts.join("\n")
+  }
+  return value
+}
+
+function ToolRow({ call, result, streaming }: { call: ToolCall; result?: ToolResult; streaming: boolean }) {
+  const args = call.input ?? parseJson(call.arguments)
+  const failed = call.state === "error" || result?.state === "error"
+  const done = !failed && (result?.state === "complete" || call.output !== undefined)
+  // A stopped run leaves the call without a result; don't spin forever.
+  const status = failed ? "error" : done ? "done" : streaming ? "running" : "stopped"
+  const summary = argSummary(args)
+  const output = resultText(result, call)
+
+  return (
+    <details className={`chat-tool is-${status}`}>
+      <summary>
+        <span className="chat-tool-status" aria-hidden="true">
+          {status === "done" ? (
+            <CheckIcon />
+          ) : status === "running" ? (
+            <span className="chat-tool-spinner" />
+          ) : (
+            <span className="chat-tool-dot" />
+          )}
+        </span>
+        <span className="chat-tool-name">{toolLabel(call.name)}</span>
+        {summary && <span className="chat-tool-args">{summary}</span>}
+        <ChevronRightIcon className="chat-tool-chevron" />
+      </summary>
+      <div className="chat-tool-body">
+        <p className="chat-tool-label">{call.name}</p>
+        <pre>{pretty(args) || "{}"}</pre>
+        {output && (
+          <>
+            <p className="chat-tool-label">{failed ? "Error" : "Result"}</p>
+            <pre className="chat-tool-output">{output}</pre>
+          </>
+        )}
+      </div>
+    </details>
   )
 }
