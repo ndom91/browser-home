@@ -102,6 +102,7 @@ launchd/ + scripts/    run at login
 - Vite loads only `VITE_`-prefixed variables, so both `vite.config.ts` and `serve.js` call `process.loadEnvFile()`. Variables already set (for example from launchd) win.
 - `serve.js` aborts the request when the browser disconnects, so Stop also stops the upstream call.
 - Answers render with `@tanstack/markdown` and its streaming extension. Raw HTML stays off.
+- `MCP_URL` adds one MCP server's tools to the chat (`mcpOptions()` in `llm.ts`), connected per request. A failed connect only logs, so chat still works without tools. HA's `/api/mcp` exposes every LLM API selected in its MCP Server integration options, write tools included.
 
 ### Linear
 

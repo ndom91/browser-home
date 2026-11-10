@@ -1,6 +1,6 @@
 import { chat, toServerSentEventsResponse } from "@tanstack/ai"
 import { createFileRoute } from "@tanstack/react-router"
-import { llmAdapter, systemPrompt } from "../../server/llm"
+import { llmAdapter, mcpOptions, systemPrompt } from "../../server/llm"
 
 const MAX_MESSAGES = 40
 const MAX_BODY_CHARS = 256_000
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/api/ask")({
           messages: body.messages,
           threadId: body.threadId ?? crypto.randomUUID(),
           systemPrompts: [systemPrompt()],
+          mcp: await mcpOptions(),
           abortController,
         })
         return toServerSentEventsResponse(stream, { abortController })

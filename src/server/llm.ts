@@ -1,4 +1,6 @@
 import tls from "node:tls"
+import type { ChatMCPOptions } from "@tanstack/ai"
+import { createMCPClient } from "@tanstack/ai-mcp"
 import { openaiCompatibleText } from "@tanstack/ai-openai/compatible"
 
 // The inference host uses a certificate from a private CA in the macOS keychain.
@@ -22,3 +24,21 @@ export function llmAdapter() {
 export const systemPrompt = () =>
   `You are a concise assistant on the user's browser start page. Today is ${new Date().toDateString()}. ` +
   "Answer briefly. Use Markdown only when it helps: short lists, code blocks."
+
+/** Tools from an MCP server (e.g. Home Assistant's /api/mcp), or undefined when MCP_URL is unset. */
+export async function mcpOptions(): Promise<ChatMCPOptions | undefined> {
+  const { MCP_URL, MCP_TOKEN } = process.env
+  if (!MCP_URL) return undefined
+  const headers: Record<string, string> = MCP_TOKEN ? { Authorization: `Bearer ${MCP_TOKEN}` } : {}
+  try {
+    const client = await createMCPClient({ transport: { type: "http", url: MCP_URL, headers }, name: "browser-home" })
+    return {
+      clients: [client],
+      // An unreachable MCP server shouldn't take the whole chat down with it.
+      onDiscoveryError: (error) => console.warn("MCP tool discovery failed:", error),
+    }
+  } catch (error) {
+    console.warn(`MCP connect to ${MCP_URL} failed:`, error)
+    return undefined
+  }
+}
