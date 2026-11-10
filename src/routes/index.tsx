@@ -175,8 +175,8 @@ function Home() {
           {columns.map(panel)}
         </main>
         {features.chat && <ChatWidget />}
-        <QuickCapture />
-        <Shortcuts open={help} onOpenChange={setHelp} chat={features.chat} columns={columns} />
+        {features.capture && <QuickCapture />}
+        <Shortcuts open={help} onOpenChange={setHelp} features={features} columns={columns} />
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} features={features} />
       </div>
     </NowContext.Provider>

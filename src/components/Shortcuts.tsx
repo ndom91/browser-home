@@ -1,11 +1,12 @@
 import type { ColumnId } from "../lib/settings"
+import type { Features } from "../lib/types"
 import { COLUMNS } from "./columns"
 import { Dialog } from "./ui/Dialog"
 
 type Group = { title: string; keys: Array<[Array<string>, string]> }
 
-// Lists only the shortcuts that exist, so a hidden column or chat box doesn't show up here.
-function groups(chat: boolean, columns: Array<ColumnId>): Array<Group> {
+// Lists only the shortcuts that exist, so a hidden column, chat box or capture doesn't show up here.
+function groups(features: Features, columns: Array<ColumnId>): Array<Group> {
   const names = columns.map((id) => COLUMNS[id].short).join(", ")
   return [
     {
@@ -30,8 +31,8 @@ function groups(chat: boolean, columns: Array<ColumnId>): Array<Group> {
     {
       title: "Anywhere",
       keys: [
-        [["c"], "Quick capture to this week's note"],
-        ...(chat ? [[["/"], "Ask the local model"] as [Array<string>, string]] : []),
+        ...(features.capture ? [[["c"], "Quick capture to this week's note"] as [Array<string>, string]] : []),
+        ...(features.chat ? [[["/"], "Ask the local model"] as [Array<string>, string]] : []),
         [["⌘", "K"], "Search or go to a URL"],
         [[","], "Settings"],
         [["?"], "This sheet"],
@@ -43,19 +44,19 @@ function groups(chat: boolean, columns: Array<ColumnId>): Array<Group> {
 export function Shortcuts({
   open,
   onOpenChange,
-  chat,
+  features,
   columns,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  chat: boolean
+  features: Features
   /** Visible columns, in order. */
   columns: Array<ColumnId>
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Keyboard shortcuts" aside={<kbd>esc</kbd>}>
       <div className="shortcuts">
-        {groups(chat, columns).map((g) => (
+        {groups(features, columns).map((g) => (
           <section key={g.title}>
             <h3>{g.title}</h3>
             <dl>

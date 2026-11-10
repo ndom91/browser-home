@@ -113,6 +113,7 @@ launchd/ + scripts/    run at login
 
 ### Quick capture
 
+- Shows only with `capture.dir` set (`Features.capture`). Without it, the dialog, the `c` shortcut and its help line are all hidden.
 - Weekly notes don't always start on Monday (there's a `2026-10-13.md`). Any `YYYY-MM-DD.md` dated inside the current week counts as this week's note.
 - With no note for the week, `capture.ts` copies `template.md` and fills in `week:`. It writes with `flag: "wx"`, so it never overwrites a note Obsidian created a moment earlier.
 

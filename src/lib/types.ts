@@ -132,4 +132,5 @@ export interface LinearIssues {
 export interface Features {
   chat: boolean
   linear: boolean
+  capture: boolean
 }

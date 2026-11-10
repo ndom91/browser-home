@@ -49,7 +49,11 @@ const waitFlag = (wait: unknown) => wait === true
 
 // Demo mode shows Linear from fixtures. Chat always needs a real model.
 export const getFeatures = createServerFn({ method: "GET" }).handler(
-  (): Features => ({ chat: missingLlmKeys().length === 0, linear: DEMO || linearConfigured() }),
+  (): Features => ({
+    chat: missingLlmKeys().length === 0,
+    linear: DEMO || linearConfigured(),
+    capture: Boolean(config().capture.dir),
+  }),
 )
 /** The settings cookie, read on the server so the first paint already uses it. */
 export const getSettings = createServerFn({ method: "GET" }).handler(() => parseSettings(getCookie(SETTINGS_COOKIE)))

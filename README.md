@@ -83,7 +83,7 @@ These live in `config.yaml`. See `config.example.yaml` for details. Edits apply 
 | `llm.base_url`, `llm.model`, `llm.api_key` | none                               | The chat box. Hidden unless all three are set                  |
 | `mcp.servers`                              | none                               | MCP servers whose tools the chat can call, e.g. Home Assistant |
 | `linear.api_key`, `linear.workspace`       | none                               | The Linear column and PR-to-issue links. Hidden without both   |
-| `capture.dir`                              | none                               | Folder of weekly notes for quick capture                       |
+| `capture.dir`                              | none                               | Folder of weekly notes for quick capture. Hidden without it    |
 | `greeting_name`                            | your GitHub name                   | Name in the greeting                                           |
 | `github.search_filter`                     | none                               | Extra GitHub search qualifiers, e.g. `org:acme`                |
 | `search_url`                               | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL               |
@@ -105,7 +105,7 @@ pnpm reload
 
 - **Calendar says "timed out" or "access denied".** Run `./bin/agenda` in a terminal and click Allow. Rebuilding the helper can make macOS ask again.
 - **No pull requests.** Run `gh auth status`. Your org may need SSO authorized for the `gh` token.
-- **No chat box or Linear column.** Its settings are missing from `config.yaml`, or a `${VAR}` it uses is missing from `.env`. The log names what's missing.
+- **No chat box, Linear column or quick capture.** Its settings are missing from `config.yaml`, or a `${VAR}` it uses is missing from `.env`. The log names what's missing.
 - **Quick capture fails.** Check that `capture.dir` exists. The first capture of a week also needs `template.md` in it.
 - **Moved the repo or switched Node managers.** Re-run `./scripts/install-launchd.sh`.
 - **Logs** are in `~/Library/Logs/browser-home.log`.
