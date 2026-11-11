@@ -3373,7 +3373,7 @@ a:focus-visible,
 .pr-files {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 -16px;
 }
 .pr-files-heading {
   display: flex;
@@ -3397,7 +3397,7 @@ a:focus-visible,
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 4px;
+  padding: 9px 20px;
   border-top: 1px solid var(--line-soft);
   font-size: 12px;
 }
