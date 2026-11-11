@@ -9,7 +9,17 @@ import { getPRDetail } from "../server/fns"
 import { ArrowLeftIcon, ArrowUpRightIcon } from "./icons"
 import { PanelError, PanelLoading } from "./Panel"
 
-export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => void }) {
+export function PRDetailView({
+  pr,
+  reviewRequested,
+  reviewHref,
+  onBack,
+}: {
+  pr: PullRequest
+  reviewRequested: boolean
+  reviewHref: string
+  onBack: () => void
+}) {
   const now = useNow()
   const contentRef = useRef<HTMLElement>(null)
   const key = `${pr.repoFull}/${pr.number}`
@@ -64,6 +74,36 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
               </span>
             </span>
           </div>
+          <div className="pr-review-bar">
+            <span
+              className={`checks-dot ${reviewRequested ? "is-pending" : pr.review === "APPROVED" ? "is-success" : pr.review === "CHANGES_REQUESTED" ? "is-failed" : ""}`}
+            />
+            <span className="pr-review-label">
+              {reviewRequested
+                ? pr.reviewedByMe
+                  ? "Your re-review requested"
+                  : "Your review requested"
+                : pr.draft
+                  ? "Draft"
+                  : (pr.review?.replaceAll("_", " ").toLowerCase() ?? "Open")}
+              {!reviewRequested && detail?.reviewers.length ? ` · requested: ${detail.reviewers.join(", ")}` : ""}
+            </span>
+            {reviewRequested && (
+              <span className="pr-review-actions">
+                <a
+                  href={`${pr.url}/files`}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Open GitHub to approve this pull request"
+                >
+                  Approve
+                </a>
+                <a className="pr-review-primary" href={reviewHref} aria-label="Review pull request in T3 Code">
+                  Review
+                </a>
+              </span>
+            )}
+          </div>
           <div className="pr-detail-status">
             <div className="pr-status-line">
               <span
@@ -90,13 +130,6 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
               ))
             )}
           </div>
-          <p className="pr-review-status">
-            <span className="checks-dot is-pending" />
-            <span>
-              {pr.draft ? "Draft" : (pr.review?.replaceAll("_", " ").toLowerCase() ?? "Open")}
-              {detail?.reviewers.length ? ` · requested: ${detail.reviewers.join(", ")}` : ""}
-            </span>
-          </p>
         </div>
         <nav className="pr-detail-sections" aria-label="Pull request sections">
           <button type="button" onClick={() => goTo("description")}>

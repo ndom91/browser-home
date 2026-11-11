@@ -122,7 +122,15 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
           )}
         </section>
         <section className="t-page pr-detail-page" data-page-id="2" ref={detailRef} inert={open == null}>
-          {shown && <PRDetailView key={shown.url} pr={shown} onBack={() => setOpen(null)} />}
+          {shown && (
+            <PRDetailView
+              key={shown.url}
+              pr={shown}
+              reviewRequested={prs?.review.some((pr) => pr.url === shown.url) ?? false}
+              reviewHref={reviewLink(shown)}
+              onBack={() => setOpen(null)}
+            />
+          )}
         </section>
       </div>
     </Panel>

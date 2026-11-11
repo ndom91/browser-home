@@ -3203,7 +3203,7 @@ a:focus-visible,
   white-space: nowrap;
 }
 .pr-detail-status {
-  margin-top: 14px;
+  margin-top: 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
@@ -3238,13 +3238,58 @@ a:focus-visible,
 .checks-dot.is-pending {
   background: var(--pending);
 }
-.pr-review-status {
+.pr-review-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 12px 0 0;
+  margin-top: 14px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-sub);
   color: var(--text-2);
   font-size: 12px;
+}
+.pr-review-bar .checks-dot {
+  flex: none;
+}
+.pr-review-label {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.pr-review-actions {
+  display: flex;
+  gap: 5px;
+  flex: none;
+}
+.pr-review-actions a {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1.2;
+}
+.pr-review-actions a:hover {
+  background: var(--hover);
+}
+.pr-review-actions .pr-review-primary {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--panel);
+}
+.pr-review-actions .pr-review-primary:hover {
+  opacity: 0.85;
+  background: var(--text);
+}
+@media (max-width: 380px) {
+  .pr-review-bar {
+    flex-wrap: wrap;
+  }
+  .pr-review-actions {
+    margin-left: auto;
+  }
 }
 .pr-detail-sections {
   display: flex;
