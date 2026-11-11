@@ -3112,7 +3112,7 @@ a:focus-visible,
   border-bottom: 1px solid var(--line-soft);
 }
 .pr-detail-heading {
-  padding: 0 16px 14px;
+  padding: 10px 16px 14px;
 }
 .pr-detail-heading h3 {
   margin: 6px 0;
