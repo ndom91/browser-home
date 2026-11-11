@@ -210,24 +210,66 @@ export function PRDetailView({
               )}
             </section>
             <section className="pr-detail-section" data-detail-section="files">
-              <h4>Files changed</h4>
+              <div className="pr-files-heading">
+                <h4>
+                  Files changed{" "}
+                  {!detail.filesError && (
+                    <span>
+                      {detail.files.length}
+                      {detail.filesMore ? "+" : ""}
+                    </span>
+                  )}
+                </h4>
+                <span className="mono pr-files-diff">
+                  <span className="add">{signed(pr.additions, "+")}</span>{" "}
+                  <span className={pr.deletions ? "del" : ""}>{signed(pr.deletions, "−")}</span>
+                </span>
+              </div>
               {detail.filesError ? (
                 <p className="panel-error">Could not load files. Open on GitHub to see them.</p>
               ) : detail.files.length === 0 ? (
                 <p className="panel-empty">No changed files.</p>
               ) : (
                 <ul className="pr-files">
-                  {detail.files.map((file) => (
-                    <li key={file.path}>
-                      <a href={file.url} target="_blank" rel="noreferrer">
-                        {file.path}
-                      </a>
-                      <span className="mono">
-                        <span className="add">{signed(file.additions, "+")}</span>{" "}
-                        <span className="del">{signed(file.deletions, "−")}</span>
-                      </span>
-                    </li>
-                  ))}
+                  {detail.files.map((file) => {
+                    const slash = file.path.lastIndexOf("/")
+                    const name = file.path.slice(slash + 1)
+                    const extension = name.indexOf(".", 1)
+                    return (
+                      <li key={file.path}>
+                        <span
+                          className="pr-file-status mono"
+                          data-status={file.status}
+                          aria-label={file.status}
+                          role="img"
+                        >
+                          {file.status.charAt(0).toUpperCase()}
+                        </span>
+                        <a
+                          className="pr-file-path mono"
+                          href={file.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={file.path}
+                          aria-label={file.path}
+                        >
+                          <span className="pr-file-name">
+                            {extension < 0 ? name : name.slice(0, extension)}
+                            {extension >= 0 && <span>{name.slice(extension)}</span>}
+                          </span>
+                          {slash >= 0 && (
+                            <span className="pr-file-directory">
+                              <bdi dir="ltr">{file.path.slice(0, slash + 1)}</bdi>
+                            </span>
+                          )}
+                        </a>
+                        <span className="mono pr-files-diff">
+                          <span className={file.additions ? "add" : ""}>{signed(file.additions, "+")}</span>{" "}
+                          <span className={file.deletions ? "del" : ""}>{signed(file.deletions, "−")}</span>
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               {detail.filesMore && <p className="panel-empty">Showing the first 100 files. See the rest on GitHub.</p>}
