@@ -206,38 +206,38 @@ const FAILED_CHECKS = ["failure", "timed_out", "action_required", "startup_failu
 const RUNNING_CHECKS = ["queued", "in_progress", "pending", "requested", "waiting"]
 
 function Checks({ checks, total }: { checks: PRDetail["checks"]; total: number }) {
-  const passing = checks.filter((check) => check.status === "success")
-  const other = checks
-    .filter((check) => check.status !== "success")
-    .sort((a, b) => {
-      const priority = (status: string) =>
-        FAILED_CHECKS.includes(status) ? 0 : RUNNING_CHECKS.includes(status) ? 1 : 2
-      return priority(a.status) - priority(b.status)
-    })
-  const visible = other.slice(0, 5)
-  const remaining = other.slice(5)
+  const priority = (status: string) =>
+    RUNNING_CHECKS.includes(status) ? 0 : FAILED_CHECKS.includes(status) ? 1 : status === "success" ? 3 : 2
+  const sorted = [...checks].sort((a, b) => priority(a.status) - priority(b.status))
+  const visible = sorted.slice(0, 5)
+  const remaining = sorted.slice(5)
+  const groups = [
+    { label: "passing", count: remaining.filter((check) => check.status === "success").length },
+    { label: "skipped", count: remaining.filter((check) => check.status === "skipped").length },
+    { label: "neutral", count: remaining.filter((check) => check.status === "neutral").length },
+    { label: "failed", count: remaining.filter((check) => FAILED_CHECKS.includes(check.status)).length },
+    { label: "running", count: remaining.filter((check) => RUNNING_CHECKS.includes(check.status)).length },
+    {
+      label: "other",
+      count: remaining.filter(
+        (check) => !["success", "skipped", "neutral", ...FAILED_CHECKS, ...RUNNING_CHECKS].includes(check.status),
+      ).length,
+    },
+  ]
   return (
     <>
       {visible.map((check) => (
         <CheckRow key={check.id} check={check} />
       ))}
       {remaining.length > 0 && (
-        <details className="pr-passing-checks">
+        <details className="pr-more-checks">
           <summary>
-            {remaining.length} more {remaining.length === 1 ? "check" : "checks"}
+            {groups
+              .filter((group) => group.count)
+              .map((group) => `${group.count} ${group.label}`)
+              .join(" · ")}
           </summary>
           {remaining.map((check) => (
-            <CheckRow key={check.id} check={check} />
-          ))}
-        </details>
-      )}
-      {passing.length > 0 && (
-        <details className="pr-passing-checks">
-          <summary>
-            <span className="checks-dot is-success" />
-            {passing.length} passing
-          </summary>
-          {passing.map((check) => (
             <CheckRow key={check.id} check={check} />
           ))}
         </details>

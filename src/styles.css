@@ -3419,7 +3419,7 @@ a:focus-visible,
   flex: none;
   align-self: center;
 }
-.pr-passing-checks > summary {
+.pr-more-checks > summary {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -3428,11 +3428,11 @@ a:focus-visible,
   color: var(--muted);
   cursor: pointer;
 }
-.pr-passing-checks > summary::after {
+.pr-more-checks > summary::after {
   content: "⌄";
   margin-left: auto;
 }
-.pr-passing-checks[open] > summary::after {
+.pr-more-checks[open] > summary::after {
   transform: rotate(180deg);
 }
 .pr-check-note {

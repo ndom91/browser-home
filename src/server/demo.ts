@@ -502,6 +502,7 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
       : [
           { id: 1, name: "Tests", status: "failure", url: "https://github.com", durationMs: 125000 },
           { id: 2, name: "Lint", status: "success", url: "https://github.com", durationMs: 38000 },
+          { id: 9, name: "Build", status: "in_progress", url: "https://github.com", durationMs: null },
           ...["Deploy", "Integration", "Release", "Publish", "Notifications", "Smoke tests"].map((name, index) => ({
             id: index + 3,
             name,
@@ -510,7 +511,7 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
             durationMs: null,
           })),
         ],
-    checksTotal: key.endsWith("/4830") ? 0 : 8,
+    checksTotal: key.endsWith("/4830") ? 0 : 9,
     checksError: false,
   }
 }
