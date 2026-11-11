@@ -5,7 +5,7 @@ import { TTL } from "../lib/ttl"
 import type { PRActivity, PRDetail, PullRequest } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { getPRDetail } from "../server/fns"
-import { ArrowLeftIcon, ArrowUpRightIcon } from "./icons"
+import { ArrowLeftIcon, ArrowUpRightIcon, ChevronDownIcon } from "./icons"
 import { PanelError, PanelLoading } from "./Panel"
 
 export function PRDetailView({
@@ -327,9 +327,7 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
                           </span>
                         )}
                         <span className="pr-activity-age">{age(Date.parse(item.at), now)}</span>
-                        <span className="pr-activity-chevron" aria-hidden="true">
-                          ⌄
-                        </span>
+                        <ChevronDownIcon className="pr-activity-chevron" />
                       </summary>
                       <div className="pr-activity-body">
                         {item.thread && <p className="pr-activity-path">{item.thread.path}</p>}

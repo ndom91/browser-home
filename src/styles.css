@@ -3510,6 +3510,10 @@ a:focus-visible,
   flex: none;
   color: var(--muted);
 }
+.pr-activity-chevron {
+  align-self: center;
+  display: block;
+}
 .pr-activity-item[open] .pr-activity-chevron {
   transform: rotate(180deg);
 }
