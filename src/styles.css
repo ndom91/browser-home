@@ -3166,51 +3166,6 @@ a:focus-visible,
 .pr-detail-markdown img {
   max-width: 100%;
 }
-.pr-detail-trigger {
-  position: relative;
-  z-index: 1;
-  font: inherit;
-  display: inline-grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-  opacity: 0;
-}
-.pr-github:hover .pr-detail-trigger,
-.pr-detail-trigger:focus-visible {
-  opacity: 1;
-}
-.pr-detail-trigger:hover {
-  color: var(--text);
-  background: var(--hover);
-}
-@media (hover: hover) {
-  .pr-github .pr-side-top {
-    position: relative;
-  }
-  .pr-github .pr-detail-trigger {
-    position: absolute;
-    right: 0;
-    top: 0;
-    z-index: 2;
-  }
-  .pr-github:hover .pr-side-top > .badge,
-  .pr-side-top:has(.pr-detail-trigger:focus-visible) > .badge {
-    visibility: hidden;
-  }
-}
-@media (hover: none) {
-  .pr-detail-trigger {
-    opacity: 1;
-  }
-}
-
 .pr-detail-issue {
   flex: none;
   padding: 2px 5px;
@@ -3712,6 +3667,9 @@ a:focus-visible,
   border: 0;
   background: none;
   cursor: pointer;
+}
+.pr-row-detail:focus-visible {
+  outline-offset: -2px;
 }
 .pr-github .pr-link::after {
   content: none;

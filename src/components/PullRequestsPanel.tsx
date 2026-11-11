@@ -18,16 +18,7 @@ import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { dismissNotification, refreshPRs } from "../server/fns"
 import { FilteredSection } from "./FilteredSection"
-import {
-  ActivityIcon,
-  AtIcon,
-  ChevronRightIcon,
-  CommentIcon,
-  GitHubIcon,
-  HourglassIcon,
-  PullRequestIcon,
-  SparkleIcon,
-} from "./icons"
+import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, HourglassIcon, PullRequestIcon, SparkleIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { PRDetailView } from "./PRDetailView"
 import { RowSignals, type Signal } from "./RowSignals"
@@ -288,7 +279,13 @@ function Row({
   const size = prSize(pr.additions, pr.deletions)
   return (
     <div className={`pr pr-github${pr.draft ? " is-draft" : ""}${showAuthor ? " is-review" : ""}`} data-nav-item>
-      <button type="button" className="pr-row-detail" onClick={onOpen} tabIndex={-1} aria-hidden="true" />
+      <button
+        type="button"
+        className="pr-row-detail"
+        data-nav-alt
+        onClick={onOpen}
+        aria-label={`Show details for ${pr.repo}#${pr.number}`}
+      />
       <PullRequestIcon className="pr-icon" draft={pr.draft} />
       <span className="pr-main">
         <span className="pr-head">
@@ -303,16 +300,6 @@ function Row({
             {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
           </a>
           <span className="pr-side-top">
-            <button
-              type="button"
-              className="pr-detail-trigger"
-              data-nav-alt
-              onClick={onOpen}
-              aria-label={`Show details for ${pr.repo}#${pr.number}`}
-              title="Show details"
-            >
-              <ChevronRightIcon />
-            </button>
             <RowSignals signals={signals} />
             {reviewHref && (
               <Tooltip content="Review in T3 Code">
