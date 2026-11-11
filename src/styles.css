@@ -2524,7 +2524,6 @@ a:focus-visible,
   --page-slide-dur: 250ms;
   --page-fade-dur: 250ms;
   --page-slide-distance: 8px;
-  --page-blur: 3px;
   --page-stagger: 0ms;
   --page-exit-enabled: 1;
   --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -2543,7 +2542,6 @@ a:focus-visible,
   --digit-dur: 500ms;
   --digit-distance: 8px;
   --digit-stagger: 70ms;
-  --digit-blur: 2px;
   --digit-ease: cubic-bezier(0.34, 1.45, 0.64, 1);
   --digit-dir-x: 0;
   --digit-dir-y: 1;
@@ -2555,7 +2553,6 @@ a:focus-visible,
   /* Text states swap */
   --text-swap-dur: 150ms;
   --text-swap-translate-y: 4px;
-  --text-swap-blur: 2px;
   --text-swap-ease: ease-in-out;
   /* Menu dropdown */
   --dropdown-open-dur: 250ms;
@@ -2582,14 +2579,12 @@ a:focus-visible,
   --think-hold: 4000ms;
   --think-swap: 150ms;
   --think-distance: 8px;
-  --think-blur: 2px;
   --think-shimmer: 2000ms;
   --think-base: var(--muted);
   --think-highlight: var(--text);
   --think-ease: ease-in-out;
   /* Streaming text */
   --stream-fade: 350ms;
-  --stream-blur: 1px;
   --stream-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* Modal */
   --modal-open-dur: 250ms;
@@ -2623,19 +2618,15 @@ a:focus-visible,
   opacity: 0;
   pointer-events: none;
   transform: translateX(calc(var(--t-page-from-x, 0px) * var(--page-exit-enabled)));
-  filter: blur(calc(var(--page-blur) * var(--page-exit-enabled)));
   transition:
     opacity var(--page-fade-dur) var(--page-fade-ease),
-    transform var(--page-slide-dur) var(--page-slide-ease),
-    filter var(--page-slide-dur) var(--page-slide-ease);
-  will-change: opacity, transform, filter;
+    transform var(--page-slide-dur) var(--page-slide-ease);
 }
 .t-page-slide[data-page="1"] .t-page[data-page-id="1"],
 .t-page-slide[data-page="2"] .t-page[data-page-id="2"] {
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(0);
-  filter: blur(0);
+  transform: none;
   transition-delay: var(--page-stagger);
 }
 
@@ -2745,12 +2736,10 @@ a:focus-visible,
       calc(var(--digit-distance) * var(--digit-dir-y))
     );
     opacity: 0;
-    filter: blur(var(--digit-blur));
   }
   100% {
     transform: translate(0, 0);
     opacity: 1;
-    filter: blur(0);
   }
 }
 
@@ -2760,10 +2749,9 @@ a:focus-visible,
 }
 .t-digit {
   display: inline-block;
-  will-change: transform, opacity, filter;
 }
 .t-digit-group.is-animating .t-digit {
-  animation: t-digit-pop-in var(--digit-dur) var(--digit-ease) both;
+  animation: t-digit-pop-in var(--digit-dur) var(--digit-ease) backwards;
 }
 .t-digit-group.is-animating .t-digit[data-stagger="1"] {
   animation-delay: var(--digit-stagger);
@@ -2782,23 +2770,17 @@ a:focus-visible,
 
 .t-text-swap {
   display: inline-block;
-  transform: translateY(0);
-  filter: blur(0);
   opacity: 1;
   transition:
     transform var(--text-swap-dur) var(--text-swap-ease),
-    filter var(--text-swap-dur) var(--text-swap-ease),
     opacity var(--text-swap-dur) var(--text-swap-ease);
-  will-change: transform, filter, opacity;
 }
 .t-text-swap.is-exit {
   transform: translateY(calc(var(--text-swap-translate-y) * -1));
-  filter: blur(var(--text-swap-blur));
   opacity: 0;
 }
 .t-text-swap.is-enter-start {
   transform: translateY(var(--text-swap-translate-y));
-  filter: blur(var(--text-swap-blur));
   opacity: 0;
   transition: none;
 }
@@ -2926,14 +2908,10 @@ a:focus-visible,
   display: block;
   color: var(--think-base);
   white-space: nowrap;
-  transform: translateY(0);
-  filter: blur(0);
   opacity: 1;
   transition:
     transform var(--think-swap) var(--think-ease),
-    filter var(--think-swap) var(--think-ease),
     opacity var(--think-swap) var(--think-ease);
-  will-change: transform, filter, opacity;
 }
 .t-think-text::before {
   content: attr(data-text);
@@ -2966,13 +2944,11 @@ a:focus-visible,
 }
 .t-think-text.is-exit {
   transform: translateY(calc(var(--think-distance) * -1));
-  filter: blur(var(--think-blur));
   opacity: 0;
 }
 .t-think-text.is-enter-start {
   transition: none;
   transform: translateY(var(--think-distance));
-  filter: blur(var(--think-blur));
   opacity: 0;
 }
 
@@ -2980,7 +2956,6 @@ a:focus-visible,
   .t-think-text {
     transition: none !important;
     transform: none !important;
-    filter: none !important;
   }
   .t-think-text::before {
     display: none !important;
@@ -2993,16 +2968,14 @@ a:focus-visible,
    the stream itself sets the pace. */
 
 .t-stream-w {
-  animation: t-stream-in var(--stream-fade) var(--stream-ease) both;
+  animation: t-stream-in var(--stream-fade) var(--stream-ease) backwards;
 }
 @keyframes t-stream-in {
   from {
     opacity: 0;
-    filter: blur(var(--stream-blur));
   }
   to {
     opacity: 1;
-    filter: blur(0);
   }
 }
 
@@ -3083,10 +3056,7 @@ a:focus-visible,
   min-height: 0;
   overflow: hidden;
   opacity: 1;
-  filter: blur(0);
-  transition:
-    opacity var(--acc-expand) var(--acc-ease),
-    filter var(--acc-expand) var(--acc-ease);
+  transition: opacity var(--acc-expand) var(--acc-ease);
 }
 .t-list-row[data-state="enter"],
 .t-list-row[data-state="exit"] {
@@ -3095,7 +3065,6 @@ a:focus-visible,
 .t-list-row[data-state="enter"] > .t-list-inner,
 .t-list-row[data-state="exit"] > .t-list-inner {
   opacity: 0;
-  filter: blur(2px);
 }
 .t-list-row[data-state="exit"],
 .t-list-row[data-state="exit"] > .t-list-inner {
