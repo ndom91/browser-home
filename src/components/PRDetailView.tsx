@@ -254,11 +254,19 @@ function Checks({ checks, total }: { checks: PRDetail["checks"]; total: number }
   const visible = sorted.slice(0, 5)
   const remaining = sorted.slice(5)
   const groups = [
-    { label: "passing", count: remaining.filter((check) => check.status === "success").length },
+    { label: "passing", tone: "is-success", count: remaining.filter((check) => check.status === "success").length },
     { label: "skipped", count: remaining.filter((check) => check.status === "skipped").length },
     { label: "neutral", count: remaining.filter((check) => check.status === "neutral").length },
-    { label: "failed", count: remaining.filter((check) => FAILED_CHECKS.includes(check.status)).length },
-    { label: "running", count: remaining.filter((check) => RUNNING_CHECKS.includes(check.status)).length },
+    {
+      label: "failed",
+      tone: "is-failed",
+      count: remaining.filter((check) => FAILED_CHECKS.includes(check.status)).length,
+    },
+    {
+      label: "running",
+      tone: "is-pending",
+      count: remaining.filter((check) => RUNNING_CHECKS.includes(check.status)).length,
+    },
     {
       label: "other",
       count: remaining.filter(
@@ -274,10 +282,18 @@ function Checks({ checks, total }: { checks: PRDetail["checks"]; total: number }
       {remaining.length > 0 && (
         <Accordion
           className="pr-more-checks"
-          heading={groups
-            .filter((group) => group.count)
-            .map((group) => `${group.count} ${group.label}`)
-            .join(" · ")}
+          heading={
+            <span className="pr-check-summary">
+              {groups
+                .filter((group) => group.count)
+                .map((group) => (
+                  <span className="pr-check-summary-group" key={group.label}>
+                    <span className={`checks-dot ${group.tone ?? ""}`} aria-hidden="true" />
+                    {group.count} {group.label}{" "}
+                  </span>
+                ))}
+            </span>
+          }
         >
           {remaining.map((check) => (
             <CheckRow key={check.id} check={check} />

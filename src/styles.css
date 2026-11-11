@@ -3486,6 +3486,20 @@ a:focus-visible,
   margin-left: auto;
   flex: none;
 }
+.pr-check-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.pr-check-summary-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.pr-check-summary-group .checks-dot {
+  flex: none;
+}
 .pr-check-note {
   padding: 8px;
   color: var(--muted);
