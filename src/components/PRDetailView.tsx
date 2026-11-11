@@ -118,7 +118,7 @@ export function PRDetailView({
                   <span>
                     {check.url ? (
                       <a href={check.url} target="_blank" rel="noreferrer">
-                        {check.name}
+                        {check.name} <ArrowUpRightIcon className="pr-check-external" />
                       </a>
                     ) : (
                       check.name

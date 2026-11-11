@@ -3226,6 +3226,10 @@ a:focus-visible,
   color: var(--text-2);
   overflow-wrap: anywhere;
 }
+.pr-check a .pr-check-external {
+  vertical-align: -1px;
+  color: var(--muted);
+}
 .pr-check > span:last-child {
   flex: none;
 }
