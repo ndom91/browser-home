@@ -4,15 +4,13 @@ interface PanelProps {
   id: string
   icon: ReactNode
   title: string
-  /** Inline next to the title, e.g. status pills. */
-  titleSuffix?: ReactNode
   meta?: ReactNode
   /** The panel "r" refreshes when no panel has focus. */
   refreshDefault?: boolean
   children: ReactNode
 }
 
-export function Panel({ id, icon, title, titleSuffix, meta, refreshDefault, children }: PanelProps) {
+export function Panel({ id, icon, title, meta, refreshDefault, children }: PanelProps) {
   return (
     <section
       className="panel"
@@ -26,7 +24,6 @@ export function Panel({ id, icon, title, titleSuffix, meta, refreshDefault, chil
       <header className="panel-head">
         <span className="panel-icon">{icon}</span>
         <h2 id={`${id}-title`}>{title}</h2>
-        {titleSuffix}
         {meta != null && <span className="panel-meta">{meta}</span>}
       </header>
       <div className="panel-body">{children}</div>

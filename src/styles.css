@@ -617,7 +617,11 @@ a:focus-visible,
   /* Centered between the card and the first hour label, which sits 16px into the timeline. */
   margin: 10px 16px 0;
   font-size: 11.5px;
+  line-height: 1.5;
   color: var(--muted);
+}
+
+.free-time p {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -670,12 +674,17 @@ a:focus-visible,
 
 /* ---------- calendar: all-day ---------- */
 
-/* Lives in the panel header, so it must shrink instead of wrapping. */
+/* Own row above the focus card. Pills wrap, and a long title truncates at the row width. */
 .allday {
+  flex: none;
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
-  min-width: 0;
-  overflow: hidden;
+  margin: 12px 14px 0;
+}
+
+.allday + .focus {
+  margin-top: 10px;
 }
 
 .allday li {

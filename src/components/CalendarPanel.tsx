@@ -43,17 +43,12 @@ export function CalendarPanel({ events, standup, error }: Props) {
   if (events) meta = remaining ? `${remaining} left today` : "all done"
 
   return (
-    <Panel
-      id="calendar"
-      icon={<CalendarIcon />}
-      title="Today"
-      titleSuffix={events && <AllDay events={events.filter((e) => e.allDay)} />}
-      meta={meta}
-    >
+    <Panel id="calendar" icon={<CalendarIcon />} title="Today" meta={meta}>
       {!events ? (
         <PanelFallback error={error} />
       ) : (
         <>
+          <AllDay events={events.filter((e) => e.allDay)} />
           <FocusCard current={current} next={next} now={now} />
           {standup && <StandupCard standup={standup} now={now} />}
           <FreeTime busy={live} now={now} />
@@ -101,20 +96,22 @@ function FocusCard({ current, next, now }: { current: Timed | null; next: Timed 
   )
 }
 
-/** "40m free until Standup · 6h 25m today". Hidden outside the workday. */
+/** "40m free until Standup", then "6h 25m free today". Hidden outside the workday. */
 function FreeTime({ busy, now }: { busy: Array<Timed>; now: number }) {
   const free = freeTime(busy, now, useSettings().settings.workday)
   if (!free) return null
   if (free.totalMs < 60_000) return <p className="free-time">Booked until {clock(free.endMs)}</p>
   return (
-    <p className="free-time">
+    <div className="free-time">
       {free.next && (
-        <>
-          <strong>{duration(free.next.inMs)}</strong> free until {free.next.title} ·{" "}
-        </>
+        <p>
+          <strong>{duration(free.next.inMs)}</strong> free until {free.next.title}
+        </p>
       )}
-      <strong>{duration(free.totalMs)}</strong> free today
-    </p>
+      <p>
+        <strong>{duration(free.totalMs)}</strong> free today
+      </p>
+    </div>
   )
 }
 
