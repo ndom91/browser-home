@@ -2596,7 +2596,6 @@ a:focus-visible,
   --toast-open: 350ms;
   --toast-close: 250ms;
   --toast-distance: 16px;
-  --toast-blur: 2px;
   --toast-scale: 0.97;
   --toast-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -3019,26 +3018,24 @@ a:focus-visible,
 .capture-toast {
   opacity: 0;
   transform: translateY(var(--toast-distance)) scale(var(--toast-scale));
-  filter: blur(var(--toast-blur));
   transition:
     opacity var(--toast-close) var(--toast-ease),
-    transform var(--toast-close) var(--toast-ease),
-    filter var(--toast-close) var(--toast-ease);
+    transform var(--toast-close) var(--toast-ease);
 }
 .capture-toast.is-shown {
   opacity: 1;
-  transform: translateY(0) scale(1);
-  filter: blur(0);
+  transform: none;
   transition:
     opacity var(--toast-open) var(--toast-ease),
-    transform var(--toast-open) var(--toast-ease),
-    filter var(--toast-open) var(--toast-ease);
+    transform var(--toast-open) var(--toast-ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dialog,
   .dialog-backdrop,
-  .capture-toast {
+  .capture-toast,
+  .signal,
+  .chat-tool-chevron {
     transition: none !important;
   }
 }

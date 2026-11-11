@@ -6,6 +6,10 @@ export function cssMs(name: string, fallback: number) {
   return Number.isFinite(v) ? v : fallback
 }
 
+export function motionMs(name: string, fallback: number) {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : cssMs(name, fallback)
+}
+
 /** The last two characters trail the rest, like the transitions.dev number pop-in. */
 function staggerOf(i: number, length: number) {
   if (i === length - 1) return "2"
@@ -47,15 +51,21 @@ export function SwapText({ text }: { text: string }) {
   const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    if (text === shown) return
+    if (text === shown) {
+      setPhase("idle")
+      return
+    }
+    const duration = motionMs("--text-swap-dur", 150)
+    if (duration === 0) {
+      setShown(text)
+      setPhase("idle")
+      return
+    }
     setPhase("exit")
-    const timer = setTimeout(
-      () => {
-        setShown(text)
-        setPhase("enter")
-      },
-      cssMs("--text-swap-dur", 150),
-    )
+    const timer = setTimeout(() => {
+      setShown(text)
+      setPhase("enter")
+    }, duration)
     return () => clearTimeout(timer)
   }, [text, shown])
 
@@ -207,10 +217,12 @@ export function AnimatedList<T>({
   // Drop exiting rows once their collapse has played.
   useEffect(() => {
     if (!rows.some((r) => r.phase === "exit")) return
-    const timer = setTimeout(
-      () => setRows((prev) => prev.filter((r) => r.phase !== "exit")),
-      cssMs("--acc-collapse", 250),
-    )
+    const duration = motionMs("--acc-collapse", 250)
+    if (duration === 0) {
+      setRows((prev) => prev.filter((r) => r.phase !== "exit"))
+      return
+    }
+    const timer = setTimeout(() => setRows((prev) => prev.filter((r) => r.phase !== "exit")), duration)
     return () => clearTimeout(timer)
   }, [rows])
 

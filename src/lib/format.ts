@@ -29,11 +29,11 @@ export function age(ms: number, now: number) {
   return `${Math.floor(diff / DAY)}d`
 }
 
-/** "synced just now" / "synced 3m ago" */
+/** "just now" / "3m ago" */
 export function synced(ms: number | undefined, now: number) {
   if (!ms) return "syncing…"
   const a = age(ms, now)
-  return a === "now" ? "synced just now" : `synced ${a} ago`
+  return a === "now" ? "just now" : `${a} ago`
 }
 
 /** A rough length of time: "45m", "2h", "1h 40m". Rounds down to the minute. */

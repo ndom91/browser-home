@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
-import { age, clock, plural } from "../lib/format"
+import { age, plural, synced } from "../lib/format"
 import { readableUrl } from "../lib/hn"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
@@ -71,11 +71,9 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
           "Comments"
         ) : (
           <span className="panel-sync">
-            {fetchedAt != null && (
-              <time dateTime={new Date(fetchedAt).toISOString()}>
-                <SwapText text={clock(fetchedAt)} />
-              </time>
-            )}
+            <time dateTime={fetchedAt == null ? undefined : new Date(fetchedAt).toISOString()}>
+              <SwapText text={synced(fetchedAt, now)} />
+            </time>
             <RefreshButton queryKey={["hn"]} refresh={refreshHN} what="stories" />
           </span>
         )
