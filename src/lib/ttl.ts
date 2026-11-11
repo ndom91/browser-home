@@ -3,6 +3,7 @@
 export const TTL = {
   calendar: 60_000,
   prs: 2 * 60_000,
+  prDetail: 2 * 60_000,
   // GitHub asks for this interval (X-Poll-Interval), and unchanged polls are free.
   notifications: 60_000,
   linear: 2 * 60_000,

@@ -30,6 +30,16 @@ export interface PullRequest {
   linear: { id: string; url: string } | null
 }
 
+export interface PRDetail {
+  description: string
+  reviewers: Array<string>
+  activity: Array<{ id: string; kind: string; author: string; body: string; at: string; url: string }>
+  activityMore: boolean
+  activityError: boolean
+  checks: Array<{ name: string; status: string; url: string | null }>
+  checksError: boolean
+}
+
 /** An unread GitHub notification on one of the listed PRs. */
 export interface PrNotification {
   threadId: string

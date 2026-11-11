@@ -14,13 +14,14 @@ import {
   demoHN,
   demoLinear,
   demoNotifications,
+  demoPRDetail,
   demoPRs,
   demoStandup,
   demoThread,
   demoViewer,
   demoWeather,
 } from "./demo"
-import { fetchNotifications, fetchPRs, fetchViewer, markNotificationRead } from "./github"
+import { fetchNotifications, fetchPRDetail, fetchPRs, fetchViewer, markNotificationRead } from "./github"
 import { fetchHN, fetchThread } from "./hn"
 import { fetchLinear, linearConfigured } from "./linear"
 import { missingLlmKeys } from "./llm"
@@ -29,6 +30,7 @@ import { fetchWeather } from "./weather"
 
 const calendar = cached(DEMO ? async () => demoCalendar() : fetchCalendar, TTL.calendar)
 const prs = cached(DEMO ? async () => demoPRs() : fetchPRs, TTL.prs)
+const prDetail = cachedBy(DEMO ? async () => demoPRDetail() : fetchPRDetail, TTL.prDetail)
 const notifications = cached(DEMO ? async () => demoNotifications() : fetchNotifications, TTL.notifications)
 const linear = cached(DEMO ? async () => demoLinear() : fetchLinear, TTL.linear)
 // Keyed by the standup's start, so the hour before each standup gets its own fetch.
@@ -122,3 +124,11 @@ export const captureNote = createServerFn({ method: "POST" })
     return text
   })
   .handler(async ({ data }) => ({ note: await capture(data) }))
+
+export const getPRDetail = createServerFn({ method: "GET" })
+  .validator((key: unknown) => {
+    if (typeof key !== "string" || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/[1-9]\d*$/.test(key))
+      throw new Error("Invalid pull request")
+    return key
+  })
+  .handler(({ data }) => prDetail(data))

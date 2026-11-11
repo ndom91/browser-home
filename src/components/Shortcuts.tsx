@@ -16,14 +16,14 @@ function groups(features: Features, columns: Array<ColumnId>): Array<Group> {
         [["h", "l"], "Previous / next column"],
         [["j", "k"], "Next / previous row"],
         [["g", "G"], "First / last row"],
-        [["esc"], "Leave the column, or close a thread"],
+        [["esc"], "Leave the column, or close details"],
       ],
     },
     {
       title: "Act",
       keys: [
         [["↵"], "Open the row"],
-        [["o"], "Open HN comments"],
+        [["o"], "Open comments or PR details"],
         [["f"], "Filter the section"],
         [["r"], "Refresh the column (or Hacker News)"],
       ],

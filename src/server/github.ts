@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
-import type { PrNotification, PullRequest, PullRequests, StandupItem, Viewer } from "../lib/types"
+import type { PRDetail, PrNotification, PullRequest, PullRequests, StandupItem, Viewer } from "../lib/types"
 import { config } from "./config"
 
 const run = promisify(execFile)
@@ -222,4 +222,124 @@ export async function fetchMyPRsSince(since: string) {
     linearId: linearIssue(pr.title, pr.body)?.id ?? null,
   })
   return { merged: data.merged.nodes.map(item), opened: data.opened.nodes.map(item) }
+}
+
+// Fetch details separately from search, whose nested fields are already expensive.
+export async function fetchPRDetail(key: string): Promise<PRDetail> {
+  const [owner, repo, number] = key.split("/")
+  const root = `repos/${owner}/${repo}`
+  async function json<T>(path: string): Promise<T> {
+    const res = await rest(path)
+    if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
+    return res.json() as Promise<T>
+  }
+  async function latest<T>(path: string): Promise<{ items: Array<T>; more: boolean }> {
+    const res = await rest(`${path}?per_page=100`)
+    if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
+    const link = res.headers.get("link")
+    const last = link?.match(/<[^>]*[?&]page=(\d+)[^>]*>; rel="last"/)
+    if (!last) return { items: (await res.json()) as Array<T>, more: false }
+    return { items: await json<Array<T>>(`${path}?per_page=100&page=${last[1]}`), more: true }
+  }
+  type User = { login: string } | null
+  type Comment = { id: number; user: User; body: string | null; created_at: string; html_url: string }
+  type Review = Comment & { state: string; submitted_at: string | null }
+  const pr = await json<{
+    body: string | null
+    head: { sha: string }
+    requested_reviewers: Array<{ login: string }>
+    requested_teams: Array<{ name: string }>
+  }>(`${root}/pulls/${number}`)
+  const [activity, checks] = await Promise.allSettled([
+    Promise.all([
+      latest<Comment>(`${root}/issues/${number}/comments`),
+      latest<Review>(`${root}/pulls/${number}/reviews`),
+      graphql<{
+        repository: {
+          pullRequest: {
+            reviewThreads: {
+              pageInfo: { hasPreviousPage: boolean }
+              nodes: Array<{
+                isResolved: boolean
+                path: string
+                comments: {
+                  pageInfo: { hasPreviousPage: boolean }
+                  nodes: Array<{ id: string; author: User; body: string; createdAt: string; url: string }>
+                }
+              }>
+            }
+          }
+        }
+      }>(
+        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login } body createdAt url } } } } } } }`,
+      ),
+    ]),
+    json<{ check_runs: Array<{ name: string; status: string; conclusion: string | null; html_url: string | null }> }>(
+      `${root}/commits/${pr.head.sha}/check-runs?per_page=100`,
+    ),
+  ])
+  const events: PRDetail["activity"] = []
+  let activityMore = false
+  if (activity.status === "fulfilled") {
+    const [comments, reviews, threads] = activity.value
+    const reviewThreads = threads.repository.pullRequest.reviewThreads
+    activityMore =
+      comments.more ||
+      reviews.more ||
+      reviewThreads.pageInfo.hasPreviousPage ||
+      reviewThreads.nodes.some((thread) => thread.comments.pageInfo.hasPreviousPage)
+    events.push(
+      ...comments.items.map((c) => ({
+        id: `comment-${c.id}`,
+        kind: "Comment",
+        author: c.user?.login ?? "Unknown",
+        body: c.body ?? "",
+        at: c.created_at,
+        url: c.html_url,
+      })),
+    )
+    events.push(
+      ...reviews.items
+        .filter((r) => r.submitted_at && r.state !== "PENDING")
+        .map((r) => ({
+          id: `review-${r.id}`,
+          kind: `Review: ${r.state.toLowerCase().replaceAll("_", " ")}`,
+          author: r.user?.login ?? "Unknown",
+          body: r.body ?? "",
+          at: r.submitted_at as string,
+          url: r.html_url,
+        })),
+    )
+    events.push(
+      ...reviewThreads.nodes.flatMap((thread) =>
+        thread.comments.nodes.map((c) => ({
+          id: `thread-${c.id}`,
+          kind: `Code comment · ${thread.path} · ${thread.isResolved ? "Resolved" : "Unresolved"}`,
+          author: c.author?.login ?? "Unknown",
+          body: c.body,
+          at: c.createdAt,
+          url: c.url,
+        })),
+      ),
+    )
+    events.sort((a, b) => a.at.localeCompare(b.at))
+  }
+  return {
+    description: pr.body ?? "",
+    reviewers: [...pr.requested_reviewers.map((r) => r.login), ...pr.requested_teams.map((r) => r.name)],
+    activity: events,
+    activityMore,
+    activityError: activity.status === "rejected",
+    checks:
+      checks.status === "fulfilled"
+        ? checks.value.check_runs
+            .filter(
+              (c) =>
+                c.status !== "completed" ||
+                (c.conclusion !== "success" && c.conclusion !== "skipped" && c.conclusion !== "neutral"),
+            )
+            .map((c) => ({ name: c.name, status: c.conclusion ?? c.status, url: c.html_url }))
+        : [],
+    checksError: checks.status === "rejected",
+  }
 }

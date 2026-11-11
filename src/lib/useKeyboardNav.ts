@@ -62,6 +62,8 @@ export function useKeyboardNav(onHelp: () => void, onSettings: () => void) {
         enterPanel(panels[Math.min(panels.length - 1, Math.max(0, i + delta))])
       }
 
+      if (target.closest("[data-nav-scroll]") && (e.key === "ArrowDown" || e.key === "ArrowUp")) return
+
       // Arrows only take over once you're in a panel, so they still scroll the page otherwise.
       if (e.key.startsWith("Arrow") && !panel) return
       // Links and buttons handle Enter themselves.

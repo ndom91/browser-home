@@ -398,3 +398,33 @@ export function demoLinear(): LinearIssues {
     ],
   }
 }
+
+export function demoPRDetail(): import("../lib/types").PRDetail {
+  return {
+    description:
+      "## Summary\nImprove the queue filters and make it easier to find work.\n\n- Preserve the selected filters\n- Add keyboard support",
+    reviewers: ["priya", "sam"],
+    activity: [
+      {
+        id: "1",
+        kind: "Comment",
+        author: "priya",
+        body: "This looks good. Could we also cover the empty state?",
+        at: new Date(Date.now() - HOUR).toISOString(),
+        url: "https://github.com",
+      },
+      {
+        id: "2",
+        kind: "Review: approved",
+        author: "sam",
+        body: "Nice improvement!",
+        at: new Date(Date.now() - 30 * MIN).toISOString(),
+        url: "https://github.com",
+      },
+    ],
+    activityMore: false,
+    activityError: false,
+    checks: [{ name: "Tests", status: "in_progress", url: "https://github.com" }],
+    checksError: false,
+  }
+}

@@ -1,5 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from "react"
+import {
+  type CSSProperties,
+  type MouseEvent,
+  type ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { age, prSize, signed, synced } from "../lib/format"
 import { repoHues } from "../lib/repoColor"
 import { t3ReviewLink, useReviewPrompt } from "../lib/reviewPrompt"
@@ -11,6 +20,7 @@ import { dismissNotification, refreshPRs } from "../server/fns"
 import { FilteredSection } from "./FilteredSection"
 import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, HourglassIcon, PullRequestIcon, SparkleIcon } from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
+import { PRDetailView } from "./PRDetailView"
 import { RowSignals, type Signal } from "./RowSignals"
 import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
@@ -25,6 +35,38 @@ interface Props {
 
 export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Props) {
   const now = useNow()
+  const [open, setOpen] = useState<PullRequest | null>(null)
+  const [shown, setShown] = useState<PullRequest | null>(null)
+  const returnTo = useRef<HTMLElement | null>(null)
+  const detailRef = useRef<HTMLDivElement>(null)
+  const openDetail = (pr: PullRequest) => (event: MouseEvent) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
+    event.preventDefault()
+    returnTo.current =
+      (event.currentTarget as HTMLElement).closest("[data-nav-item]")?.querySelector("[data-nav-row]") ?? null
+    setShown(pr)
+    setOpen(pr)
+  }
+  useLayoutEffect(() => {
+    if (open) detailRef.current?.querySelector<HTMLElement>("[data-detail-back]")?.focus({ preventScroll: true })
+    else returnTo.current?.focus({ preventScroll: true })
+  }, [open])
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (
+        event.key === "Escape" &&
+        !event.defaultPrevented &&
+        detailRef.current?.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest("[role=dialog], [role=menu], input, textarea, select")
+      ) {
+        event.preventDefault()
+        setOpen(null)
+      }
+    }
+    window.addEventListener("keydown", onKey, true)
+    return () => window.removeEventListener("keydown", onKey, true)
+  }, [open])
   const notificationSignals = useNotificationSignals(notifications)
   const staleSignals = useStaleSignals(now)
   const reviewSignals = (pr: PullRequest) => [...notificationSignals(pr), ...staleSignals(pr)]
@@ -44,36 +86,45 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
         </span>
       }
     >
-      {!prs ? (
-        <PanelFallback error={error} />
-      ) : (
-        <>
-          {error != null && <PanelError error={error} />}
-          <Section
-            id="review"
-            title="Review requested"
-            prs={prs.review}
-            total={prs.reviewTotal}
-            badgeFor={reviewBadge}
-            hues={hues}
-            now={now}
-            signalsFor={reviewSignals}
-            reviewLink={reviewLink}
-            tone="attention"
-            showAuthor
-          />
-          <Section
-            id="mine"
-            title="Yours"
-            prs={prs.mine}
-            total={prs.mineTotal}
-            badgeFor={ownBadge}
-            hues={hues}
-            now={now}
-            signalsFor={notificationSignals}
-          />
-        </>
-      )}
+      <div className="t-page-slide" data-page={open ? "2" : "1"}>
+        <section className="t-page pr-list-page" data-page-id="1" inert={open != null}>
+          {!prs ? (
+            <PanelFallback error={error} />
+          ) : (
+            <>
+              {error != null && <PanelError error={error} />}
+              <Section
+                id="review"
+                title="Review requested"
+                prs={prs.review}
+                total={prs.reviewTotal}
+                badgeFor={reviewBadge}
+                hues={hues}
+                now={now}
+                signalsFor={reviewSignals}
+                reviewLink={reviewLink}
+                tone="attention"
+                showAuthor
+                onOpen={openDetail}
+              />
+              <Section
+                id="mine"
+                title="Yours"
+                prs={prs.mine}
+                total={prs.mineTotal}
+                badgeFor={ownBadge}
+                hues={hues}
+                now={now}
+                signalsFor={notificationSignals}
+                onOpen={openDetail}
+              />
+            </>
+          )}
+        </section>
+        <section className="t-page pr-detail-page" data-page-id="2" ref={detailRef} inert={open == null}>
+          {shown && <PRDetailView key={shown.url} pr={shown} onBack={() => setOpen(null)} />}
+        </section>
+      </div>
     </Panel>
   )
 }
@@ -111,6 +162,7 @@ function Section({
   reviewLink,
   tone,
   showAuthor,
+  onOpen,
 }: {
   id: string
   title: string
@@ -123,6 +175,7 @@ function Section({
   reviewLink?: (pr: PullRequest) => string
   tone?: "attention"
   showAuthor?: boolean
+  onOpen: (pr: PullRequest) => (event: MouseEvent) => void
 }) {
   const facets = useMemo(() => prFacets(badgeFor, hues), [badgeFor, hues])
   return (
@@ -143,6 +196,7 @@ function Section({
           signals={signalsFor(pr)}
           reviewHref={reviewLink?.(pr)}
           showAuthor={showAuthor}
+          onOpen={onOpen(pr)}
         />
       )}
     />
@@ -199,6 +253,7 @@ function Row({
   signals,
   reviewHref,
   showAuthor,
+  onOpen,
 }: {
   pr: PullRequest
   now: number
@@ -207,12 +262,13 @@ function Row({
   signals: Array<Signal>
   reviewHref?: string
   showAuthor?: boolean
+  onOpen: (event: MouseEvent) => void
 }) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
   const size = prSize(pr.additions, pr.deletions)
   // Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead.
   return (
-    <div className={`pr${pr.draft ? " is-draft" : ""}`}>
+    <div className={`pr${pr.draft ? " is-draft" : ""}`} data-nav-item>
       <PullRequestIcon className="pr-icon" draft={pr.draft} />
       <span className="pr-main">
         <span className="pr-head">
@@ -258,6 +314,15 @@ function Row({
       </span>
       <span className="pr-side">
         <span className="pr-side-top">
+          <button
+            type="button"
+            className="pr-detail-trigger"
+            data-nav-alt
+            onClick={onOpen}
+            aria-label={`Show details for ${pr.repo}#${pr.number}`}
+          >
+            Details
+          </button>
           <RowSignals signals={signals} />
           {reviewHref && (
             <Tooltip content="Review in T3 Code">
