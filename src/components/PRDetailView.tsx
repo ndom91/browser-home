@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useRef } from "react"
+import { type ReactNode, useRef, useState } from "react"
 import { age, prSize, signed } from "../lib/format"
 import { TTL } from "../lib/ttl"
 import type { PRActivity, PRDetail, PullRequest } from "../lib/types"
@@ -233,17 +233,17 @@ function Checks({ checks, total }: { checks: PRDetail["checks"]; total: number }
         <CheckRow key={check.id} check={check} />
       ))}
       {remaining.length > 0 && (
-        <details className="pr-more-checks">
-          <summary>
-            {groups
-              .filter((group) => group.count)
-              .map((group) => `${group.count} ${group.label}`)
-              .join(" · ")}
-          </summary>
+        <Accordion
+          className="pr-more-checks"
+          heading={groups
+            .filter((group) => group.count)
+            .map((group) => `${group.count} ${group.label}`)
+            .join(" · ")}
+        >
           {remaining.map((check) => (
             <CheckRow key={check.id} check={check} />
           ))}
-        </details>
+        </Accordion>
       )}
       {total > checks.length && (
         <p className="pr-check-note">
@@ -311,34 +311,35 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
               <ul>
                 {group.items.map((item) => (
                   <li key={item.id}>
-                    <details
+                    <Accordion
                       className="pr-activity-item"
-                      open={
+                      defaultOpen={
                         !item.isBot &&
                         !item.thread?.resolved &&
                         Boolean(item.preview.trim() || item.thread?.replies.some((reply) => reply.preview.trim()))
                       }
-                    >
-                      <summary>
-                        <span className={`pr-activity-avatar${item.isBot ? " is-bot" : ""}`} aria-hidden="true">
-                          {item.author.slice(0, 2)}
-                        </span>
-                        <strong>{item.author.replace(/\[bot\]$/, "")}</strong>
-                        {!item.thread && item.kind !== "Comment" && (
-                          <span className="pr-activity-kind">{item.kind}</span>
-                        )}
-                        <span className="pr-activity-preview">
-                          {item.preview.trim().replace(/\s+/g, " ") ||
-                            (item.thread || item.kind === "Comment" ? item.kind : "")}
-                        </span>
-                        {item.thread?.resolved && (
-                          <span className="pr-activity-resolved" role="img" aria-label="Resolved">
-                            ✓
+                      heading={
+                        <>
+                          <span className={`pr-activity-avatar${item.isBot ? " is-bot" : ""}`} aria-hidden="true">
+                            {item.author.slice(0, 2)}
                           </span>
-                        )}
-                        <span className="pr-activity-age">{age(Date.parse(item.at), now)}</span>
-                        <ChevronDownIcon className="pr-activity-chevron" />
-                      </summary>
+                          <strong>{item.author.replace(/\[bot\]$/, "")}</strong>
+                          {!item.thread && item.kind !== "Comment" && (
+                            <span className="pr-activity-kind">{item.kind}</span>
+                          )}
+                          <span className="pr-activity-preview">
+                            {item.preview.trim().replace(/\s+/g, " ") ||
+                              (item.thread || item.kind === "Comment" ? item.kind : "")}
+                          </span>
+                          {item.thread?.resolved && (
+                            <span className="pr-activity-resolved" role="img" aria-label="Resolved">
+                              ✓
+                            </span>
+                          )}
+                          <span className="pr-activity-age">{age(Date.parse(item.at), now)}</span>
+                        </>
+                      }
+                    >
                       <div className="pr-activity-body">
                         {item.thread && <p className="pr-activity-path">{item.thread.path}</p>}
                         {item.body ? <PRMarkdown html={item.body} /> : item.preview.trim() && <p>{item.preview}</p>}
@@ -357,13 +358,40 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
                           </div>
                         ))}
                       </div>
-                    </details>
+                    </Accordion>
                   </li>
                 ))}
               </ul>
             </section>
           ),
       )}
+    </div>
+  )
+}
+
+function Accordion({
+  className,
+  heading,
+  children,
+  defaultOpen = false,
+}: {
+  className: string
+  heading: ReactNode
+  children: ReactNode
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div className={`t-acc ${className}`} data-open={open}>
+      <button type="button" className="t-acc-head" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        {heading}
+        <ChevronDownIcon className="t-acc-chevron" />
+      </button>
+      <div className="t-acc-panel">
+        <div className="t-acc-panel-inner" inert={!open}>
+          {children}
+        </div>
+      </div>
     </div>
   )
 }

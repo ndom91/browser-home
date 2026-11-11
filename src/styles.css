@@ -2527,6 +2527,7 @@ a:focus-visible,
   /* Accordion */
   --acc-expand: 250ms;
   --acc-collapse: 250ms;
+  --acc-chevron: 250ms;
   --acc-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* Shimmer text: theme colors, so it follows light and dark mode. */
   --shimmer-dur: 2000ms;
@@ -2672,9 +2673,23 @@ a:focus-visible,
   transition: opacity var(--acc-expand) var(--acc-ease);
 }
 
+.t-acc-chevron {
+  display: inline-flex;
+  transform: scaleY(1);
+  transform-origin: center;
+  transition: transform var(--acc-chevron) var(--acc-ease);
+}
+.t-acc-chevron path {
+  vector-effect: non-scaling-stroke;
+}
+.t-acc[data-open="true"] .t-acc-chevron {
+  transform: scaleY(-1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .t-acc-panel,
-  .t-acc-panel-inner {
+  .t-acc-panel-inner,
+  .t-acc-chevron {
     transition: none !important;
   }
 }
@@ -3440,21 +3455,23 @@ a:focus-visible,
   flex: none;
   align-self: center;
 }
-.pr-more-checks > summary {
+.pr-more-checks > .t-acc-head {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   padding: 7px 9px;
+  border: 0;
   border-top: 1px solid var(--line-soft);
+  background: none;
   color: var(--muted);
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
-.pr-more-checks > summary::after {
-  content: "⌄";
+.pr-more-checks .t-acc-head > .t-acc-chevron {
   margin-left: auto;
-}
-.pr-more-checks[open] > summary::after {
-  transform: rotate(180deg);
+  flex: none;
 }
 .pr-check-note {
   padding: 8px;
@@ -3480,19 +3497,21 @@ a:focus-visible,
 .pr-activity-group ul > li {
   border-top: 1px solid var(--line-soft);
 }
-.pr-activity-item > summary {
+.pr-activity-item > .t-acc-head {
   display: flex;
   align-items: center;
   gap: 7px;
+  width: 100%;
   padding: 10px 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-size: 12px;
+  text-align: left;
   cursor: pointer;
-  list-style: none;
 }
-.pr-activity-item > summary::-webkit-details-marker {
-  display: none;
-}
-.pr-activity-item > summary strong {
+.pr-activity-item > .t-acc-head strong {
   flex: none;
 }
 .pr-activity-avatar {
@@ -3527,16 +3546,9 @@ a:focus-visible,
   font-size: 10px;
 }
 .pr-activity-age,
-.pr-activity-chevron {
+.pr-activity-item .t-acc-head > .t-acc-chevron {
   flex: none;
   color: var(--muted);
-}
-.pr-activity-chevron {
-  align-self: center;
-  display: block;
-}
-.pr-activity-item[open] .pr-activity-chevron {
-  transform: rotate(180deg);
 }
 .pr-activity-resolved {
   color: var(--ok);
