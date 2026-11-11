@@ -3400,3 +3400,17 @@ a:focus-visible,
 .pr-detail-markdown ol {
   list-style: decimal;
 }
+
+.pr-detail-markdown img[align="right"] {
+  float: right;
+  margin-left: 8px;
+}
+.pr-detail-markdown details {
+  margin: 12px 0;
+}
+.pr-detail-markdown summary {
+  cursor: pointer;
+}
+.pr-detail-markdown input[type="checkbox"] {
+  margin-right: 5px;
+}

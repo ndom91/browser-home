@@ -2,6 +2,7 @@ import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 import type { PRDetail, PrNotification, PullRequest, PullRequests, StandupItem, Viewer } from "../lib/types"
 import { config } from "./config"
+import { sanitizePRHtml } from "./prMarkdown"
 
 const run = promisify(execFile)
 
@@ -228,13 +229,14 @@ export async function fetchMyPRsSince(since: string) {
 export async function fetchPRDetail(key: string): Promise<PRDetail> {
   const [owner, repo, number] = key.split("/")
   const root = `repos/${owner}/${repo}`
+  const htmlHeaders = { Accept: "application/vnd.github.full+json" }
   async function json<T>(path: string): Promise<T> {
-    const res = await rest(path)
+    const res = await rest(path, { headers: htmlHeaders })
     if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
     return res.json() as Promise<T>
   }
   async function latest<T>(path: string): Promise<{ items: Array<T>; more: boolean }> {
-    const res = await rest(`${path}?per_page=100`)
+    const res = await rest(`${path}?per_page=100`, { headers: htmlHeaders })
     if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`)
     const link = res.headers.get("link")
     const last = link?.match(/<[^>]*[?&]page=(\d+)[^>]*>; rel="last"/)
@@ -242,10 +244,10 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     return { items: await json<Array<T>>(`${path}?per_page=100&page=${last[1]}`), more: true }
   }
   type User = { login: string } | null
-  type Comment = { id: number; user: User; body: string | null; created_at: string; html_url: string }
+  type Comment = { id: number; user: User; body_html: string | null; created_at: string; html_url: string }
   type Review = Comment & { state: string; submitted_at: string | null }
   const pr = await json<{
-    body: string | null
+    body_html: string | null
     head: { sha: string }
     requested_reviewers: Array<{ login: string }>
     requested_teams: Array<{ name: string }>
@@ -265,14 +267,14 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
                 path: string
                 comments: {
                   pageInfo: { hasPreviousPage: boolean }
-                  nodes: Array<{ id: string; author: User; body: string; createdAt: string; url: string }>
+                  nodes: Array<{ id: string; author: User; bodyHTML: string; createdAt: string; url: string }>
                 }
               }>
             }
           }
         }
       }>(
-        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login } body createdAt url } } } } } } }`,
+        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login } bodyHTML createdAt url } } } } } } }`,
       ),
     ]),
     json<{ check_runs: Array<{ name: string; status: string; conclusion: string | null; html_url: string | null }> }>(
@@ -297,7 +299,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
         id: `comment-${c.id}`,
         kind: "Comment",
         author: c.user?.login ?? "Unknown",
-        body: c.body ?? "",
+        body: sanitizePRHtml(c.body_html ?? ""),
         at: c.created_at,
         url: c.html_url,
       })),
@@ -309,7 +311,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
           id: `review-${r.id}`,
           kind: `Review: ${r.state.toLowerCase().replaceAll("_", " ")}`,
           author: r.user?.login ?? "Unknown",
-          body: r.body ?? "",
+          body: sanitizePRHtml(r.body_html ?? ""),
           at: r.submitted_at as string,
           url: r.html_url,
         })),
@@ -320,7 +322,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
           id: `thread-${c.id}`,
           kind: `Code comment · ${thread.path} · ${thread.isResolved ? "Resolved" : "Unresolved"}`,
           author: c.author?.login ?? "Unknown",
-          body: c.body,
+          body: sanitizePRHtml(c.bodyHTML),
           at: c.createdAt,
           url: c.url,
         })),
@@ -329,7 +331,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     events.sort((a, b) => a.at.localeCompare(b.at))
   }
   return {
-    description: pr.body ?? "",
+    description: sanitizePRHtml(pr.body_html ?? ""),
     files:
       files.status === "fulfilled"
         ? files.value.map((file) => ({

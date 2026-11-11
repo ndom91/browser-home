@@ -1,4 +1,6 @@
 // Fixture data matching the design mockups. Enable with BROWSER_HOME_DEMO=1.
+
+import { renderHtml } from "@tanstack/markdown/html"
 import type {
   CalendarEvent,
   HNThread,
@@ -11,6 +13,7 @@ import type {
   Viewer,
   Weather,
 } from "../lib/types"
+import { sanitizePRHtml } from "./prMarkdown"
 
 export const DEMO = process.env.BROWSER_HOME_DEMO === "1"
 
@@ -401,8 +404,11 @@ export function demoLinear(): LinearIssues {
 
 export function demoPRDetail(key: string): import("../lib/types").PRDetail {
   return {
-    description:
-      "## Summary\nImprove the queue filters and make it easier to find work.\n\n- Preserve the selected filters\n- Add keyboard support",
+    description: sanitizePRHtml(
+      renderHtml(
+        "## Summary\nImprove the queue filters and make it easier to find work.\n\n- Preserve the selected filters\n- Add keyboard support",
+      ),
+    ),
     files: [
       {
         path: "src/components/QueueFilters.tsx",
@@ -421,7 +427,7 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
         id: "1",
         kind: "Comment",
         author: "priya",
-        body: "This looks good. Could we also cover the empty state?",
+        body: sanitizePRHtml(renderHtml("This looks good. Could we also cover the **empty state**?")),
         at: new Date(Date.now() - HOUR).toISOString(),
         url: "https://github.com",
       },
@@ -429,7 +435,12 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
         id: "2",
         kind: "Review: approved",
         author: "sam",
-        body: "Nice improvement!",
+        body: sanitizePRHtml(
+          renderHtml(
+            "<!-- bot summary -->\n\n<h2>Confidence score: 5/5</h2>\n\nNice improvement!\n\n<details><summary>Review notes</summary>All checks passed.</details>",
+            { allowHtml: true },
+          ),
+        ),
         at: new Date(Date.now() - 30 * MIN).toISOString(),
         url: "https://github.com",
       },

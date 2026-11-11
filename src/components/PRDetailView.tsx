@@ -1,4 +1,3 @@
-import { Markdown } from "@tanstack/markdown/react"
 import { useQuery } from "@tanstack/react-query"
 import { useRef } from "react"
 import { age, prSize, signed } from "../lib/format"
@@ -163,9 +162,7 @@ export function PRDetailView({
             <section className="pr-detail-section" data-detail-section="description">
               <h4>Description</h4>
               {detail.description ? (
-                <div className="pr-detail-markdown">
-                  <Markdown>{detail.description}</Markdown>
-                </div>
+                <PRMarkdown html={detail.description} />
               ) : (
                 <p className="panel-empty">No description.</p>
               )}
@@ -187,11 +184,7 @@ export function PRDetailView({
                           {age(Date.parse(item.at), now)}
                         </a>
                       </p>
-                      {item.body && (
-                        <div className="pr-detail-markdown">
-                          <Markdown>{item.body}</Markdown>
-                        </div>
-                      )}
+                      {item.body && <PRMarkdown html={item.body} />}
                     </li>
                   ))}
                 </ul>
@@ -228,4 +221,9 @@ export function PRDetailView({
       </section>
     </div>
   )
+}
+
+function PRMarkdown({ html }: { html: string }) {
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: GitHub HTML is sanitized on the server.
+  return <div className="pr-detail-markdown" dangerouslySetInnerHTML={{ __html: html }} />
 }
