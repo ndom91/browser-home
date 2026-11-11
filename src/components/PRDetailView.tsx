@@ -308,7 +308,14 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
               <ul>
                 {group.items.map((item) => (
                   <li key={item.id}>
-                    <details className="pr-activity-item" open={item.isBot || item.thread?.resolved ? undefined : true}>
+                    <details
+                      className="pr-activity-item"
+                      open={
+                        !item.isBot &&
+                        !item.thread?.resolved &&
+                        Boolean(item.preview.trim() || item.thread?.replies.some((reply) => reply.preview.trim()))
+                      }
+                    >
                       <summary>
                         <span className={`pr-activity-avatar${item.isBot ? " is-bot" : ""}`} aria-hidden="true">
                           {item.author.slice(0, 2)}
@@ -331,7 +338,7 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
                       </summary>
                       <div className="pr-activity-body">
                         {item.thread && <p className="pr-activity-path">{item.thread.path}</p>}
-                        {item.body && <PRMarkdown html={item.body} />}
+                        {item.body ? <PRMarkdown html={item.body} /> : item.preview.trim() && <p>{item.preview}</p>}
                         <a className="pr-activity-link" href={item.url} target="_blank" rel="noreferrer">
                           View on GitHub <ArrowUpRightIcon />
                         </a>

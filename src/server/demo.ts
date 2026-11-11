@@ -470,6 +470,16 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
         url: "https://github.com",
       },
       {
+        id: "empty-human-review",
+        kind: "Review: commented",
+        preview: "",
+        author: "alex",
+        isBot: false,
+        body: "",
+        at: new Date(Date.now() - 35 * MIN).toISOString(),
+        url: "https://github.com",
+      },
+      {
         id: "2",
         kind: "Review: approved",
         preview: "Nice improvement!",
