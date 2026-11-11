@@ -1,6 +1,7 @@
 import { Markdown } from "@tanstack/markdown/react"
 import { useQuery } from "@tanstack/react-query"
-import { age, signed } from "../lib/format"
+import { useRef } from "react"
+import { age, prSize, signed } from "../lib/format"
 import { TTL } from "../lib/ttl"
 import type { PullRequest } from "../lib/types"
 import { useNow } from "../lib/useNow"
@@ -10,6 +11,7 @@ import { PanelError, PanelLoading } from "./Panel"
 
 export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => void }) {
   const now = useNow()
+  const contentRef = useRef<HTMLElement>(null)
   const key = `${pr.repoFull}/${pr.number}`
   const query = useQuery({
     queryKey: ["pr-detail", key],
@@ -17,6 +19,16 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
     staleTime: TTL.prDetail,
   })
   const detail = query.data?.data
+  const goTo = (id: string) => {
+    const container = contentRef.current
+    const target = container?.querySelector<HTMLElement>(`[data-detail-section="${id}"]`)
+    if (container && target)
+      container.scrollTo({
+        top: container.scrollTop + target.getBoundingClientRect().top - container.getBoundingClientRect().top,
+        behavior: "instant",
+      })
+    container?.focus({ preventScroll: true })
+  }
   return (
     <div className="pr-detail">
       <header className="pr-detail-header">
@@ -29,48 +41,80 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
           </a>
         </nav>
         <div className="pr-detail-heading">
-          <span className="mono">
-            {pr.repoFull}#{pr.number}
-          </span>
-          <h3>{pr.title}</h3>
-          <p className="hn-meta">
-            <span>{pr.author ?? "Unknown author"}</span>
-            <span>{pr.draft ? "Draft" : (pr.review?.replaceAll("_", " ").toLowerCase() ?? "Open")}</span>
-            <span>Updated {age(Date.parse(pr.updatedAt), now)}</span>
-          </p>
-          <p className="hn-meta">
-            <span>{pr.checks ? `Checks: ${pr.checks.toLowerCase()}` : "No checks"}</span>
-            <span className="add">{signed(pr.additions, "+")}</span>
-            <span className="del">{signed(pr.deletions, "−")}</span>
+          <div className="pr-detail-repo">
+            <span className="mono">
+              {pr.repoFull}#{pr.number}
+            </span>
             {pr.linear && (
-              <a href={pr.linear.url} target="_blank" rel="noreferrer">
+              <a className="pr-detail-issue mono" href={pr.linear.url} target="_blank" rel="noreferrer">
                 {pr.linear.id}
               </a>
             )}
+          </div>
+          <h3>{pr.title}</h3>
+          <div className="pr-detail-byline">
+            <span>{pr.author ?? "Unknown author"}</span>
+            <span>·</span>
+            <span>updated {age(Date.parse(pr.updatedAt), now)}</span>
+            <span className="pr-detail-diff mono">
+              <span className="add">{signed(pr.additions, "+")}</span>{" "}
+              <span className="del">{signed(pr.deletions, "−")}</span>{" "}
+              <span className="size" data-size={prSize(pr.additions, pr.deletions)}>
+                {prSize(pr.additions, pr.deletions)}
+              </span>
+            </span>
+          </div>
+          <div className="pr-detail-status">
+            <div className="pr-status-line">
+              <span
+                className={`checks-dot ${pr.checks === "FAILURE" || pr.checks === "ERROR" ? "is-failed" : pr.checks === "SUCCESS" ? "is-success" : "is-pending"}`}
+              />
+              <strong>{pr.checks ? `Checks: ${pr.checks.toLowerCase()}` : "No checks"}</strong>
+            </div>
+            {detail?.checksError ? (
+              <p className="panel-error">Could not load check details.</p>
+            ) : (
+              detail?.checks.map((check) => (
+                <div className="pr-check" key={`${check.name}-${check.url}`}>
+                  <span>
+                    {check.url ? (
+                      <a href={check.url} target="_blank" rel="noreferrer">
+                        {check.name}
+                      </a>
+                    ) : (
+                      check.name
+                    )}
+                  </span>
+                  <span>{check.status.replaceAll("_", " ")}</span>
+                </div>
+              ))
+            )}
+          </div>
+          <p className="pr-review-status">
+            <span className="checks-dot is-pending" />
+            <span>
+              {pr.draft ? "Draft" : (pr.review?.replaceAll("_", " ").toLowerCase() ?? "Open")}
+              {detail?.reviewers.length ? ` · requested: ${detail.reviewers.join(", ")}` : ""}
+            </span>
           </p>
-          {detail?.reviewers.length ? <p className="hn-meta">Requested: {detail.reviewers.join(", ")}</p> : null}
-          {detail?.checksError ? (
-            <p className="panel-error">Could not load check details.</p>
-          ) : (
-            detail?.checks.map((check) => (
-              <p className="hn-meta" key={check.name}>
-                {check.url ? (
-                  <a href={check.url} target="_blank" rel="noreferrer">
-                    {check.name}
-                  </a>
-                ) : (
-                  check.name
-                )}
-                : {check.status}
-              </p>
-            ))
-          )}
         </div>
+        <nav className="pr-detail-sections" aria-label="Pull request sections">
+          <button type="button" onClick={() => goTo("description")}>
+            Description
+          </button>
+          <button type="button" onClick={() => goTo("activity")}>
+            Activity{detail && !detail.activityError ? ` ${detail.activity.length}` : ""}
+          </button>
+          <button type="button" onClick={() => goTo("files")}>
+            Files{detail && !detail.filesError ? ` ${detail.files.length}${detail.filesMore ? "+" : ""}` : ""}
+          </button>
+        </nav>
       </header>
-      {/* A focusable scroll region lets keyboard users read long activity. */}
+      {/* The scroll region needs keyboard focus for native scrolling. */}
       <section
+        ref={contentRef}
         className="pr-detail-content"
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the scroll region must be reachable by keyboard.
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard users need to reach the scroll region.
         tabIndex={0}
         aria-label="Pull request description and activity"
         data-nav-scroll
@@ -83,7 +127,7 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
           )
         ) : (
           <>
-            <section className="pr-detail-section">
+            <section className="pr-detail-section" data-detail-section="description">
               <h4>Description</h4>
               {detail.description ? (
                 <div className="pr-detail-markdown">
@@ -93,7 +137,7 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
                 <p className="panel-empty">No description.</p>
               )}
             </section>
-            <section className="pr-detail-section">
+            <section className="pr-detail-section" data-detail-section="activity">
               <h4>Activity</h4>
               {detail.activityError ? (
                 <p className="panel-error">Could not load activity. Open on GitHub to see it.</p>
@@ -122,6 +166,29 @@ export function PRDetailView({ pr, onBack }: { pr: PullRequest; onBack: () => vo
               {detail.activityMore && (
                 <p className="panel-empty">Some activity is omitted. See the full history on GitHub.</p>
               )}
+            </section>
+            <section className="pr-detail-section" data-detail-section="files">
+              <h4>Files changed</h4>
+              {detail.filesError ? (
+                <p className="panel-error">Could not load files. Open on GitHub to see them.</p>
+              ) : detail.files.length === 0 ? (
+                <p className="panel-empty">No changed files.</p>
+              ) : (
+                <ul className="pr-files">
+                  {detail.files.map((file) => (
+                    <li key={file.path}>
+                      <a href={file.url} target="_blank" rel="noreferrer">
+                        {file.path}
+                      </a>
+                      <span className="mono">
+                        <span className="add">{signed(file.additions, "+")}</span>{" "}
+                        <span className="del">{signed(file.deletions, "−")}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {detail.filesMore && <p className="panel-empty">Showing the first 100 files. See the rest on GitHub.</p>}
             </section>
           </>
         )}

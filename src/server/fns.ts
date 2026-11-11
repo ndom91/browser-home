@@ -30,7 +30,7 @@ import { fetchWeather } from "./weather"
 
 const calendar = cached(DEMO ? async () => demoCalendar() : fetchCalendar, TTL.calendar)
 const prs = cached(DEMO ? async () => demoPRs() : fetchPRs, TTL.prs)
-const prDetail = cachedBy(DEMO ? async () => demoPRDetail() : fetchPRDetail, TTL.prDetail)
+const prDetail = cachedBy(DEMO ? async (key: string) => demoPRDetail(key) : fetchPRDetail, TTL.prDetail)
 const notifications = cached(DEMO ? async () => demoNotifications() : fetchNotifications, TTL.notifications)
 const linear = cached(DEMO ? async () => demoLinear() : fetchLinear, TTL.linear)
 // Keyed by the standup's start, so the hour before each standup gets its own fetch.

@@ -399,10 +399,22 @@ export function demoLinear(): LinearIssues {
   }
 }
 
-export function demoPRDetail(): import("../lib/types").PRDetail {
+export function demoPRDetail(key: string): import("../lib/types").PRDetail {
   return {
     description:
       "## Summary\nImprove the queue filters and make it easier to find work.\n\n- Preserve the selected filters\n- Add keyboard support",
+    files: [
+      {
+        path: "src/components/QueueFilters.tsx",
+        status: "modified",
+        additions: 32,
+        deletions: 8,
+        url: "https://github.com",
+      },
+      { path: "src/lib/filters.ts", status: "added", additions: 18, deletions: 0, url: "https://github.com" },
+    ],
+    filesMore: false,
+    filesError: false,
     reviewers: ["priya", "sam"],
     activity: [
       {
@@ -424,7 +436,7 @@ export function demoPRDetail(): import("../lib/types").PRDetail {
     ],
     activityMore: false,
     activityError: false,
-    checks: [{ name: "Tests", status: "in_progress", url: "https://github.com" }],
+    checks: key.endsWith("/4830") ? [] : [{ name: "Tests", status: "in_progress", url: "https://github.com" }],
     checksError: false,
   }
 }

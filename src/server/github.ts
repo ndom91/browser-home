@@ -249,8 +249,9 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     head: { sha: string }
     requested_reviewers: Array<{ login: string }>
     requested_teams: Array<{ name: string }>
+    changed_files: number
   }>(`${root}/pulls/${number}`)
-  const [activity, checks] = await Promise.allSettled([
+  const [activity, checks, files] = await Promise.allSettled([
     Promise.all([
       latest<Comment>(`${root}/issues/${number}/comments`),
       latest<Review>(`${root}/pulls/${number}/reviews`),
@@ -276,6 +277,9 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     ]),
     json<{ check_runs: Array<{ name: string; status: string; conclusion: string | null; html_url: string | null }> }>(
       `${root}/commits/${pr.head.sha}/check-runs?per_page=100`,
+    ),
+    json<Array<{ filename: string; status: string; additions: number; deletions: number; blob_url: string }>>(
+      `${root}/pulls/${number}/files?per_page=100`,
     ),
   ])
   const events: PRDetail["activity"] = []
@@ -326,6 +330,18 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
   }
   return {
     description: pr.body ?? "",
+    files:
+      files.status === "fulfilled"
+        ? files.value.map((file) => ({
+            path: file.filename,
+            status: file.status,
+            additions: file.additions,
+            deletions: file.deletions,
+            url: file.blob_url,
+          }))
+        : [],
+    filesMore: pr.changed_files > 100,
+    filesError: files.status === "rejected",
     reviewers: [...pr.requested_reviewers.map((r) => r.login), ...pr.requested_teams.map((r) => r.name)],
     activity: events,
     activityMore,

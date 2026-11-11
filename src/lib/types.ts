@@ -32,6 +32,9 @@ export interface PullRequest {
 
 export interface PRDetail {
   description: string
+  files: Array<{ path: string; status: string; additions: number; deletions: number; url: string }>
+  filesMore: boolean
+  filesError: boolean
   reviewers: Array<string>
   activity: Array<{ id: string; kind: string; author: string; body: string; at: string; url: string }>
   activityMore: boolean
