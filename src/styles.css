@@ -3331,6 +3331,7 @@ a:focus-visible,
   border-top: 1px solid var(--line-soft);
 }
 .pr-detail-sections button {
+  position: relative;
   padding: 11px 0;
   border: 0;
   background: none;
@@ -3341,6 +3342,18 @@ a:focus-visible,
 }
 .pr-detail-sections button:hover {
   color: var(--text);
+}
+.pr-detail-sections button[aria-current="location"] {
+  color: var(--text);
+}
+.pr-detail-sections button[aria-current="location"]::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--text);
+  content: "";
 }
 .pr-detail-markdown > :first-child {
   margin-top: 0;

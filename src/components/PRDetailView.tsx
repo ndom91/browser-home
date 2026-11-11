@@ -8,6 +8,8 @@ import { getPRDetail } from "../server/fns"
 import { ArrowLeftIcon, ArrowUpRightIcon, ChevronDownIcon } from "./icons"
 import { PanelError, PanelLoading } from "./Panel"
 
+type DetailSection = "description" | "activity" | "files"
+
 export function PRDetailView({
   pr,
   reviewRequested,
@@ -21,6 +23,8 @@ export function PRDetailView({
 }) {
   const now = useNow()
   const contentRef = useRef<HTMLElement>(null)
+  const programmaticScroll = useRef<number | null>(null)
+  const [activeSection, setActiveSection] = useState<DetailSection>("description")
   const key = `${pr.repoFull}/${pr.number}`
   const query = useQuery({
     queryKey: ["pr-detail", key],
@@ -28,15 +32,37 @@ export function PRDetailView({
     staleTime: TTL.prDetail,
   })
   const detail = query.data?.data
-  const goTo = (id: string) => {
+  const goTo = (id: DetailSection) => {
     const container = contentRef.current
     const target = container?.querySelector<HTMLElement>(`[data-detail-section="${id}"]`)
-    if (container && target)
-      container.scrollTo({
-        top: container.scrollTop + target.getBoundingClientRect().top - container.getBoundingClientRect().top,
-        behavior: "instant",
-      })
-    container?.focus({ preventScroll: true })
+    if (!container || !target) return
+    setActiveSection(id)
+    container.scrollTo({
+      top: container.scrollTop + target.getBoundingClientRect().top - container.getBoundingClientRect().top,
+      behavior: "instant",
+    })
+    programmaticScroll.current = container.scrollTop
+    container.focus({ preventScroll: true })
+  }
+  const updateActiveSection = () => {
+    const container = contentRef.current
+    if (!container) return
+    const expected = programmaticScroll.current
+    programmaticScroll.current = null
+    if (expected !== null && Math.abs(container.scrollTop - expected) < 1) return
+
+    const sections = container.querySelectorAll<HTMLElement>("[data-detail-section]")
+    if (container.scrollTop > 0 && container.scrollTop + container.clientHeight >= container.scrollHeight - 1) {
+      setActiveSection("files")
+      return
+    }
+    const top = container.getBoundingClientRect().top + 20
+    let current: DetailSection = "description"
+    for (const section of sections) {
+      if (section.getBoundingClientRect().top > top) break
+      current = section.dataset.detailSection as DetailSection
+    }
+    setActiveSection(current)
   }
   return (
     <div className="pr-detail">
@@ -118,13 +144,25 @@ export function PRDetailView({
           </div>
         </div>
         <nav className="pr-detail-sections" aria-label="Pull request sections">
-          <button type="button" onClick={() => goTo("description")}>
+          <button
+            type="button"
+            aria-current={activeSection === "description" ? "location" : undefined}
+            onClick={() => goTo("description")}
+          >
             Description
           </button>
-          <button type="button" onClick={() => goTo("activity")}>
+          <button
+            type="button"
+            aria-current={activeSection === "activity" ? "location" : undefined}
+            onClick={() => goTo("activity")}
+          >
             Activity{detail && !detail.activityError ? ` ${detail.activity.length}` : ""}
           </button>
-          <button type="button" onClick={() => goTo("files")}>
+          <button
+            type="button"
+            aria-current={activeSection === "files" ? "location" : undefined}
+            onClick={() => goTo("files")}
+          >
             Files{detail && !detail.filesError ? ` ${detail.files.length}${detail.filesMore ? "+" : ""}` : ""}
           </button>
         </nav>
@@ -137,6 +175,7 @@ export function PRDetailView({
         tabIndex={0}
         aria-label="Pull request description and activity"
         data-nav-scroll
+        onScroll={updateActiveSection}
       >
         {!detail ? (
           query.error ? (
