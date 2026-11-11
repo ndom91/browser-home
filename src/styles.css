@@ -1845,14 +1845,10 @@ a:focus-visible,
   color: var(--text);
 }
 
-/* ---------- pull requests: repo badges + filters ---------- */
+/* ---------- pull requests: repo colors + filters ---------- */
 
 /* --repo-h comes from a hash of the repo name. Fixed lightness keeps every hue readable. */
-.repo-badge {
-  padding: 0 5px;
-  border-radius: 4px;
-  line-height: 17px;
-  background: light-dark(oklch(0.95 0.035 var(--repo-h)), oklch(0.3 0.05 var(--repo-h)));
+.repo-label {
   color: light-dark(oklch(0.46 0.12 var(--repo-h)), oklch(0.86 0.09 var(--repo-h)));
 }
 
@@ -3158,14 +3154,45 @@ a:focus-visible,
   position: relative;
   z-index: 1;
   font: inherit;
-  font-size: 11px;
-  color: var(--muted);
-  background: none;
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--muted);
   cursor: pointer;
+  opacity: 0;
+}
+.pr-github:hover .pr-detail-trigger,
+.pr-detail-trigger:focus-visible {
+  opacity: 1;
 }
 .pr-detail-trigger:hover {
-  text-decoration: underline;
+  color: var(--text);
+  background: var(--hover);
+}
+@media (hover: hover) {
+  .pr-github .pr-side-top {
+    position: relative;
+  }
+  .pr-github .pr-detail-trigger {
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+  }
+  .pr-github:hover .pr-side-top > .badge,
+  .pr-side-top:has(.pr-detail-trigger:focus-visible) > .badge {
+    visibility: hidden;
+  }
+}
+@media (hover: none) {
+  .pr-detail-trigger {
+    opacity: 1;
+  }
 }
 
 .pr-detail-issue {
@@ -3546,4 +3573,70 @@ a:focus-visible,
   margin: 0 0 6px;
   color: var(--muted);
   font-size: 11px;
+}
+
+.pr-github.is-review .pr-icon {
+  color: var(--b-blue-fg);
+}
+.pr-github .pr-meta > .pr-author {
+  display: inline-flex;
+  flex: 0 0 auto;
+  max-width: 90px;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-2);
+  font-size: 11px;
+}
+.pr-author-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--b-blue-bg);
+  color: var(--b-blue-fg);
+  font-size: 8px;
+  font-weight: 600;
+}
+.pr-author-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pr-github .repo-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pr-github .pr-meta .mono {
+  font-size: 10.5px;
+}
+.pr-github .checks {
+  font-size: 10.5px;
+}
+
+.pr-github .pr-meta > * + *::before {
+  margin: 0 4px;
+}
+
+.pr-github {
+  grid-template-columns: 14px minmax(0, 1fr);
+}
+.pr-github .pr-head {
+  align-items: center;
+}
+.pr-github .pr-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pr-github .pr-side-top {
+  flex: none;
+  margin-left: auto;
+}
+.pr-github .pr-meta > .pr-diff {
+  margin-left: auto;
+}
+.pr-github .pr-meta > .pr-diff::before {
+  content: none;
 }

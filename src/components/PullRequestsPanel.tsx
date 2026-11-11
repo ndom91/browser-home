@@ -18,7 +18,16 @@ import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { dismissNotification, refreshPRs } from "../server/fns"
 import { FilteredSection } from "./FilteredSection"
-import { ActivityIcon, AtIcon, CommentIcon, GitHubIcon, HourglassIcon, PullRequestIcon, SparkleIcon } from "./icons"
+import {
+  ActivityIcon,
+  AtIcon,
+  ChevronRightIcon,
+  CommentIcon,
+  GitHubIcon,
+  HourglassIcon,
+  PullRequestIcon,
+  SparkleIcon,
+} from "./icons"
 import { Panel, PanelError, PanelFallback } from "./Panel"
 import { PRDetailView } from "./PRDetailView"
 import { RowSignals, type Signal } from "./RowSignals"
@@ -277,10 +286,54 @@ function Row({
   const size = prSize(pr.additions, pr.deletions)
   // Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead.
   return (
-    <div className={`pr${pr.draft ? " is-draft" : ""}`} data-nav-item>
+    <div className={`pr pr-github${pr.draft ? " is-draft" : ""}${showAuthor ? " is-review" : ""}`} data-nav-item>
       <PullRequestIcon className="pr-icon" draft={pr.draft} />
       <span className="pr-main">
         <span className="pr-head">
+          <a
+            className="pr-title pr-link"
+            href={pr.url}
+            target="_blank"
+            rel="noreferrer"
+            title={pr.repoFull}
+            data-nav-row
+          >
+            {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
+          </a>
+          <span className="pr-side-top">
+            <button
+              type="button"
+              className="pr-detail-trigger"
+              data-nav-alt
+              onClick={onOpen}
+              aria-label={`Show details for ${pr.repo}#${pr.number}`}
+              title="Show details"
+            >
+              <ChevronRightIcon />
+            </button>
+            <RowSignals signals={signals} />
+            {reviewHref && (
+              <Tooltip content="Review in T3 Code">
+                <a className="row-action" href={reviewHref} aria-label={`Review ${pr.repo}#${pr.number} in T3 Code`}>
+                  <SparkleIcon />
+                </a>
+              </Tooltip>
+            )}
+            <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
+          </span>
+        </span>
+        <span className="pr-meta">
+          {showAuthor && pr.author && (
+            <span className="pr-author" title={pr.author}>
+              <span className="pr-author-avatar" aria-hidden="true">
+                {pr.author.slice(0, 2).toUpperCase()}
+              </span>
+              <span className="pr-author-name">{pr.author}</span>
+            </span>
+          )}
+          <span className="repo-label mono" style={hueStyle(hue)}>
+            {pr.repo}#{pr.number}
+          </span>
           {pr.linear && (
             <a
               className="pr-linear mono"
@@ -292,61 +345,25 @@ function Row({
               {pr.linear.id}
             </a>
           )}
-          <a
-            className="pr-title pr-link"
-            href={pr.url}
-            target="_blank"
-            rel="noreferrer"
-            title={pr.repoFull}
-            data-nav-row
-          >
-            {pr.linear ? withoutIssueId(pr.title, pr.linear.id) : pr.title}
-          </a>
-        </span>
-        <span className="pr-meta">
-          <span className="repo-badge mono" style={hueStyle(hue)}>
-            {pr.repo}#{pr.number}
-          </span>
-          {showAuthor && pr.author && (
-            <span className="pr-author mono" title={pr.author}>
-              {pr.author}
-            </span>
-          )}
           <span className="mono">{age(Date.parse(pr.updatedAt), now)}</span>
           {checks && (
-            <span className={`checks checks-${checks.tone}`}>
-              <i className="checks-dot" />
-              {checks.label}
+            <span className={`checks checks-${checks.tone}`} title={checks.label}>
+              <i className="checks-dot" aria-hidden="true" />
+              {checks.tone === "ok" ? (
+                <span className="sr-only">{checks.label}</span>
+              ) : checks.tone === "fail" ? (
+                "Failing"
+              ) : (
+                checks.label
+              )}
             </span>
           )}
-        </span>
-      </span>
-      <span className="pr-side">
-        <span className="pr-side-top">
-          <button
-            type="button"
-            className="pr-detail-trigger"
-            data-nav-alt
-            onClick={onOpen}
-            aria-label={`Show details for ${pr.repo}#${pr.number}`}
-          >
-            Details
-          </button>
-          <RowSignals signals={signals} />
-          {reviewHref && (
-            <Tooltip content="Review in T3 Code">
-              <a className="row-action" href={reviewHref} aria-label={`Review ${pr.repo}#${pr.number} in T3 Code`}>
-                <SparkleIcon />
-              </a>
-            </Tooltip>
-          )}
-          <span className={`badge badge-${badge.tone}`}>{badge.label}</span>
-        </span>
-        <span className="pr-diff mono">
-          <span className="add">{signed(pr.additions, "+")}</span>
-          <span className="del">{signed(pr.deletions, "−")}</span>
-          <span className="size" data-size={size}>
-            {size}
+          <span className="pr-diff mono">
+            <span className="add">{signed(pr.additions, "+")}</span>
+            <span className="del">{signed(pr.deletions, "−")}</span>
+            <span className="size" data-size={size}>
+              {size}
+            </span>
           </span>
         </span>
       </span>
