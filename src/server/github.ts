@@ -243,7 +243,9 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     if (!last) return { items: (await res.json()) as Array<T>, more: false }
     return { items: await json<Array<T>>(`${path}?per_page=100&page=${last[1]}`), more: true }
   }
-  type User = { login: string } | null
+  type User = { login: string; type?: string; __typename?: string } | null
+  const isBot = (user: User) =>
+    user?.type === "Bot" || user?.__typename === "Bot" || Boolean(user?.login.endsWith("[bot]"))
   type Comment = {
     id: number
     user: User
@@ -289,7 +291,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
           }
         }
       }>(
-        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { id isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login } bodyHTML bodyText createdAt url } } } } } } }`,
+        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { id isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login __typename } bodyHTML bodyText createdAt url } } } } } } }`,
       ),
     ]),
     json<{
@@ -323,6 +325,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
         id: `comment-${c.id}`,
         kind: "Comment",
         author: c.user?.login ?? "Unknown",
+        isBot: isBot(c.user),
         body: sanitizePRHtml(c.body_html ?? ""),
         preview: c.body_text ?? "",
         at: c.created_at,
@@ -336,6 +339,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
           id: `review-${r.id}`,
           kind: `Review: ${r.state.toLowerCase().replaceAll("_", " ")}`,
           author: r.user?.login ?? "Unknown",
+          isBot: isBot(r.user),
           body: sanitizePRHtml(r.body_html ?? ""),
           preview: r.body_text ?? "",
           at: r.submitted_at as string,
@@ -346,6 +350,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
       const comments = thread.comments.nodes.map((c) => ({
         id: c.id,
         author: c.author?.login ?? "Unknown",
+        isBot: isBot(c.author),
         body: sanitizePRHtml(c.bodyHTML),
         preview: c.bodyText,
         at: c.createdAt,

@@ -429,6 +429,7 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
         thread: { path: "src/components/QueueFilters.tsx", resolved: false, replies: [] },
         preview: "Could we also cover the empty state?",
         author: "priya",
+        isBot: false,
         body: sanitizePRHtml(renderHtml("This looks good. Could we also cover the **empty state**?")),
         at: new Date(Date.now() - HOUR).toISOString(),
         url: "https://github.com",
@@ -443,6 +444,7 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
             {
               id: "reply-1",
               author: "alex",
+              isBot: false,
               body: sanitizePRHtml(renderHtml("Fixed in the latest commit.")),
               preview: "Fixed in the latest commit.",
               at: new Date(Date.now() - 45 * MIN).toISOString(),
@@ -452,8 +454,19 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
         },
         preview: "Should this handle empty filters?",
         author: "review-bot[bot]",
+        isBot: true,
         body: sanitizePRHtml(renderHtml("Should this handle empty filters?")),
         at: new Date(Date.now() - 55 * MIN).toISOString(),
+        url: "https://github.com",
+      },
+      {
+        id: "empty-review",
+        kind: "Review: commented",
+        preview: "",
+        author: "review-bot[bot]",
+        isBot: true,
+        body: "",
+        at: new Date(Date.now() - 40 * MIN).toISOString(),
         url: "https://github.com",
       },
       {
@@ -461,6 +474,7 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
         kind: "Review: approved",
         preview: "Nice improvement!",
         author: "sam",
+        isBot: false,
         body: sanitizePRHtml(
           renderHtml(
             "<!-- bot summary -->\n\n<h2>Confidence score: 5/5</h2>\n\nNice improvement!\n\n<details><summary>Review notes</summary>All checks passed.</details>",

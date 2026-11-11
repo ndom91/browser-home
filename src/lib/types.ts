@@ -33,6 +33,7 @@ export interface PullRequest {
 export interface PRActivityComment {
   id: string
   author: string
+  isBot: boolean
   body: string
   preview: string
   at: string

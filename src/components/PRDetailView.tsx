@@ -287,12 +287,9 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
               <ul>
                 {group.items.map((item) => (
                   <li key={item.id}>
-                    <details className="pr-activity-item" open={item.thread?.resolved ? undefined : true}>
+                    <details className="pr-activity-item" open={item.isBot || item.thread?.resolved ? undefined : true}>
                       <summary>
-                        <span
-                          className={`pr-activity-avatar${item.author.endsWith("[bot]") ? " is-bot" : ""}`}
-                          aria-hidden="true"
-                        >
+                        <span className={`pr-activity-avatar${item.isBot ? " is-bot" : ""}`} aria-hidden="true">
                           {item.author.slice(0, 2)}
                         </span>
                         <strong>{item.author.replace(/\[bot\]$/, "")}</strong>
@@ -300,7 +297,8 @@ function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
                           <span className="pr-activity-kind">{item.kind}</span>
                         )}
                         <span className="pr-activity-preview">
-                          {item.preview.trim().replace(/\s+/g, " ") || item.kind}
+                          {item.preview.trim().replace(/\s+/g, " ") ||
+                            (item.thread || item.kind === "Comment" ? item.kind : "")}
                         </span>
                         {item.thread?.resolved && (
                           <span className="pr-activity-resolved" role="img" aria-label="Resolved">
