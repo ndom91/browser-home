@@ -131,4 +131,4 @@ export const getPRDetail = createServerFn({ method: "GET" })
       throw new Error("Invalid pull request")
     return key
   })
-  .handler(({ data }) => prDetail(data))
+  .handler(({ data }) => prDetail(data, { wait: true }))

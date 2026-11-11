@@ -262,38 +262,36 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     requested_teams: Array<{ name: string }>
     changed_files: number
   }>(`${root}/pulls/${number}`)
-  const [activity, checks, files] = await Promise.allSettled([
-    Promise.all([
-      latest<Comment>(`${root}/issues/${number}/comments`),
-      latest<Review>(`${root}/pulls/${number}/reviews`),
-      graphql<{
-        repository: {
-          pullRequest: {
-            reviewThreads: {
-              pageInfo: { hasPreviousPage: boolean }
-              nodes: Array<{
-                id: string
-                isResolved: boolean
-                path: string
-                comments: {
-                  pageInfo: { hasPreviousPage: boolean }
-                  nodes: Array<{
-                    id: string
-                    author: User
-                    bodyHTML: string
-                    bodyText: string
-                    createdAt: string
-                    url: string
-                  }>
-                }
-              }>
-            }
+  const [comments, reviews, threads, checks, files] = await Promise.allSettled([
+    latest<Comment>(`${root}/issues/${number}/comments`),
+    latest<Review>(`${root}/pulls/${number}/reviews`),
+    graphql<{
+      repository: {
+        pullRequest: {
+          reviewThreads: {
+            pageInfo: { hasPreviousPage: boolean }
+            nodes: Array<{
+              id: string
+              isResolved: boolean
+              path: string
+              comments: {
+                pageInfo: { hasPreviousPage: boolean }
+                nodes: Array<{
+                  id: string
+                  author: User
+                  bodyHTML: string
+                  bodyText: string
+                  createdAt: string
+                  url: string
+                }>
+              }
+            }>
           }
         }
-      }>(
-        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { id isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login __typename } bodyHTML bodyText createdAt url } } } } } } }`,
-      ),
-    ]),
+      }
+    }>(
+      `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { id isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login __typename } bodyHTML bodyText createdAt url } } } } } } }`,
+    ),
     json<{
       total_count: number
       check_runs: Array<{
@@ -311,62 +309,60 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     ),
   ])
   const events: PRDetail["activity"] = []
-  let activityMore = false
-  if (activity.status === "fulfilled") {
-    const [comments, reviews, threads] = activity.value
-    const reviewThreads = threads.repository.pullRequest.reviewThreads
-    activityMore =
-      comments.more ||
-      reviews.more ||
-      reviewThreads.pageInfo.hasPreviousPage ||
-      reviewThreads.nodes.some((thread) => thread.comments.pageInfo.hasPreviousPage)
-    events.push(
-      ...comments.items.map((c) => ({
-        id: `comment-${c.id}`,
-        kind: "Comment",
-        author: c.user?.login ?? "Unknown",
-        isBot: isBot(c.user),
-        body: sanitizePRHtml(c.body_html ?? ""),
-        preview: c.body_text ?? "",
-        at: c.created_at,
-        url: c.html_url,
+  const reviewThreads = threads.status === "fulfilled" ? threads.value.repository.pullRequest.reviewThreads : null
+  const activityMore =
+    (comments.status === "fulfilled" && comments.value.more) ||
+    (reviews.status === "fulfilled" && reviews.value.more) ||
+    Boolean(
+      reviewThreads?.pageInfo.hasPreviousPage ||
+        reviewThreads?.nodes.some((thread) => thread.comments.pageInfo.hasPreviousPage),
+    )
+  events.push(
+    ...(comments.status === "fulfilled" ? comments.value.items : []).map((c) => ({
+      id: `comment-${c.id}`,
+      kind: "Comment",
+      author: c.user?.login ?? "Unknown",
+      isBot: isBot(c.user),
+      body: sanitizePRHtml(c.body_html ?? ""),
+      preview: c.body_text ?? "",
+      at: c.created_at,
+      url: c.html_url,
+    })),
+  )
+  events.push(
+    ...(reviews.status === "fulfilled" ? reviews.value.items : [])
+      .filter((r) => r.submitted_at && r.state !== "PENDING")
+      .map((r) => ({
+        id: `review-${r.id}`,
+        kind: `Review: ${r.state.toLowerCase().replaceAll("_", " ")}`,
+        author: r.user?.login ?? "Unknown",
+        isBot: isBot(r.user),
+        body: sanitizePRHtml(r.body_html ?? ""),
+        preview: r.body_text ?? "",
+        at: r.submitted_at as string,
+        url: r.html_url,
       })),
-    )
-    events.push(
-      ...reviews.items
-        .filter((r) => r.submitted_at && r.state !== "PENDING")
-        .map((r) => ({
-          id: `review-${r.id}`,
-          kind: `Review: ${r.state.toLowerCase().replaceAll("_", " ")}`,
-          author: r.user?.login ?? "Unknown",
-          isBot: isBot(r.user),
-          body: sanitizePRHtml(r.body_html ?? ""),
-          preview: r.body_text ?? "",
-          at: r.submitted_at as string,
-          url: r.html_url,
-        })),
-    )
-    for (const thread of reviewThreads.nodes) {
-      const comments = thread.comments.nodes.map((c) => ({
-        id: c.id,
-        author: c.author?.login ?? "Unknown",
-        isBot: isBot(c.author),
-        body: sanitizePRHtml(c.bodyHTML),
-        preview: c.bodyText,
-        at: c.createdAt,
-        url: c.url,
-      }))
-      const [first, ...replies] = comments
-      if (first)
-        events.push({
-          ...first,
-          id: thread.id,
-          kind: "Code comment",
-          thread: { path: thread.path, resolved: thread.isResolved, replies },
-        })
-    }
-    events.sort((a, b) => a.at.localeCompare(b.at))
+  )
+  for (const thread of reviewThreads?.nodes ?? []) {
+    const comments = thread.comments.nodes.map((c) => ({
+      id: c.id,
+      author: c.author?.login ?? "Unknown",
+      isBot: isBot(c.author),
+      body: sanitizePRHtml(c.bodyHTML),
+      preview: c.bodyText,
+      at: c.createdAt,
+      url: c.url,
+    }))
+    const [first, ...replies] = comments
+    if (first)
+      events.push({
+        ...first,
+        id: thread.id,
+        kind: "Code comment",
+        thread: { path: thread.path, resolved: thread.isResolved, replies },
+      })
   }
+  events.sort((a, b) => a.at.localeCompare(b.at))
   return {
     description: sanitizePRHtml(pr.body_html ?? ""),
     files:
@@ -384,7 +380,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     reviewers: [...pr.requested_reviewers.map((r) => r.login), ...pr.requested_teams.map((r) => r.name)],
     activity: events,
     activityMore,
-    activityError: activity.status === "rejected",
+    activityError: [comments, reviews, threads].some((part) => part.status === "rejected"),
     checks:
       checks.status === "fulfilled"
         ? checks.value.check_runs.map((c) => {

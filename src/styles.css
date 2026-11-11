@@ -3111,8 +3111,8 @@ a:focus-visible,
   padding: 10px 16px 14px;
 }
 .pr-detail-heading h3 {
-  margin: 6px 0;
-  font-size: 15px;
+  margin: 12px 0;
+  font-size: 16px;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -3140,6 +3140,7 @@ a:focus-visible,
   margin: 0 0 10px;
 }
 .pr-detail-markdown {
+  color: var(--text-2);
   font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -3203,10 +3204,6 @@ a:focus-visible,
   background: var(--line-soft);
   font-size: 11px;
   text-decoration: none;
-}
-.pr-detail-heading h3 {
-  font-size: 16px;
-  margin: 12px 0;
 }
 .pr-detail-byline {
   display: flex;
@@ -3329,9 +3326,6 @@ a:focus-visible,
 }
 .pr-detail-sections button:hover {
   color: var(--text);
-}
-.pr-detail-markdown {
-  color: var(--text-2);
 }
 .pr-detail-markdown > :first-child {
   margin-top: 0;

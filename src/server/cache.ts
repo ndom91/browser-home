@@ -1,3 +1,5 @@
+type CacheOptions = { force?: boolean; wait?: boolean }
+
 export interface Cached<T> {
   data: T
   fetchedAt: number
@@ -44,8 +46,8 @@ export function cached<T>(fn: () => Promise<T>, ttlMs: number) {
 
 /** `cached`, keyed by an argument. Keeps the most recently used `max` keys. */
 export function cachedBy<K, T>(fn: (key: K) => Promise<T>, ttlMs: number, max = 50) {
-  const entries = new Map<K, () => Promise<Cached<T>>>()
-  return (key: K): Promise<Cached<T>> => {
+  const entries = new Map<K, (options?: CacheOptions) => Promise<Cached<T>>>()
+  return (key: K, options?: CacheOptions): Promise<Cached<T>> => {
     let entry = entries.get(key)
     if (entry) {
       entries.delete(key) // re-insert below, so Map order tracks recency
@@ -54,6 +56,6 @@ export function cachedBy<K, T>(fn: (key: K) => Promise<T>, ttlMs: number, max = 
       if (entries.size >= max) entries.delete(entries.keys().next().value as K)
     }
     entries.set(key, entry)
-    return entry()
+    return entry(options)
   }
 }

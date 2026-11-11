@@ -81,6 +81,8 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
   const reviewSignals = (pr: PullRequest) => [...notificationSignals(pr), ...staleSignals(pr)]
   const { prompt } = useReviewPrompt()
   const reviewLink = (pr: PullRequest) => t3ReviewLink(pr.url, prompt)
+  const currentShown =
+    shown && (prs?.review.find((pr) => pr.url === shown.url) ?? prs?.mine.find((pr) => pr.url === shown.url) ?? shown)
   // One map for both sections, so a repo has the same color in each.
   const hues = useMemo(() => repoHues([...(prs?.review ?? []), ...(prs?.mine ?? [])].map((pr) => pr.repoFull)), [prs])
   return (
@@ -131,12 +133,12 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
           )}
         </section>
         <section className="t-page pr-detail-page" data-page-id="2" ref={detailRef} inert={open == null}>
-          {shown && (
+          {currentShown && (
             <PRDetailView
-              key={shown.url}
-              pr={shown}
-              reviewRequested={prs?.review.some((pr) => pr.url === shown.url) ?? false}
-              reviewHref={reviewLink(shown)}
+              key={currentShown.url}
+              pr={currentShown}
+              reviewRequested={prs?.review.some((pr) => pr.url === currentShown.url) ?? false}
+              reviewHref={reviewLink(currentShown)}
               onBack={() => setOpen(null)}
             />
           )}

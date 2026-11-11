@@ -156,13 +156,16 @@ export function PRDetailView({
             </section>
             <section className="pr-detail-section" data-detail-section="activity">
               <h4>Activity</h4>
-              {detail.activityError ? (
-                <p className="panel-error">Could not load activity. Open on GitHub to see it.</p>
-              ) : detail.activity.length === 0 ? (
-                <p className="panel-empty">No activity yet.</p>
-              ) : (
-                <Activity items={detail.activity} now={now} />
+              {detail.activityError && (
+                <p className="panel-error">
+                  Some activity could not be loaded. Open on GitHub to see the full history.
+                </p>
               )}
+              {detail.activity.length > 0 ? (
+                <Activity items={detail.activity} now={now} />
+              ) : !detail.activityError ? (
+                <p className="panel-empty">No activity yet.</p>
+              ) : null}
               {detail.activityMore && (
                 <p className="panel-empty">Some activity is omitted. See the full history on GitHub.</p>
               )}
