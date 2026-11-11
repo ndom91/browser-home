@@ -425,15 +425,41 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
     activity: [
       {
         id: "1",
-        kind: "Comment",
+        kind: "Code comment",
+        thread: { path: "src/components/QueueFilters.tsx", resolved: false, replies: [] },
+        preview: "Could we also cover the empty state?",
         author: "priya",
         body: sanitizePRHtml(renderHtml("This looks good. Could we also cover the **empty state**?")),
         at: new Date(Date.now() - HOUR).toISOString(),
         url: "https://github.com",
       },
       {
+        id: "resolved-thread",
+        kind: "Code comment",
+        thread: {
+          path: "src/lib/filters.ts",
+          resolved: true,
+          replies: [
+            {
+              id: "reply-1",
+              author: "alex",
+              body: sanitizePRHtml(renderHtml("Fixed in the latest commit.")),
+              preview: "Fixed in the latest commit.",
+              at: new Date(Date.now() - 45 * MIN).toISOString(),
+              url: "https://github.com",
+            },
+          ],
+        },
+        preview: "Should this handle empty filters?",
+        author: "review-bot[bot]",
+        body: sanitizePRHtml(renderHtml("Should this handle empty filters?")),
+        at: new Date(Date.now() - 55 * MIN).toISOString(),
+        url: "https://github.com",
+      },
+      {
         id: "2",
         kind: "Review: approved",
+        preview: "Nice improvement!",
         author: "sam",
         body: sanitizePRHtml(
           renderHtml(
@@ -447,7 +473,13 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
     ],
     activityMore: false,
     activityError: false,
-    checks: key.endsWith("/4830") ? [] : [{ name: "Tests", status: "in_progress", url: "https://github.com" }],
+    checks: key.endsWith("/4830")
+      ? []
+      : [
+          { id: 1, name: "Tests", status: "failure", url: "https://github.com", durationMs: 125000 },
+          { id: 2, name: "Lint", status: "success", url: "https://github.com", durationMs: 38000 },
+        ],
+    checksTotal: key.endsWith("/4830") ? 0 : 2,
     checksError: false,
   }
 }

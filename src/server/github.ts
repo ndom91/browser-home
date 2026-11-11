@@ -244,7 +244,14 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     return { items: await json<Array<T>>(`${path}?per_page=100&page=${last[1]}`), more: true }
   }
   type User = { login: string } | null
-  type Comment = { id: number; user: User; body_html: string | null; created_at: string; html_url: string }
+  type Comment = {
+    id: number
+    user: User
+    body_html: string | null
+    body_text: string | null
+    created_at: string
+    html_url: string
+  }
   type Review = Comment & { state: string; submitted_at: string | null }
   const pr = await json<{
     body_html: string | null
@@ -263,23 +270,40 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
             reviewThreads: {
               pageInfo: { hasPreviousPage: boolean }
               nodes: Array<{
+                id: string
                 isResolved: boolean
                 path: string
                 comments: {
                   pageInfo: { hasPreviousPage: boolean }
-                  nodes: Array<{ id: string; author: User; bodyHTML: string; createdAt: string; url: string }>
+                  nodes: Array<{
+                    id: string
+                    author: User
+                    bodyHTML: string
+                    bodyText: string
+                    createdAt: string
+                    url: string
+                  }>
                 }
               }>
             }
           }
         }
       }>(
-        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login } bodyHTML createdAt url } } } } } } }`,
+        `query { repository(owner: ${JSON.stringify(owner)}, name: ${JSON.stringify(repo)}) { pullRequest(number: ${number}) { reviewThreads(last: 50) { pageInfo { hasPreviousPage } nodes { id isResolved path comments(last: 20) { pageInfo { hasPreviousPage } nodes { id author { login } bodyHTML bodyText createdAt url } } } } } } }`,
       ),
     ]),
-    json<{ check_runs: Array<{ name: string; status: string; conclusion: string | null; html_url: string | null }> }>(
-      `${root}/commits/${pr.head.sha}/check-runs?per_page=100`,
-    ),
+    json<{
+      total_count: number
+      check_runs: Array<{
+        id: number
+        name: string
+        status: string
+        conclusion: string | null
+        html_url: string | null
+        started_at: string | null
+        completed_at: string | null
+      }>
+    }>(`${root}/commits/${pr.head.sha}/check-runs?per_page=100`),
     json<Array<{ filename: string; status: string; additions: number; deletions: number; blob_url: string }>>(
       `${root}/pulls/${number}/files?per_page=100`,
     ),
@@ -300,6 +324,7 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
         kind: "Comment",
         author: c.user?.login ?? "Unknown",
         body: sanitizePRHtml(c.body_html ?? ""),
+        preview: c.body_text ?? "",
         at: c.created_at,
         url: c.html_url,
       })),
@@ -312,22 +337,29 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
           kind: `Review: ${r.state.toLowerCase().replaceAll("_", " ")}`,
           author: r.user?.login ?? "Unknown",
           body: sanitizePRHtml(r.body_html ?? ""),
+          preview: r.body_text ?? "",
           at: r.submitted_at as string,
           url: r.html_url,
         })),
     )
-    events.push(
-      ...reviewThreads.nodes.flatMap((thread) =>
-        thread.comments.nodes.map((c) => ({
-          id: `thread-${c.id}`,
-          kind: `Code comment · ${thread.path} · ${thread.isResolved ? "Resolved" : "Unresolved"}`,
-          author: c.author?.login ?? "Unknown",
-          body: sanitizePRHtml(c.bodyHTML),
-          at: c.createdAt,
-          url: c.url,
-        })),
-      ),
-    )
+    for (const thread of reviewThreads.nodes) {
+      const comments = thread.comments.nodes.map((c) => ({
+        id: c.id,
+        author: c.author?.login ?? "Unknown",
+        body: sanitizePRHtml(c.bodyHTML),
+        preview: c.bodyText,
+        at: c.createdAt,
+        url: c.url,
+      }))
+      const [first, ...replies] = comments
+      if (first)
+        events.push({
+          ...first,
+          id: thread.id,
+          kind: "Code comment",
+          thread: { path: thread.path, resolved: thread.isResolved, replies },
+        })
+    }
     events.sort((a, b) => a.at.localeCompare(b.at))
   }
   return {
@@ -350,14 +382,19 @@ export async function fetchPRDetail(key: string): Promise<PRDetail> {
     activityError: activity.status === "rejected",
     checks:
       checks.status === "fulfilled"
-        ? checks.value.check_runs
-            .filter(
-              (c) =>
-                c.status !== "completed" ||
-                (c.conclusion !== "success" && c.conclusion !== "skipped" && c.conclusion !== "neutral"),
-            )
-            .map((c) => ({ name: c.name, status: c.conclusion ?? c.status, url: c.html_url }))
+        ? checks.value.check_runs.map((c) => {
+            const start = c.started_at ? Date.parse(c.started_at) : NaN
+            const end = c.completed_at ? Date.parse(c.completed_at) : NaN
+            return {
+              id: c.id,
+              name: c.name,
+              status: c.conclusion ?? c.status,
+              url: c.html_url,
+              durationMs: Number.isFinite(start) && Number.isFinite(end) && end >= start ? end - start : null,
+            }
+          })
         : [],
+    checksTotal: checks.status === "fulfilled" ? checks.value.total_count : 0,
     checksError: checks.status === "rejected",
   }
 }

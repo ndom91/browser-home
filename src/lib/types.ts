@@ -30,16 +30,31 @@ export interface PullRequest {
   linear: { id: string; url: string } | null
 }
 
+export interface PRActivityComment {
+  id: string
+  author: string
+  body: string
+  preview: string
+  at: string
+  url: string
+}
+
+export interface PRActivity extends PRActivityComment {
+  kind: string
+  thread?: { path: string; resolved: boolean; replies: Array<PRActivityComment> }
+}
+
 export interface PRDetail {
   description: string
   files: Array<{ path: string; status: string; additions: number; deletions: number; url: string }>
   filesMore: boolean
   filesError: boolean
   reviewers: Array<string>
-  activity: Array<{ id: string; kind: string; author: string; body: string; at: string; url: string }>
+  activity: Array<PRActivity>
   activityMore: boolean
   activityError: boolean
-  checks: Array<{ name: string; status: string; url: string | null }>
+  checks: Array<{ id: number; name: string; status: string; url: string | null; durationMs: number | null }>
+  checksTotal: number
   checksError: boolean
 }
 

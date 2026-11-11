@@ -67,7 +67,7 @@ export function useKeyboardNav(onHelp: () => void, onSettings: () => void) {
       // Arrows only take over once you're in a panel, so they still scroll the page otherwise.
       if (e.key.startsWith("Arrow") && !panel) return
       // Links and buttons handle Enter themselves.
-      if (e.key === "Enter" && active?.matches("a, button")) return
+      if (e.key === "Enter" && active?.matches("a, button, summary")) return
 
       const digit = Number(e.key)
       if (Number.isInteger(digit) && digit >= 1 && digit <= panels.length) {

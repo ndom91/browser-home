@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useRef } from "react"
 import { age, prSize, signed } from "../lib/format"
 import { TTL } from "../lib/ttl"
-import type { PullRequest } from "../lib/types"
+import type { PRActivity, PRDetail, PullRequest } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { getPRDetail } from "../server/fns"
 import { ArrowLeftIcon, ArrowUpRightIcon } from "./icons"
@@ -113,20 +113,7 @@ export function PRDetailView({
             {detail?.checksError ? (
               <p className="panel-error">Could not load check details.</p>
             ) : (
-              detail?.checks.map((check) => (
-                <div className="pr-check" key={`${check.name}-${check.url}`}>
-                  <span>
-                    {check.url ? (
-                      <a href={check.url} target="_blank" rel="noreferrer">
-                        {check.name} <ArrowUpRightIcon className="pr-check-external" />
-                      </a>
-                    ) : (
-                      check.name
-                    )}
-                  </span>
-                  <span>{check.status.replaceAll("_", " ")}</span>
-                </div>
-              ))
+              detail && <Checks checks={detail.checks} total={detail.checksTotal} />
             )}
           </div>
         </div>
@@ -174,20 +161,7 @@ export function PRDetailView({
               ) : detail.activity.length === 0 ? (
                 <p className="panel-empty">No activity yet.</p>
               ) : (
-                <ul className="pr-activity">
-                  {detail.activity.map((item) => (
-                    <li key={item.id}>
-                      <p className="hn-meta">
-                        <strong>{item.author}</strong>
-                        <span>{item.kind}</span>
-                        <a href={item.url} target="_blank" rel="noreferrer">
-                          {age(Date.parse(item.at), now)}
-                        </a>
-                      </p>
-                      {item.body && <PRMarkdown html={item.body} />}
-                    </li>
-                  ))}
-                </ul>
+                <Activity items={detail.activity} now={now} />
               )}
               {detail.activityMore && (
                 <p className="panel-empty">Some activity is omitted. See the full history on GitHub.</p>
@@ -226,4 +200,143 @@ export function PRDetailView({
 function PRMarkdown({ html }: { html: string }) {
   // biome-ignore lint/security/noDangerouslySetInnerHtml: GitHub HTML is sanitized on the server.
   return <div className="pr-detail-markdown" dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+function Checks({ checks, total }: { checks: PRDetail["checks"]; total: number }) {
+  const passing = checks.filter((check) => check.status === "success")
+  const other = checks.filter((check) => check.status !== "success")
+  return (
+    <>
+      {other.map((check) => (
+        <CheckRow key={check.id} check={check} />
+      ))}
+      {passing.length > 0 && (
+        <details className="pr-passing-checks">
+          <summary>
+            <span className="checks-dot is-success" />
+            {passing.length} passing
+          </summary>
+          {passing.map((check) => (
+            <CheckRow key={check.id} check={check} />
+          ))}
+        </details>
+      )}
+      {total > checks.length && (
+        <p className="pr-check-note">
+          Showing {checks.length} of {total} checks. See GitHub for all checks.
+        </p>
+      )}
+    </>
+  )
+}
+
+function CheckRow({ check }: { check: PRDetail["checks"][number] }) {
+  const tone =
+    check.status === "success"
+      ? "is-success"
+      : ["failure", "timed_out", "action_required", "startup_failure"].includes(check.status)
+        ? "is-failed"
+        : ["queued", "in_progress", "pending", "requested", "waiting"].includes(check.status)
+          ? "is-pending"
+          : ""
+  const seconds = check.durationMs == null ? null : Math.round(check.durationMs / 1000)
+  const duration =
+    seconds == null
+      ? null
+      : seconds < 60
+        ? `${seconds}s`
+        : seconds < 3600
+          ? `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+          : `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
+  return (
+    <div className="pr-check">
+      <span className="pr-check-name">
+        <span className={`checks-dot ${tone}`} />
+        {check.url ? (
+          <a href={check.url} target="_blank" rel="noreferrer">
+            {check.name} <ArrowUpRightIcon className="pr-check-external" />
+          </a>
+        ) : (
+          check.name
+        )}
+      </span>
+      <span>
+        {check.status.replaceAll("_", " ")}
+        {duration && ` · ${duration}`}
+      </span>
+    </div>
+  )
+}
+
+function Activity({ items, now }: { items: Array<PRActivity>; now: number }) {
+  const groups = [
+    { label: "Open", items: items.filter((item) => item.thread && !item.thread.resolved) },
+    { label: "Resolved", items: items.filter((item) => item.thread?.resolved) },
+    { label: "Conversation", items: items.filter((item) => !item.thread) },
+  ]
+  return (
+    <div className="pr-activity">
+      {groups.map(
+        (group) =>
+          group.items.length > 0 && (
+            <section className="pr-activity-group" key={group.label}>
+              <h5>
+                {group.label}
+                {group.label !== "Conversation" && ` · ${group.items.length}`}
+              </h5>
+              <ul>
+                {group.items.map((item) => (
+                  <li key={item.id}>
+                    <details className="pr-activity-item" open={item.thread?.resolved ? undefined : true}>
+                      <summary>
+                        <span
+                          className={`pr-activity-avatar${item.author.endsWith("[bot]") ? " is-bot" : ""}`}
+                          aria-hidden="true"
+                        >
+                          {item.author.slice(0, 2)}
+                        </span>
+                        <strong>{item.author.replace(/\[bot\]$/, "")}</strong>
+                        {!item.thread && item.kind !== "Comment" && (
+                          <span className="pr-activity-kind">{item.kind}</span>
+                        )}
+                        <span className="pr-activity-preview">
+                          {item.preview.trim().replace(/\s+/g, " ") || item.kind}
+                        </span>
+                        {item.thread?.resolved && (
+                          <span className="pr-activity-resolved" role="img" aria-label="Resolved">
+                            ✓
+                          </span>
+                        )}
+                        <span className="pr-activity-age">{age(Date.parse(item.at), now)}</span>
+                        <span className="pr-activity-chevron" aria-hidden="true">
+                          ⌄
+                        </span>
+                      </summary>
+                      <div className="pr-activity-body">
+                        {item.thread && <p className="pr-activity-path">{item.thread.path}</p>}
+                        {item.body && <PRMarkdown html={item.body} />}
+                        <a className="pr-activity-link" href={item.url} target="_blank" rel="noreferrer">
+                          View on GitHub <ArrowUpRightIcon />
+                        </a>
+                        {item.thread?.replies.map((reply) => (
+                          <div className="pr-activity-reply" key={reply.id}>
+                            <p>
+                              <strong>{reply.author}</strong> ·{" "}
+                              <a href={reply.url} target="_blank" rel="noreferrer">
+                                {age(Date.parse(reply.at), now)}
+                              </a>
+                            </p>
+                            {reply.body && <PRMarkdown html={reply.body} />}
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ),
+      )}
+    </div>
+  )
 }
