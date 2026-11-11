@@ -202,14 +202,35 @@ function PRMarkdown({ html }: { html: string }) {
   return <div className="pr-detail-markdown" dangerouslySetInnerHTML={{ __html: html }} />
 }
 
+const FAILED_CHECKS = ["failure", "timed_out", "action_required", "startup_failure"]
+const RUNNING_CHECKS = ["queued", "in_progress", "pending", "requested", "waiting"]
+
 function Checks({ checks, total }: { checks: PRDetail["checks"]; total: number }) {
   const passing = checks.filter((check) => check.status === "success")
-  const other = checks.filter((check) => check.status !== "success")
+  const other = checks
+    .filter((check) => check.status !== "success")
+    .sort((a, b) => {
+      const priority = (status: string) =>
+        FAILED_CHECKS.includes(status) ? 0 : RUNNING_CHECKS.includes(status) ? 1 : 2
+      return priority(a.status) - priority(b.status)
+    })
+  const visible = other.slice(0, 5)
+  const remaining = other.slice(5)
   return (
     <>
-      {other.map((check) => (
+      {visible.map((check) => (
         <CheckRow key={check.id} check={check} />
       ))}
+      {remaining.length > 0 && (
+        <details className="pr-passing-checks">
+          <summary>
+            {remaining.length} more {remaining.length === 1 ? "check" : "checks"}
+          </summary>
+          {remaining.map((check) => (
+            <CheckRow key={check.id} check={check} />
+          ))}
+        </details>
+      )}
       {passing.length > 0 && (
         <details className="pr-passing-checks">
           <summary>
@@ -234,9 +255,9 @@ function CheckRow({ check }: { check: PRDetail["checks"][number] }) {
   const tone =
     check.status === "success"
       ? "is-success"
-      : ["failure", "timed_out", "action_required", "startup_failure"].includes(check.status)
+      : FAILED_CHECKS.includes(check.status)
         ? "is-failed"
-        : ["queued", "in_progress", "pending", "requested", "waiting"].includes(check.status)
+        : RUNNING_CHECKS.includes(check.status)
           ? "is-pending"
           : ""
   const seconds = check.durationMs == null ? null : Math.round(check.durationMs / 1000)

@@ -492,8 +492,15 @@ export function demoPRDetail(key: string): import("../lib/types").PRDetail {
       : [
           { id: 1, name: "Tests", status: "failure", url: "https://github.com", durationMs: 125000 },
           { id: 2, name: "Lint", status: "success", url: "https://github.com", durationMs: 38000 },
+          ...["Deploy", "Integration", "Release", "Publish", "Notifications", "Smoke tests"].map((name, index) => ({
+            id: index + 3,
+            name,
+            status: "skipped",
+            url: "https://github.com",
+            durationMs: null,
+          })),
         ],
-    checksTotal: key.endsWith("/4830") ? 0 : 2,
+    checksTotal: key.endsWith("/4830") ? 0 : 8,
     checksError: false,
   }
 }
