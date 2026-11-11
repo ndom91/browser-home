@@ -1023,7 +1023,7 @@ a:focus-visible,
   gap: 4px;
 }
 
-/* Row signals: small dismissable icons, above the stretched title link. */
+/* Row signals: small dismissable icons, above the row action. */
 .signals {
   position: relative;
   z-index: 1;
@@ -3642,11 +3642,24 @@ a:focus-visible,
 .pr-github {
   grid-template-columns: 14px minmax(0, 1fr);
 }
+.pr-row-detail {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.pr-github .pr-link::after {
+  content: none;
+}
 .pr-github .pr-head {
   align-items: center;
 }
 .pr-github .pr-title {
-  flex: 1 1 auto;
+  position: relative;
+  z-index: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 .pr-github .pr-side-top {

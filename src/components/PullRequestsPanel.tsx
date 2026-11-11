@@ -286,9 +286,9 @@ function Row({
 }) {
   const checks = pr.checks ? CHECKS[pr.checks] : null
   const size = prSize(pr.additions, pr.deletions)
-  // Not one big <a>: the Linear link can't nest inside it. The title link stretches over the row instead.
   return (
     <div className={`pr pr-github${pr.draft ? " is-draft" : ""}${showAuthor ? " is-review" : ""}`} data-nav-item>
+      <button type="button" className="pr-row-detail" onClick={onOpen} tabIndex={-1} aria-hidden="true" />
       <PullRequestIcon className="pr-icon" draft={pr.draft} />
       <span className="pr-main">
         <span className="pr-head">
