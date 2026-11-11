@@ -244,9 +244,10 @@ function shortRepo(full: string, all: Array<string>) {
   return all.filter((v) => v.endsWith(`/${name}`)).length > 1 ? full : name
 }
 
-/** "CORE-123: Fix it" -> "Fix it", since the ID is shown as its own link. */
+/** The issue ID is already shown as its own link. */
 function withoutIssueId(title: string, id: string) {
-  return title.startsWith(id) ? title.slice(id.length).replace(/^[\s:–—-]+/, "") : title
+  const prefix = title.startsWith(`[${id}]`) ? `[${id}]` : id
+  return title.startsWith(prefix) ? title.slice(prefix.length).replace(/^[\s:–—-]+/, "") : title
 }
 
 function hueStyle(hue: number | undefined) {

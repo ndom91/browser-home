@@ -125,7 +125,7 @@ export function demoPRs(): PullRequests {
     pr(
       {
         number: 4830,
-        title: "Fix SLA timer drift on snoozed threads",
+        title: "[SUP-212] Fix SLA timer drift on snoozed threads",
         repo: "support-app",
         author: "mara",
         linear: { id: "SUP-212", url: "https://linear.app/acme/issue/SUP-212" },
