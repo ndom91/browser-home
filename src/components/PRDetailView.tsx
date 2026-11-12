@@ -253,15 +253,15 @@ export function PRDetailView({
                           title={file.path}
                           aria-label={file.path}
                         >
-                          <span className="pr-file-name">
-                            {extension < 0 ? name : name.slice(0, extension)}
-                            {extension >= 0 && <span>{name.slice(extension)}</span>}
-                          </span>
                           {slash >= 0 && (
                             <span className="pr-file-directory">
                               <bdi dir="ltr">{file.path.slice(0, slash + 1)}</bdi>
                             </span>
                           )}
+                          <span className="pr-file-name">
+                            {extension < 0 ? name : name.slice(0, extension)}
+                            {extension >= 0 && <span>{name.slice(extension)}</span>}
+                          </span>
                         </a>
                         <span className="mono pr-files-diff">
                           <span className={file.additions ? "add" : ""}>{signed(file.additions, "+")}</span>{" "}
