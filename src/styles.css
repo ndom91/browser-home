@@ -3380,6 +3380,12 @@ a:focus-visible,
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+  margin: 0 -16px;
+  padding: 16px 16px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.pr-detail-section[data-detail-section="files"] {
+  margin-top: 0;
 }
 .pr-files-heading :where(h4 > span) {
   color: var(--muted);
