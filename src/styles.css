@@ -818,14 +818,14 @@ a:focus-visible,
   width: 24px;
   height: 16px;
   border-radius: 3px;
-  background: var(--pill-bg);
-  border: 1px solid var(--pill-border);
-  color: var(--pill-fg);
-  transition: background 120ms ease;
+  color: inherit;
+  opacity: 0.75;
+  transition: opacity 120ms ease;
 }
 
-.tl-join:hover {
-  background: var(--hover);
+.tl-join:hover,
+.tl-join:focus-visible {
+  opacity: 1;
 }
 
 .tl-now {
