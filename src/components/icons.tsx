@@ -20,6 +20,15 @@ export function CalendarIcon(props: IconProps) {
   )
 }
 
+export function VideoIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <rect x="1.5" y="3.5" width="8.5" height="9" rx="1.75" stroke="currentColor" strokeWidth="1.4" />
+      <path d="m10 6 4.5-2v8L10 10" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function GitHubIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>

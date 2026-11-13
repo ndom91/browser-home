@@ -4,8 +4,9 @@ import { freeTime } from "../lib/freeTime"
 import type { CalendarEvent, Standup, StandupItem } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import { useSettings } from "../lib/useSettings"
-import { ArrowUpRightIcon, CalendarIcon, PullRequestIcon } from "./icons"
+import { ArrowUpRightIcon, CalendarIcon, PullRequestIcon, VideoIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
+import { Tooltip } from "./ui/Tooltip"
 
 const MIN_EVENT_PX = 18
 // px per hour before the first measurement, so server and client render the same lanes.
@@ -289,9 +290,18 @@ function Timeline({ events, current, now }: { events: Array<Timed>; current: Tim
                   <span className="tl-at"> · {clock(e.startMs)}</span>
                 </span>
                 {e.meeting && !isPast && !declined && (
-                  <a className="tl-join" href={e.meeting} target="_blank" rel="noreferrer" data-nav-primary>
-                    Join
-                  </a>
+                  <Tooltip content={`Join ${e.provider ?? "meeting"}`}>
+                    <a
+                      className="tl-join"
+                      href={e.meeting}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Join ${e.provider ?? "meeting"}: ${e.title}`}
+                      data-nav-primary
+                    >
+                      <VideoIcon />
+                    </a>
+                  </Tooltip>
                 )}
               </div>
             )
