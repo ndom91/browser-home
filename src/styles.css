@@ -3376,6 +3376,11 @@ a:focus-visible,
   color: var(--text);
   text-decoration: underline;
 }
+.pr-detail-section[data-detail-section="activity"] > h4 {
+  margin: 0 -16px;
+  padding: 12px 16px;
+  border-block: 1px solid var(--line-soft);
+}
 .pr-files {
   list-style: none;
   padding: 0;
@@ -3531,6 +3536,9 @@ a:focus-visible,
   color: var(--muted);
   font-size: 11px;
   font-weight: 500;
+}
+.pr-activity-group:first-child h5 {
+  border-top: 0;
 }
 .pr-activity-group ul {
   margin: 0;
