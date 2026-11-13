@@ -62,6 +62,8 @@
   --b-green-fg: light-dark(#15753c, #8ee6b0);
   --b-red-bg: light-dark(#fde9e8, #3f1717);
   --b-red-fg: light-dark(#c62e2e, #ff9b98);
+  --b-amber-bg: light-dark(#fdf0c2, #3a2e07);
+  --b-amber-fg: light-dark(#876500, #f5cf55);
   --b-gray-bg: light-dark(#efeff2, #26262b);
   --b-gray-fg: light-dark(#6b6b75, #a0a0a9);
   /* PR size badges: one cool sky hue that deepens with size. XS stays plain. Kept far
@@ -1123,6 +1125,10 @@ a:focus-visible,
 .badge-red {
   background: var(--b-red-bg);
   color: var(--b-red-fg);
+}
+.badge-amber {
+  background: var(--b-amber-bg);
+  color: var(--b-amber-fg);
 }
 .badge-gray {
   background: var(--b-gray-bg);

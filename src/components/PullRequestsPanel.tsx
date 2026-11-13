@@ -139,7 +139,7 @@ export function PullRequestsPanel({ prs, notifications, fetchedAt, error }: Prop
   )
 }
 
-type Badge = { label: string; tone: "blue" | "pink" | "green" | "red" | "gray" }
+type Badge = { label: string; tone: "blue" | "pink" | "green" | "red" | "amber" | "gray" }
 
 function reviewBadge(pr: PullRequest): Badge {
   return pr.reviewedByMe ? { label: "Re-review", tone: "pink" } : { label: "Your review", tone: "blue" }
@@ -149,7 +149,7 @@ function ownBadge(pr: PullRequest): Badge {
   if (pr.draft) return { label: "Draft", tone: "gray" }
   if (pr.review === "APPROVED") return { label: "Approved", tone: "green" }
   if (pr.review === "CHANGES_REQUESTED") return { label: "Changes requested", tone: "red" }
-  return { label: "In review", tone: "gray" }
+  return { label: "In review", tone: "amber" }
 }
 
 const CHECKS: Record<NonNullable<PullRequest["checks"]>, { label: string; tone: string }> = {
