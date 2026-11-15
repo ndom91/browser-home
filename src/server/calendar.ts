@@ -37,7 +37,7 @@ function findMeeting(event: RawEvent) {
 // would be the "current" event all day and squeeze every real meeting into half width.
 const LONG_EVENT_MS = 12 * 3_600_000
 
-// Google accounts often expose attendees as bare emails: "person@example.com" -> "Elise Hein".
+// Google accounts often expose attendees as bare emails.
 function displayName(attendee: string) {
   if (!attendee.includes("@")) return attendee
   return attendee
