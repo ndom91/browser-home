@@ -7,7 +7,7 @@ import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { refreshHN, upvoteHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
-import { HackerNewsIcon, UpvoteIcon } from "./icons"
+import { HackerNewsIcon, RefreshIcon, UpvoteIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
@@ -168,7 +168,7 @@ function StoryUpvote({ story }: { story: Story }) {
         <button
           type="button"
           className="hn-upvote"
-          aria-label={`${vote.isSuccess ? "Upvoted" : "Upvote"}: ${story.title}`}
+          aria-label={`${hint}: ${story.title}`}
           aria-disabled={vote.isPending || vote.isSuccess}
           aria-busy={vote.isPending}
           data-voted={vote.isSuccess || undefined}
@@ -176,7 +176,14 @@ function StoryUpvote({ story }: { story: Story }) {
             if (!vote.isPending && !vote.isSuccess) vote.mutate()
           }}
         >
-          <UpvoteIcon />
+          <span className="t-icon-swap" data-state={vote.isPending ? "b" : "a"} aria-hidden="true">
+            <span className="t-icon" data-icon="a">
+              <UpvoteIcon />
+            </span>
+            <span className="t-icon" data-icon="b">
+              <RefreshIcon className="hn-vote-spinner" />
+            </span>
+          </span>
         </button>
       </Tooltip>
       {vote.isError && (
