@@ -64,7 +64,7 @@ Press `?` for the full list. The main ones:
 | `Esc`              | Leave the column, hide the chat, or leave HN comments |
 
 - Click **N comments** on a story to read the thread right in the HN column. Click `[–]` or a thread line to fold a branch.
-- Click the triangle beside a story to upvote without leaving the page. Background voting needs the optional HN session setup below. The triangle turns orange after HN confirms the vote.
+- With the optional HN session configured, click the triangle below a story's rank to upvote without leaving the page. It turns orange after HN confirms the vote.
 - Links and searches open in a new tab, so this page stays put.
 - The filter icon on each PR and Linear section filters by repo, project, author, status and more. Active filters show as pills next to it, and filters are remembered.
 
@@ -100,7 +100,7 @@ hacker_news:
   session_cookie: ${HN_SESSION_COOKIE}
 ```
 
-Restart the server after changing `.env` (`pnpm reload` for the installed service). The cookie grants access to your HN account; keep it in the gitignored `.env`. The local server fetches a fresh authenticated vote link for each click, sends the vote, and checks that HN recorded it. Neither the cookie nor the vote link reaches the browser. If the session expires, replace the cookie. Without it, the button offers a link to vote on HN instead. Voting relies on HN's website markup because its public API has no write endpoints.
+Restart the server after changing `.env` (`pnpm reload` for the installed service). The cookie grants access to your HN account; keep it in the gitignored `.env`. The local server fetches a fresh authenticated vote link for each click, sends the vote, and checks that HN recorded it. Neither the cookie nor the vote link reaches the browser. If the session expires, replace the cookie. Voting controls stay hidden unless `hacker_news.session_cookie` is set. Voting relies on HN's website markup because its public API has no write endpoints.
 
 ## After updating
 

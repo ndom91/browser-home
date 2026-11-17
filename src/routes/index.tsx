@@ -163,7 +163,15 @@ function Home() {
           />
         )
       case "hn":
-        return <HackerNewsPanel key={id} stories={hn.data?.data} fetchedAt={hn.data?.fetchedAt} error={hn.error} />
+        return (
+          <HackerNewsPanel
+            key={id}
+            stories={hn.data?.data}
+            fetchedAt={hn.data?.fetchedAt}
+            error={hn.error}
+            votingEnabled={features.hnVoting}
+          />
+        )
     }
   }
 

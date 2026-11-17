@@ -17,9 +17,10 @@ interface Props {
   stories: Array<Story> | undefined
   fetchedAt: number | undefined
   error: unknown
+  votingEnabled: boolean
 }
 
-export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
+export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled }: Props) {
   const now = useNow()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState<Story | null>(null)
@@ -84,7 +85,13 @@ export function HackerNewsPanel({ stories, fetchedAt, error }: Props) {
       <div className="t-page-slide" data-page={open ? "2" : "1"}>
         <section className="t-page" data-page-id="1" inert={open != null}>
           {stories ? (
-            <StoryList stories={stories} now={now} onOpen={openThread} onPrefetch={prefetch} />
+            <StoryList
+              stories={stories}
+              now={now}
+              onOpen={openThread}
+              onPrefetch={prefetch}
+              votingEnabled={votingEnabled}
+            />
           ) : (
             <PanelFallback error={error} />
           )}
@@ -102,18 +109,20 @@ function StoryList({
   now,
   onOpen,
   onPrefetch,
+  votingEnabled,
 }: {
   stories: Array<Story>
   now: number
   onOpen: (story: Story) => (e: MouseEvent) => void
   onPrefetch: (story: Story) => () => void
+  votingEnabled: boolean
 }) {
   return (
     <ol className="hn-list">
       {stories.map((s, i) => (
         <li key={s.id} className="hn-item" data-nav-item>
           <span className="hn-rank mono">{i + 1}</span>
-          <StoryUpvote story={s} />
+          {votingEnabled && <StoryUpvote story={s} />}
           <div className="hn-main">
             <a className="hn-title" href={readableUrl(s.url)} target="_blank" rel="noreferrer" data-nav-row>
               {s.title}

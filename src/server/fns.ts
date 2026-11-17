@@ -56,6 +56,7 @@ export const getFeatures = createServerFn({ method: "GET" }).handler(
     chat: missingLlmKeys().length === 0,
     linear: DEMO || linearConfigured(),
     capture: Boolean(config().capture.dir),
+    hnVoting: Boolean(config().hacker_news.session_cookie),
   }),
 )
 /** The settings cookie, read on the server so the first paint already uses it. */
