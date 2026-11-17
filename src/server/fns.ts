@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start"
-import { getCookie } from "@tanstack/react-start/server"
+import { getCookie, getRequestHeader } from "@tanstack/react-start/server"
 import { parseSettings, SETTINGS_COOKIE } from "../lib/settings"
 import { TTL } from "../lib/ttl"
 import type { Features } from "../lib/types"
@@ -23,6 +23,7 @@ import {
 } from "./demo"
 import { fetchNotifications, fetchPRDetail, fetchPRs, fetchViewer, markNotificationRead } from "./github"
 import { fetchHN, fetchThread } from "./hn"
+import { upvoteStory } from "./hnVote"
 import { fetchLinear, linearConfigured } from "./linear"
 import { missingLlmKeys } from "./llm"
 import { fetchStandup } from "./standup"
@@ -94,6 +95,16 @@ export const getStandup = createServerFn({ method: "GET" })
 export const getHN = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => hn({ wait: data }))
+export const upvoteHN = createServerFn({ method: "POST" })
+  .validator((id: unknown) => {
+    if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid story id")
+    return id
+  })
+  .handler(async ({ data }) => {
+    if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+    if (DEMO) return { points: (demoHN().find((s) => s.id === data)?.points ?? 0) + 1 }
+    return upvoteStory(data, config().hacker_news.session_cookie)
+  })
 // Manual refreshes. POST, so they're never served from an HTTP cache; force skips the server cache.
 export const refreshHN = createServerFn({ method: "POST" }).handler(() => hn({ force: true }))
 export const refreshPRs = createServerFn({ method: "POST" }).handler(() => prs({ force: true }))

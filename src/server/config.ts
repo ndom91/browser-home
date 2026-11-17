@@ -35,6 +35,7 @@ const Schema = z.object({
     })
     .prefault({}),
   github: z.object({ search_filter: str() }).prefault({}),
+  hacker_news: z.object({ session_cookie: str() }).prefault({}),
   linear: z.object({ api_key: str(), workspace: str() }).prefault({}),
   capture: z.object({ dir: str().transform((d) => d.replace(/^~(?=\/|$)/, homedir())) }).prefault({}),
 })

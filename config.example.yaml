@@ -32,6 +32,11 @@ github:
   # Extra search qualifiers for the PR column, e.g. org:acme or -repo:acme/noisy.
   search_filter:
 
+# Optional: vote from the HN column without opening another tab.
+hacker_news:
+  # Value of HN's "user" cookie, copied from your browser's developer tools.
+  session_cookie: ${HN_SESSION_COOKIE}
+
 # Shows your assigned In progress, Todo and Backlog issues, and links PRs to their
 # issue. Without both keys, the Linear column is hidden.
 linear:

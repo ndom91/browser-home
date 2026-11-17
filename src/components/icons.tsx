@@ -49,6 +49,14 @@ export function HackerNewsIcon(props: IconProps) {
   )
 }
 
+export function UpvoteIcon(props: IconProps) {
+  return (
+    <svg aria-hidden="true" {...base} {...props}>
+      <path d="m8 4 6 8H2z" fill="currentColor" />
+    </svg>
+  )
+}
+
 export function SearchIcon(props: IconProps) {
   return (
     <svg aria-hidden="true" {...base} {...props}>

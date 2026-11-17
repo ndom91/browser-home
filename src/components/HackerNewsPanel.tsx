@@ -1,15 +1,17 @@
-import { useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { age, plural, synced } from "../lib/format"
 import { readableUrl } from "../lib/hn"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
-import { refreshHN } from "../server/fns"
+import type { Cached } from "../server/cache"
+import { refreshHN, upvoteHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
-import { HackerNewsIcon } from "./icons"
+import { HackerNewsIcon, UpvoteIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
+import { Tooltip } from "./ui/Tooltip"
 
 interface Props {
   stories: Array<Story> | undefined
@@ -111,6 +113,7 @@ function StoryList({
       {stories.map((s, i) => (
         <li key={s.id} className="hn-item" data-nav-item>
           <span className="hn-rank mono">{i + 1}</span>
+          <StoryUpvote story={s} />
           <div className="hn-main">
             <a className="hn-title" href={readableUrl(s.url)} target="_blank" rel="noreferrer" data-nav-row>
               {s.title}
@@ -133,5 +136,48 @@ function StoryList({
         </li>
       ))}
     </ol>
+  )
+}
+
+function StoryUpvote({ story }: { story: Story }) {
+  const queryClient = useQueryClient()
+  const vote = useMutation({
+    mutationFn: () => upvoteHN({ data: story.id }),
+    onSuccess: ({ points }) => {
+      queryClient.setQueryData<Cached<Array<Story>>>(["hn"], (old) =>
+        old ? { ...old, data: old.data.map((s) => (s.id === story.id ? { ...s, points } : s)) } : old,
+      )
+    },
+  })
+  let hint = "Upvote"
+  if (vote.isPending) hint = "Voting…"
+  if (vote.isSuccess) hint = "Upvoted"
+
+  return (
+    <>
+      <Tooltip content={hint}>
+        <button
+          type="button"
+          className="hn-upvote"
+          aria-label={`${vote.isSuccess ? "Upvoted" : "Upvote"}: ${story.title}`}
+          aria-disabled={vote.isPending || vote.isSuccess}
+          aria-busy={vote.isPending}
+          data-voted={vote.isSuccess || undefined}
+          onClick={() => {
+            if (!vote.isPending && !vote.isSuccess) vote.mutate()
+          }}
+        >
+          <UpvoteIcon />
+        </button>
+      </Tooltip>
+      {vote.isError && (
+        <p className="hn-vote-error" role="alert">
+          {vote.error.message}{" "}
+          <a href={story.discussion} target="_blank" rel="noreferrer">
+            Vote on HN ↗
+          </a>
+        </p>
+      )}
+    </>
   )
 }
