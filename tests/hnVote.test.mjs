@@ -37,6 +37,13 @@ test("an existing upvote succeeds without sending another vote", async () => {
   assert.equal(fetch.mock.callCount(), 1)
 })
 
+test("HN's hidden arrow confirms an older upvote without an undo link", async () => {
+  const html = page().replace("id='up_", "class='clicky nosee' id='up_")
+  const fetch = mock.method(globalThis, "fetch", async () => new Response(html))
+  assert.deepEqual(await upvoteStory(id, cookie), { points: 65 })
+  assert.equal(fetch.mock.callCount(), 1)
+})
+
 test("an HTTP 200 without a confirmed upvote is a failure", async () => {
   mock.method(globalThis, "fetch", async () => new Response(page()))
   await assert.rejects(upvoteStory(id, cookie), /didn't confirm/)

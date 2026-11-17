@@ -1,6 +1,6 @@
 const HN = "https://news.ycombinator.com"
 
-function voteLink(html: string, id: number, how: "up" | "un"): URL | null {
+function voteControl(html: string, id: number, how: "up" | "un") {
   for (const [tag] of html.matchAll(/<a\b[^>]*>/gi)) {
     const attr = (name: string) => tag.match(new RegExp(`\\b${name}=["']([^"']*)["']`, "i"))?.[1]
     if (attr("id") !== `${how}_${id}`) continue
@@ -12,9 +12,14 @@ function voteLink(html: string, id: number, how: "up" | "un"): URL | null {
       url.searchParams.get("how") === how &&
       url.searchParams.get("auth")
     )
-      return url
+      return { url, hidden: (attr("class") ?? "").split(/\s+/).includes("nosee") }
   }
   return null
+}
+
+function hasUpvote(html: string, id: number): boolean {
+  // After HN's undo window closes, only the hidden upvote arrow remains.
+  return Boolean(voteControl(html, id, "un") || voteControl(html, id, "up")?.hidden)
 }
 
 /** HN's write API is its website: fetch a fresh signed link, then verify the vote. */
@@ -45,14 +50,14 @@ export async function upvoteStory(id: number, sessionCookie: string): Promise<{ 
     return html
   }
   let html = await page()
-  if (!voteLink(html, id, "un")) {
-    const url = voteLink(html, id, "up")
-    if (!url) throw new Error("Hacker News isn't allowing a vote on this story. Try voting on HN.")
-    const res = await request(url)
+  if (!hasUpvote(html, id)) {
+    const control = voteControl(html, id, "up")
+    if (!control) throw new Error("Hacker News isn't allowing a vote on this story. Try voting on HN.")
+    const res = await request(control.url)
     if (!res.ok && res.status !== 302 && res.status !== 303)
       throw new Error("Hacker News couldn't accept the vote. Try again.")
     html = await page()
-    if (!voteLink(html, id, "un")) throw new Error("Hacker News didn't confirm the vote. Try voting on HN.")
+    if (!hasUpvote(html, id)) throw new Error("Hacker News didn't confirm the vote. Try voting on HN.")
   }
   const score = html.match(new RegExp(`id=["']score_${id}["'][^>]*>\\s*(\\d+)`))
   if (!score) throw new Error("Couldn't read the Hacker News score. Refresh the stories.")
