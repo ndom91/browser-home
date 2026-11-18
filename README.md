@@ -10,7 +10,7 @@ A new-tab page that runs on your own Mac. One glance shows:
 - **Hacker News**: the top stories, with a built-in threaded comment viewer.
 - **Weather**: today's forecast for Berlin.
 - **Quick question** (optional): a chat box at the bottom that asks your local LLM.
-- **Quick capture**: press `c` to add a bullet to this week's Obsidian note.
+- **Quick capture** (optional): press `c` to add a bullet to this week's Obsidian note.
 
 The tab title shows a count, like `(3) Home`, when PRs wait for your review, your own PRs fail CI, or a listed PR has unread activity.
 
@@ -22,7 +22,7 @@ It runs at `http://localhost:6464`. It needs no browser extension, no OAuth app,
 
 You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logged in.
 
-1. Install, and build the small calendar helper:
+1. Install dependencies and build the calendar helper:
 
    ```sh
    pnpm install
@@ -37,9 +37,16 @@ You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logge
 
    It prints today's events. No prompt? Check System Settings → Privacy & Security → Calendars.
 
-3. Optional: copy `config.example.yaml` to `config.yaml`, and `.env.example` to `.env`. Settings go in `config.yaml`. Secrets go in `.env`, and `config.yaml` reads them with `${VAR}`. The chat box needs your LLM's URL, model and API key. The Linear column needs an API key and your workspace slug. Each one stays hidden until its settings are there.
+3. Optional: add the extras. With no config at all you get the calendar, pull requests, Hacker News and weather. For chat, Linear, quick capture or HN voting, copy the example files:
 
-4. Build it, and start it at every login:
+   ```sh
+   cp config.example.yaml config.yaml
+   cp .env.example .env
+   ```
+
+   Fill in the features you want, and blank out or delete the rest. A feature without its settings stays off and out of the UI. Secrets go in `.env`, and `config.yaml` reads them as `${VAR}`. See [Settings](#settings).
+
+4. Build the app and start it at every login:
 
    ```sh
    pnpm build
@@ -70,14 +77,7 @@ Press `?` for the full list. The main ones:
 
 ## Settings
 
-Edit `launchd/com.ndom91.browser-home.plist`, then re-run `./scripts/install-launchd.sh`.
-
-| Setting  | Default                | What it does          |
-| -------- | ---------------------- | --------------------- |
-| `PORT`   | `6464`                 | Port the page runs on |
-| `GH_BIN` | `/opt/homebrew/bin/gh` | Where `gh` lives      |
-
-These live in `config.yaml`. See `config.example.yaml` for details. Edits apply on the next page load, with no restart:
+These live in `config.yaml`, and every one is optional. Edits apply on the next page load, with no restart. `config.example.yaml` explains each one:
 
 | Setting                                    | Default                            | What it does                                                   |
 | ------------------------------------------ | ---------------------------------- | -------------------------------------------------------------- |
@@ -85,11 +85,19 @@ These live in `config.yaml`. See `config.example.yaml` for details. Edits apply 
 | `mcp.servers`                              | none                               | MCP servers whose tools the chat can call, e.g. Home Assistant |
 | `linear.api_key`, `linear.workspace`       | none                               | The Linear column and PR-to-issue links. Hidden without both   |
 | `capture.dir`                              | none                               | Folder of weekly notes for quick capture. Hidden without it    |
+| `hacker_news.session_cookie`               | none                               | HN upvotes. Hidden without it                                  |
 | `greeting_name`                            | your GitHub name                   | Name in the greeting                                           |
 | `github.search_filter`                     | none                               | Extra GitHub search qualifiers, e.g. `org:acme`                |
 | `search_url`                               | `https://www.google.com/search?q=` | Search engine; the query is appended to this URL               |
 
 Set `BH_CONFIG` to keep the file somewhere other than the repo root.
+
+The port and the `gh` path live in `launchd/com.ndom91.browser-home.plist`. Edit it, then re-run `./scripts/install-launchd.sh`:
+
+| Setting  | Default                | What it does          |
+| -------- | ---------------------- | --------------------- |
+| `PORT`   | `6464`                 | Port the page runs on |
+| `GH_BIN` | `/opt/homebrew/bin/gh` | Where `gh` lives      |
 
 ### Hacker News voting (optional)
 
@@ -117,7 +125,7 @@ pnpm reload
 
 - **Calendar says "timed out" or "access denied".** Run `./bin/agenda` in a terminal and click Allow. Rebuilding the helper can make macOS ask again.
 - **No pull requests.** Run `gh auth status`. Your org may need SSO authorized for the `gh` token.
-- **No chat box, Linear column or quick capture.** Its settings are missing from `config.yaml`, or a `${VAR}` it uses is missing from `.env`. The log names what's missing.
+- **No chat box, Linear column, quick capture or HN votes.** Its settings are missing from `config.yaml`, or a `${VAR}` it uses is missing from `.env`. The log names what's missing.
 - **Quick capture fails.** Check that `capture.dir` exists. The first capture of a week also needs `template.md` in it.
 - **Moved the repo or switched Node managers.** Re-run `./scripts/install-launchd.sh`.
 - **Logs** are in `~/Library/Logs/browser-home.log`.
