@@ -55,7 +55,7 @@ You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logge
    ./scripts/install-launchd.sh
    ```
 
-5. Set it as your new-tab page. In Vivaldi: Settings → Tabs → New Tab Page → **Specific Page** → `http://localhost:6464`.
+5. Set it as your new-tab page. In Chromium-based browsers: Settings → Tabs → New Tab Page → **Specific Page** → `http://localhost:6464`.
 
 ## Using it
 
