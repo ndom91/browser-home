@@ -29,7 +29,9 @@ You need macOS 14+, Node 24+, pnpm, the Xcode command line tools, and `gh` logge
    pnpm build:agenda
    ```
 
-2. Allow calendar access. Run this once and click **Allow** when macOS asks:
+2. Connect your calendar. The Today column reads from Apple Calendar, so add your work account there first (System Settings → Internet Accounts). Every calendar from every account enabled in Apple Calendar shows up, personal ones included.
+
+   Then allow calendar access. Run this once and click **Allow** when macOS asks:
 
    ```sh
    ./bin/agenda
