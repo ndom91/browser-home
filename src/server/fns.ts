@@ -24,7 +24,7 @@ import {
 import { fetchNotifications, fetchPRDetail, fetchPRs, fetchViewer, markNotificationRead } from "./github"
 import { fetchHN, fetchThread } from "./hn"
 import { formatPlainComment, MAX_HN_COMMENT, postComment } from "./hnComment"
-import { upvoteStory } from "./hnVote"
+import { upvoteComment, upvoteStory } from "./hnVote"
 import { fetchLinear, linearConfigured } from "./linear"
 import { missingLlmKeys } from "./llm"
 import { fetchStandup } from "./standup"
@@ -107,6 +107,19 @@ export const upvoteHN = createServerFn({ method: "POST" })
     if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
     if (DEMO) return { points: (demoHN().find((s) => s.id === data)?.points ?? 0) + 1 }
     return upvoteStory(data, config().hacker_news.session_cookie)
+  })
+export const upvoteHNComment = createServerFn({ method: "POST" })
+  .validator((id: unknown) => {
+    if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid comment id")
+    return id
+  })
+  .handler(async ({ data }) => {
+    if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+    if (DEMO) {
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      return { upvoted: true as const }
+    }
+    return upvoteComment(data, config().hacker_news.session_cookie)
   })
 export const postHNComment = createServerFn({ method: "POST" })
   .validator((input: unknown) => {

@@ -66,15 +66,15 @@ export function PRDetailView({
   }
   return (
     <div className="pr-detail">
+      <nav className="hn-crumbs" aria-label="Pull request navigation">
+        <button type="button" className="hn-back" data-detail-back onClick={onBack}>
+          <ArrowLeftIcon /> Back
+        </button>
+        <a className="hn-open" href={pr.url} target="_blank" rel="noreferrer">
+          Open on GitHub <ArrowUpRightIcon />
+        </a>
+      </nav>
       <header className="pr-detail-header">
-        <nav className="hn-crumbs" aria-label="Pull request navigation">
-          <button type="button" className="hn-back" data-detail-back onClick={onBack}>
-            <ArrowLeftIcon /> Back
-          </button>
-          <a className="hn-open" href={pr.url} target="_blank" rel="noreferrer">
-            Open on GitHub <ArrowUpRightIcon />
-          </a>
-        </nav>
         <div className="pr-detail-heading">
           <div className="pr-detail-repo">
             <span className="mono">

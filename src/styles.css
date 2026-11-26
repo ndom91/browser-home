@@ -182,7 +182,8 @@ ul {
 /* Inline links and text buttons have no radius of their own; round the ring. */
 a:focus-visible,
 .hn-c-toggle:focus-visible,
-.hn-c-reply:focus-visible {
+.hn-c-reply:focus-visible,
+.hn-c-upvote:focus-visible {
   border-radius: 3px;
 }
 
@@ -1309,9 +1310,7 @@ a:focus-visible,
 /* ---------- hacker news: comments ---------- */
 
 .hn-crumbs {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1462,11 +1461,15 @@ a.hn-c-age:hover {
 }
 
 .hn-c-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   margin-top: 4px;
   line-height: 1;
 }
 
-.hn-c-reply {
+.hn-c-reply,
+.hn-c-upvote {
   padding: 1px 0;
   border: 0;
   background: none;
@@ -1478,12 +1481,29 @@ a.hn-c-age:hover {
   transition: color 120ms ease;
 }
 
-.hn-c-reply:hover {
+.hn-c-reply:hover,
+.hn-c-upvote:hover {
   color: var(--text-2);
 }
 
-.hn-c-reply[data-active] {
+.hn-c-reply[data-active],
+.hn-c-upvote[data-voted] {
   color: var(--hn-accent);
+}
+
+.hn-c-upvote[aria-busy="true"] {
+  cursor: wait;
+}
+
+.hn-c-upvote[data-voted] {
+  cursor: default;
+}
+
+.hn-c-vote-error {
+  margin-top: 3px;
+  color: var(--b-red-fg);
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .hn-c-text,

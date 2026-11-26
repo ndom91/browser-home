@@ -22,8 +22,7 @@ function hasUpvote(html: string, id: number): boolean {
   return Boolean(voteControl(html, id, "un") || voteControl(html, id, "up")?.hidden)
 }
 
-/** HN's write API is its website: fetch a fresh signed link, then verify the vote. */
-export async function upvoteStory(id: number, sessionCookie: string): Promise<{ points: number }> {
+async function submitUpvote(id: number, sessionCookie: string, kind: "story" | "comment"): Promise<string> {
   if (!sessionCookie) throw new Error("Connect your Hacker News session to vote from here.")
   if (/[;\r\n]/.test(sessionCookie)) throw new Error("The Hacker News session cookie is invalid.")
 
@@ -52,14 +51,26 @@ export async function upvoteStory(id: number, sessionCookie: string): Promise<{ 
   let html = await page()
   if (!hasUpvote(html, id)) {
     const control = voteControl(html, id, "up")
-    if (!control) throw new Error("Hacker News isn't allowing a vote on this story. Try voting on HN.")
+    if (!control) throw new Error(`Hacker News isn't allowing a vote on this ${kind}. Try voting on HN.`)
     const res = await request(control.url)
     if (!res.ok && res.status !== 302 && res.status !== 303)
       throw new Error("Hacker News couldn't accept the vote. Try again.")
     html = await page()
     if (!hasUpvote(html, id)) throw new Error("Hacker News didn't confirm the vote. Try voting on HN.")
   }
+  return html
+}
+
+/** HN's write API is its website: fetch a fresh signed link, then verify the vote. */
+export async function upvoteStory(id: number, sessionCookie: string): Promise<{ points: number }> {
+  const html = await submitUpvote(id, sessionCookie, "story")
   const score = html.match(new RegExp(`id=["']score_${id}["'][^>]*>\\s*(\\d+)`))
   if (!score) throw new Error("Couldn't read the Hacker News score. Refresh the stories.")
   return { points: Number(score[1]) }
+}
+
+/** Upvotes a comment on HN. Comments don't expose a public score, so only confirmation is checked. */
+export async function upvoteComment(id: number, sessionCookie: string): Promise<{ upvoted: true }> {
+  await submitUpvote(id, sessionCookie, "comment")
+  return { upvoted: true }
 }

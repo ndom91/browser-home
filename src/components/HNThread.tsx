@@ -6,7 +6,7 @@ import { TTL } from "../lib/ttl"
 import type { HNComment, HNThread as HNThreadData, Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
-import { getHNThread, postHNComment } from "../server/fns"
+import { getHNThread, postHNComment, upvoteHNComment } from "../server/fns"
 import { ArrowLeftIcon, ArrowUpRightIcon } from "./icons"
 import { PanelError, PanelLoading } from "./Panel"
 
@@ -144,16 +144,16 @@ export function HNThread({
 
   return (
     <div className="hn-thread-view">
-      <div className="hn-thread-scroll" ref={scrollRef}>
-        <nav className="hn-crumbs" aria-label="Breadcrumb">
-          <button type="button" className="hn-back" onClick={onBack}>
-            <ArrowLeftIcon /> Back
-          </button>
-          <a className="hn-open" href={itemUrl(story.id)} target="_blank" rel="noreferrer">
-            Open on HN <ArrowUpRightIcon />
-          </a>
-        </nav>
+      <nav className="hn-crumbs" aria-label="Breadcrumb">
+        <button type="button" className="hn-back" onClick={onBack}>
+          <ArrowLeftIcon /> Back
+        </button>
+        <a className="hn-open" href={itemUrl(story.id)} target="_blank" rel="noreferrer">
+          Open on HN <ArrowUpRightIcon />
+        </a>
+      </nav>
 
+      <div className="hn-thread-scroll" ref={scrollRef}>
         <header className="hn-story">
           <a className="hn-story-title" href={readableUrl(story.url)} target="_blank" rel="noreferrer">
             {story.title}
@@ -276,11 +276,13 @@ function Comment({
   } = callbacks
   const [collapsed, setCollapsed] = useState(false)
   const toggle = () => setCollapsed((c) => !c)
+  const upvote = useMutation({ mutationFn: () => upvoteHNComment({ data: comment.id }) })
   const isReplying = activeTarget === comment.id
   const isFresh = freshIds.has(comment.id)
   const rawAge = age(comment.time, now)
   const ageLabel = rawAge === "now" ? "just now" : rawAge
   const canReply = comment.author !== "[deleted]" && comment.id > 0
+  const canUpvote = commentingEnabled && canReply && !comment.isYou
 
   // Body stays mounted so collapse can animate its height. inert keeps hidden links out of the tab order.
   return (
@@ -306,17 +308,38 @@ function Comment({
           <div className="t-acc-panel-inner" inert={collapsed}>
             <Html className="hn-c-text" html={comment.html} />
             {canReply && (
-              <div className="hn-c-actions">
-                <button
-                  type="button"
-                  className="hn-c-reply"
-                  aria-expanded={isReplying}
-                  data-active={isReplying || undefined}
-                  onClick={() => onReply(comment.id)}
-                >
-                  reply
-                </button>
-              </div>
+              <>
+                <div className="hn-c-actions">
+                  <button
+                    type="button"
+                    className="hn-c-reply"
+                    aria-expanded={isReplying}
+                    data-active={isReplying || undefined}
+                    onClick={() => onReply(comment.id)}
+                  >
+                    reply
+                  </button>
+                  {canUpvote && (
+                    <button
+                      type="button"
+                      className="hn-c-upvote"
+                      aria-busy={upvote.isPending}
+                      aria-disabled={upvote.isPending || upvote.isSuccess}
+                      data-voted={upvote.isSuccess || undefined}
+                      onClick={() => {
+                        if (!upvote.isPending && !upvote.isSuccess) upvote.mutate()
+                      }}
+                    >
+                      {upvote.isPending ? "upvoting…" : upvote.isSuccess ? "upvoted" : "upvote"}
+                    </button>
+                  )}
+                </div>
+                {upvote.isError && (
+                  <p className="hn-c-vote-error" role="alert">
+                    {upvote.error instanceof Error ? upvote.error.message : "Couldn't upvote. Try again."}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

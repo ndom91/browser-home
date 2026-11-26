@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { afterEach, mock, test } from "node:test"
-import { upvoteStory } from "../src/server/hnVote.ts"
+import { upvoteComment, upvoteStory } from "../src/server/hnVote.ts"
 
 const id = 50532086
 const item = `https://news.ycombinator.com/item?id=${id}`
@@ -94,4 +94,18 @@ test("network errors never expose the signed URL", async () => {
     throw new Error(`Fetch failed: ${url} cookie=${cookie}`)
   })
   await assert.rejects(upvoteStory(id, cookie), { message: "Couldn't reach Hacker News. Try again." })
+})
+
+test("upvoteComment succeeds without a score element on the comment page", async () => {
+  const commentPage = (how = "up") =>
+    `<a href="logout?auth=test">logout</a><a id='${how}_${id}' href='vote?id=${id}&amp;how=${how}&amp;auth=${auth}'>vote</a>`
+  let count = 0
+  mock.method(globalThis, "fetch", async () => {
+    count++
+    if (count === 1) return new Response(commentPage())
+    if (count === 2) return new Response(null, { status: 302, headers: { Location: item } })
+    return new Response(commentPage("un"))
+  })
+  assert.deepEqual(await upvoteComment(id, cookie), { upvoted: true })
+  assert.equal(count, 3)
 })
