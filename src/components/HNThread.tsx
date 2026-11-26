@@ -14,6 +14,7 @@ const HN_LOGIN_URL = "https://news.ycombinator.com/login"
 const FRESH_MS = 2400
 
 type ComposerTarget = null | "story" | number
+type VoteState = { status: "pending" } | { status: "voted" } | { status: "error"; message: string }
 
 export const threadQuery = (id: number) => ({
   queryKey: ["hn-thread", id],
@@ -37,18 +38,22 @@ export function HNThread({
   const data = thread.data?.data
 
   const [activeTarget, setActiveTarget] = useState<ComposerTarget>(null)
-  const [draft, setDraft] = useState("")
   const [confirming, setConfirming] = useState<{ next: ComposerTarget } | null>(null)
   const [freshIds, setFreshIds] = useState<Set<number>>(() => new Set())
+  const [votes, setVotes] = useState<Record<number, VoteState>>({})
+  // Tracked in a ref so typing inside Composer doesn't re-render the comment tree.
+  const hasDraftRef = useRef(false)
+  const mountedRef = useRef(true)
   const freshTimers = useRef<Array<ReturnType<typeof setTimeout>>>([])
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
       for (const timer of freshTimers.current) clearTimeout(timer)
-    },
-    [],
-  )
+    }
+  }, [])
 
   const post = useMutation({
     mutationFn: ({ parentId, text }: { parentId: number; text: string; target: Exclude<ComposerTarget, null> }) =>
@@ -83,8 +88,8 @@ export function HNThread({
       }, FRESH_MS)
       freshTimers.current.push(timer)
 
+      hasDraftRef.current = false
       setActiveTarget(null)
-      setDraft("")
       setConfirming(null)
       post.reset()
 
@@ -96,44 +101,64 @@ export function HNThread({
     },
   })
 
+  const upvoteComment = (commentId: number) => {
+    const current = votes[commentId]
+    if (current?.status === "pending" || current?.status === "voted") return
+    setVotes((prev) => ({ ...prev, [commentId]: { status: "pending" } }))
+    void upvoteHNComment({ data: commentId }).then(
+      () => {
+        if (mountedRef.current) setVotes((prev) => ({ ...prev, [commentId]: { status: "voted" } }))
+      },
+      (err: unknown) => {
+        if (!mountedRef.current) return
+        const message = err instanceof Error ? err.message : "Couldn't upvote. Try again."
+        setVotes((prev) => ({ ...prev, [commentId]: { status: "error", message } }))
+      },
+    )
+  }
+
   const switchTarget = (next: ComposerTarget) => {
     if (post.isPending) return
     const target = next === activeTarget ? null : next
-    if (commentingEnabled && activeTarget !== null && draft.trim()) {
+    if (commentingEnabled && activeTarget !== null && hasDraftRef.current) {
       setConfirming({ next: target })
       return
     }
+    hasDraftRef.current = false
     setActiveTarget(target)
-    setDraft("")
     setConfirming(null)
     post.reset()
   }
 
   const cancelComposer = () => {
     if (post.isPending) return
-    if (commentingEnabled && draft.trim()) {
+    if (commentingEnabled && hasDraftRef.current) {
       setConfirming({ next: null })
       return
     }
+    hasDraftRef.current = false
     setActiveTarget(null)
-    setDraft("")
     setConfirming(null)
     post.reset()
   }
 
   const discardDraft = () => {
     const next = confirming?.next ?? null
+    hasDraftRef.current = false
     setActiveTarget(next)
-    setDraft("")
     setConfirming(null)
     post.reset()
   }
 
-  const submitComposer = () => {
-    if (activeTarget === null || post.isPending || !draft.trim()) return
+  const submitComposer = (text: string) => {
+    if (activeTarget === null || post.isPending || !text.trim()) return
     setConfirming(null)
     const parentId = activeTarget === "story" ? story.id : activeTarget
-    post.mutate({ parentId, text: draft, target: activeTarget })
+    post.mutate({ parentId, text, target: activeTarget })
+  }
+
+  const onHasDraftChange = (hasDraft: boolean) => {
+    hasDraftRef.current = hasDraft
   }
 
   const composerError = post.isError
@@ -175,12 +200,13 @@ export function HNThread({
           commentingEnabled={commentingEnabled}
           activeTarget={activeTarget}
           freshIds={freshIds}
-          draft={draft}
-          onDraftChange={setDraft}
+          votes={votes}
           isPending={post.isPending}
           composerError={composerError}
           confirming={confirming !== null}
+          onHasDraftChange={onHasDraftChange}
           onReply={switchTarget}
+          onUpvote={upvoteComment}
           onCancel={cancelComposer}
           onKeep={() => setConfirming(null)}
           onDiscard={discardDraft}
@@ -196,14 +222,14 @@ export function HNThread({
             </a>
           ) : activeTarget === "story" ? (
             <Composer
-              value={draft}
-              onChange={setDraft}
+              key="story"
               placeholder="Add a comment…"
               submitLabel="Comment"
               ariaLabel="Add a comment"
               isPending={post.isPending}
               error={composerError}
               confirming={confirming !== null}
+              onHasDraftChange={onHasDraftChange}
               onCancel={cancelComposer}
               onKeep={() => setConfirming(null)}
               onDiscard={discardDraft}
@@ -224,16 +250,17 @@ interface CommentCallbacks {
   commentingEnabled: boolean
   activeTarget: ComposerTarget
   freshIds: Set<number>
-  draft: string
-  onDraftChange: (value: string) => void
+  votes: Record<number, VoteState>
   isPending: boolean
   composerError: string | null
   confirming: boolean
+  onHasDraftChange: (hasDraft: boolean) => void
   onReply: (commentId: number) => void
+  onUpvote: (commentId: number) => void
   onCancel: () => void
   onKeep: () => void
   onDiscard: () => void
-  onSubmit: () => void
+  onSubmit: (text: string) => void
 }
 
 function Comments({
@@ -263,12 +290,13 @@ function Comment({
     commentingEnabled,
     activeTarget,
     freshIds,
-    draft,
-    onDraftChange,
+    votes,
     isPending,
     composerError,
     confirming,
+    onHasDraftChange,
     onReply,
+    onUpvote,
     onCancel,
     onKeep,
     onDiscard,
@@ -276,13 +304,14 @@ function Comment({
   } = callbacks
   const [collapsed, setCollapsed] = useState(false)
   const toggle = () => setCollapsed((c) => !c)
-  const upvote = useMutation({ mutationFn: () => upvoteHNComment({ data: comment.id }) })
+  const vote = votes[comment.id]
   const isReplying = activeTarget === comment.id
   const isFresh = freshIds.has(comment.id)
   const rawAge = age(comment.time, now)
   const ageLabel = rawAge === "now" ? "just now" : rawAge
   const canReply = comment.author !== "[deleted]" && comment.id > 0
   const canUpvote = commentingEnabled && canReply && !comment.isYou
+  const hasRepliesBranch = comment.children.length > 0 || isReplying
 
   // Body stays mounted so collapse can animate its height. inert keeps hidden links out of the tab order.
   return (
@@ -323,20 +352,18 @@ function Comment({
                     <button
                       type="button"
                       className="hn-c-upvote"
-                      aria-busy={upvote.isPending}
-                      aria-disabled={upvote.isPending || upvote.isSuccess}
-                      data-voted={upvote.isSuccess || undefined}
-                      onClick={() => {
-                        if (!upvote.isPending && !upvote.isSuccess) upvote.mutate()
-                      }}
+                      aria-busy={vote?.status === "pending"}
+                      aria-disabled={vote?.status === "pending" || vote?.status === "voted"}
+                      data-voted={vote?.status === "voted" || undefined}
+                      onClick={() => onUpvote(comment.id)}
                     >
-                      {upvote.isPending ? "upvoting…" : upvote.isSuccess ? "upvoted" : "upvote"}
+                      {vote?.status === "pending" ? "upvoting…" : vote?.status === "voted" ? "upvoted" : "upvote"}
                     </button>
                   )}
                 </div>
-                {upvote.isError && (
+                {vote?.status === "error" && (
                   <p className="hn-c-vote-error" role="alert">
-                    {upvote.error instanceof Error ? upvote.error.message : "Couldn't upvote. Try again."}
+                    {vote.message}
                   </p>
                 )}
               </>
@@ -345,9 +372,9 @@ function Comment({
         </div>
       </div>
 
-      <div className="t-acc-panel">
-        <div className="t-acc-panel-inner" inert={collapsed}>
-          {(comment.children.length > 0 || isReplying) && (
+      {hasRepliesBranch && (
+        <div className="t-acc-panel">
+          <div className="t-acc-panel-inner" inert={collapsed}>
             <div className="hn-c-replies">
               {/* The thread line doubles as a collapse target, like on Reddit. */}
               <button
@@ -360,14 +387,14 @@ function Comment({
                 <div className="hn-inline-composer">
                   {commentingEnabled ? (
                     <Composer
-                      value={draft}
-                      onChange={onDraftChange}
+                      key={comment.id}
                       placeholder={`Reply to ${comment.author}…`}
                       submitLabel="Reply"
                       ariaLabel={`Reply to ${comment.author}`}
                       isPending={isPending}
                       error={composerError}
                       confirming={confirming}
+                      onHasDraftChange={onHasDraftChange}
                       onCancel={onCancel}
                       onKeep={onKeep}
                       onDiscard={onDiscard}
@@ -386,40 +413,39 @@ function Comment({
                 </ul>
               )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </li>
   )
 }
 
 function Composer({
-  value,
-  onChange,
   placeholder,
   submitLabel,
   ariaLabel,
   isPending,
   error,
   confirming,
+  onHasDraftChange,
   onCancel,
   onKeep,
   onDiscard,
   onSubmit,
 }: {
-  value: string
-  onChange: (value: string) => void
   placeholder: string
   submitLabel: string
   ariaLabel: string
   isPending: boolean
   error: string | null
   confirming: boolean
+  onHasDraftChange: (hasDraft: boolean) => void
   onCancel: () => void
   onKeep: () => void
   onDiscard: () => void
-  onSubmit: () => void
+  onSubmit: (text: string) => void
 }) {
+  const [value, setValue] = useState("")
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
 
@@ -456,7 +482,7 @@ function Composer({
     }
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !e.nativeEvent.isComposing) {
       e.preventDefault()
-      onSubmit()
+      onSubmit(value)
     }
   }
 
@@ -471,7 +497,9 @@ function Composer({
         className="hn-composer-input"
         value={value}
         onChange={(e) => {
-          onChange(e.target.value)
+          const next = e.target.value
+          setValue(next)
+          onHasDraftChange(Boolean(next.trim()))
           fitHeight(e.currentTarget)
         }}
         placeholder={placeholder}
@@ -522,7 +550,12 @@ function Composer({
               <button type="button" className="hn-composer-cancel" onClick={onCancel}>
                 Cancel
               </button>
-              <button type="button" className="hn-composer-submit" disabled={!canSubmit} onClick={onSubmit}>
+              <button
+                type="button"
+                className="hn-composer-submit"
+                disabled={!canSubmit}
+                onClick={() => onSubmit(value)}
+              >
                 {primaryLabel}
               </button>
             </div>
@@ -537,7 +570,12 @@ function Composer({
               <button type="button" className="hn-composer-cancel" onClick={onCancel}>
                 Cancel
               </button>
-              <button type="button" className="hn-composer-submit" disabled={!canSubmit} onClick={onSubmit}>
+              <button
+                type="button"
+                className="hn-composer-submit"
+                disabled={!canSubmit}
+                onClick={() => onSubmit(value)}
+              >
                 {primaryLabel}
               </button>
             </div>
