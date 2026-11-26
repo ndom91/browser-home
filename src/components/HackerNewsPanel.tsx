@@ -9,7 +9,7 @@ import { refreshHN, upvoteHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
 import { ArrowUpRightIcon, CloseIcon, HackerNewsIcon, RefreshIcon, UpvoteIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
-import { SwapText } from "./ui/motion"
+import { PopIn, SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 import { Tooltip } from "./ui/Tooltip"
 
@@ -225,13 +225,22 @@ function StoryRow({
   returned: boolean
 }) {
   const queryClient = useQueryClient()
+  const setPoints = (points: number) => {
+    queryClient.setQueryData<Cached<Array<Story>>>(["hn"], (old) =>
+      old ? { ...old, data: old.data.map((s) => (s.id === story.id ? { ...s, points } : s)) } : old,
+    )
+  }
   const vote = useMutation({
     mutationFn: () => upvoteHN({ data: story.id }),
-    onSuccess: ({ points }) => {
-      queryClient.setQueryData<Cached<Array<Story>>>(["hn"], (old) =>
-        old ? { ...old, data: old.data.map((s) => (s.id === story.id ? { ...s, points } : s)) } : old,
-      )
+    onMutate: () => {
+      const previous = story.points
+      setPoints(previous + 1)
+      return { previous }
     },
+    onError: (_err, _vars, ctx) => {
+      if (ctx) setPoints(ctx.previous)
+    },
+    onSuccess: ({ points }) => setPoints(points),
   })
   let hint = "Upvote"
   if (vote.isPending) hint = "Voting…"
@@ -272,7 +281,9 @@ function StoryRow({
         </a>
         <p className="hn-meta">
           <span>{story.domain}</span>
-          <span>{plural(story.points, "pt")}</span>
+          <span className="hn-points">
+            <PopIn value={String(story.points)} /> {story.points === 1 ? "pt" : "pts"}
+          </span>
           <a
             href={story.discussion}
             onClick={onOpen(story)}
