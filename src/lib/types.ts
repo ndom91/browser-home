@@ -166,7 +166,6 @@ export interface Features {
   chat: boolean
   linear: boolean
   capture: boolean
-  hnVoting: boolean
-  hnCommenting: boolean
+  hnSession: boolean
   hnUser: string | null
 }

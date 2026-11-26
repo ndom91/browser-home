@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type KeyboardEvent, useEffect, useRef, useState } from "react"
+import { type KeyboardEvent, memo, useCallback, useEffect, useRef, useState } from "react"
 import { age, plural } from "../lib/format"
 import { countComments, insertComment, itemUrl, readableUrl } from "../lib/hn"
 import { TTL } from "../lib/ttl"
@@ -32,6 +32,8 @@ export function HNThread({
   hnUser: string | null
 }) {
   const now = useNow()
+  // Comment ages only change per minute; quantizing prevents re-rendering large threads every second.
+  const nowMin = Math.floor(now / 60_000) * 60_000
   const queryClient = useQueryClient()
   const thread = useQuery(threadQuery(story.id))
   const data = thread.data?.data
@@ -42,6 +44,7 @@ export function HNThread({
   const [votes, setVotes] = useState<Record<number, VoteState>>({})
   // Tracked in a ref so typing inside Composer doesn't re-render the comment tree.
   const hasDraftRef = useRef(false)
+  const lockedVotesRef = useRef(new Set<number>())
   const mountedRef = useRef(true)
   const freshTimers = useRef<Array<ReturnType<typeof setTimeout>>>([])
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -100,65 +103,76 @@ export function HNThread({
     },
   })
 
-  const upvoteComment = (commentId: number) => {
-    const current = votes[commentId]
-    if (current?.status === "pending" || current?.status === "voted") return
+  const { isPending, reset: resetPost, mutate: mutatePost } = post
+
+  const resetComposer = useCallback(
+    (target: ComposerTarget) => {
+      hasDraftRef.current = false
+      setActiveTarget(target)
+      setConfirming(null)
+      resetPost()
+    },
+    [resetPost],
+  )
+
+  const upvoteComment = useCallback((commentId: number) => {
+    if (lockedVotesRef.current.has(commentId)) return
+    lockedVotesRef.current.add(commentId)
     setVotes((prev) => ({ ...prev, [commentId]: { status: "pending" } }))
     void upvoteHNComment({ data: commentId }).then(
       () => {
         if (mountedRef.current) setVotes((prev) => ({ ...prev, [commentId]: { status: "voted" } }))
       },
       (err: unknown) => {
+        lockedVotesRef.current.delete(commentId)
         if (!mountedRef.current) return
         const message = err instanceof Error ? err.message : "Couldn't upvote. Try again."
         setVotes((prev) => ({ ...prev, [commentId]: { status: "error", message } }))
       },
     )
-  }
+  }, [])
 
-  const switchTarget = (next: ComposerTarget) => {
-    if (post.isPending) return
-    const target = next === activeTarget ? null : next
-    if (commentingEnabled && activeTarget !== null && hasDraftRef.current) {
-      setConfirming({ next: target })
-      return
-    }
-    hasDraftRef.current = false
-    setActiveTarget(target)
-    setConfirming(null)
-    post.reset()
-  }
+  const switchTarget = useCallback(
+    (next: ComposerTarget) => {
+      if (isPending) return
+      const target = next === activeTarget ? null : next
+      if (commentingEnabled && activeTarget !== null && hasDraftRef.current) {
+        setConfirming({ next: target })
+        return
+      }
+      resetComposer(target)
+    },
+    [activeTarget, commentingEnabled, isPending, resetComposer],
+  )
 
-  const cancelComposer = () => {
-    if (post.isPending) return
+  const cancelComposer = useCallback(() => {
+    if (isPending) return
     if (commentingEnabled && hasDraftRef.current) {
       setConfirming({ next: null })
       return
     }
-    hasDraftRef.current = false
-    setActiveTarget(null)
-    setConfirming(null)
-    post.reset()
-  }
+    resetComposer(null)
+  }, [commentingEnabled, isPending, resetComposer])
 
-  const discardDraft = () => {
-    const next = confirming?.next ?? null
-    hasDraftRef.current = false
-    setActiveTarget(next)
-    setConfirming(null)
-    post.reset()
-  }
+  const keepDraft = useCallback(() => setConfirming(null), [])
 
-  const submitComposer = (text: string) => {
-    if (activeTarget === null || post.isPending || !text.trim()) return
-    setConfirming(null)
-    const parentId = activeTarget === "story" ? story.id : activeTarget
-    post.mutate({ parentId, text, target: activeTarget })
-  }
+  const discardDraft = useCallback(() => {
+    resetComposer(confirming?.next ?? null)
+  }, [confirming, resetComposer])
 
-  const onHasDraftChange = (hasDraft: boolean) => {
+  const submitComposer = useCallback(
+    (text: string) => {
+      if (activeTarget === null || isPending || !text.trim()) return
+      setConfirming(null)
+      const parentId = activeTarget === "story" ? story.id : activeTarget
+      mutatePost({ parentId, text, target: activeTarget })
+    },
+    [activeTarget, isPending, mutatePost, story.id],
+  )
+
+  const onHasDraftChange = useCallback((hasDraft: boolean) => {
     hasDraftRef.current = hasDraft
-  }
+  }, [])
 
   const composerError = post.isError
     ? post.error instanceof Error
@@ -177,7 +191,7 @@ export function HNThread({
             <span>{story.domain}</span>
             <span>{plural(data?.points ?? story.points, "pt")}</span>
             {data && <span>{data.author}</span>}
-            <span>{age(story.time, now)}</span>
+            <span>{age(story.time, nowMin)}</span>
             <span>{plural(data?.total ?? story.comments, "comment")}</span>
           </p>
           {data?.html && <Html className="hn-story-text" html={data.html} />}
@@ -186,20 +200,20 @@ export function HNThread({
         <Comments
           thread={data}
           error={thread.error}
-          now={now}
+          now={nowMin}
           commentingEnabled={commentingEnabled}
           hnUser={hnUser}
           activeTarget={activeTarget}
           freshIds={freshIds}
           votes={votes}
-          isPending={post.isPending}
+          isPending={isPending}
           composerError={composerError}
           confirming={confirming !== null}
           onHasDraftChange={onHasDraftChange}
           onReply={switchTarget}
           onUpvote={upvoteComment}
           onCancel={cancelComposer}
-          onKeep={() => setConfirming(null)}
+          onKeep={keepDraft}
           onDiscard={discardDraft}
           onSubmit={submitComposer}
         />
@@ -217,12 +231,12 @@ export function HNThread({
               placeholder="Add a comment…"
               submitLabel="Comment"
               ariaLabel="Add a comment"
-              isPending={post.isPending}
+              isPending={isPending}
               error={composerError}
               confirming={confirming !== null}
               onHasDraftChange={onHasDraftChange}
               onCancel={cancelComposer}
-              onKeep={() => setConfirming(null)}
+              onKeep={keepDraft}
               onDiscard={discardDraft}
               onSubmit={submitComposer}
             />
@@ -255,7 +269,7 @@ interface CommentCallbacks {
   onSubmit: (text: string) => void
 }
 
-function Comments({
+const Comments = memo(function Comments({
   thread,
   error,
   now,
@@ -270,7 +284,7 @@ function Comments({
       ))}
     </ul>
   )
-}
+})
 
 function Comment({
   comment,
@@ -482,7 +496,7 @@ function Composer({
   }
 
   const canSubmit = Boolean(value.trim()) && !isPending
-  const primaryLabel = error ? "Retry" : submitLabel
+  const primaryLabel = error && !isPending ? "Retry" : submitLabel
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: catches Escape and Cmd+Enter across the textarea and footer buttons.
@@ -503,21 +517,7 @@ function Composer({
         disabled={isPending}
       />
       <footer className="hn-composer-foot">
-        {isPending ? (
-          <>
-            <span className="hn-composer-status" aria-live="polite">
-              Posting…
-            </span>
-            <div className="hn-composer-btns">
-              <button type="button" className="hn-composer-cancel" disabled>
-                Cancel
-              </button>
-              <button type="button" className="hn-composer-submit" disabled>
-                {submitLabel}
-              </button>
-            </div>
-          </>
-        ) : confirming ? (
+        {confirming ? (
           <>
             <span className="hn-composer-confirm-msg">Discard draft?</span>
             <div className="hn-composer-btns">
@@ -536,33 +536,24 @@ function Composer({
               </button>
             </div>
           </>
-        ) : error ? (
-          <>
-            <span className="hn-composer-error" role="alert">
-              {error}
-            </span>
-            <div className="hn-composer-btns">
-              <button type="button" className="hn-composer-cancel" onClick={onCancel}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="hn-composer-submit"
-                disabled={!canSubmit}
-                onClick={() => onSubmit(value)}
-              >
-                {primaryLabel}
-              </button>
-            </div>
-          </>
         ) : (
           <>
-            <span className="hn-composer-hint">
-              <kbd>⌘</kbd>
-              <kbd>↵</kbd> to post · <kbd>esc</kbd> to cancel
-            </span>
+            {isPending ? (
+              <span className="hn-composer-status" aria-live="polite">
+                Posting…
+              </span>
+            ) : error ? (
+              <span className="hn-composer-error" role="alert">
+                {error}
+              </span>
+            ) : (
+              <span className="hn-composer-hint">
+                <kbd>⌘</kbd>
+                <kbd>↵</kbd> to post · <kbd>esc</kbd> to cancel
+              </span>
+            )}
             <div className="hn-composer-btns">
-              <button type="button" className="hn-composer-cancel" onClick={onCancel}>
+              <button type="button" className="hn-composer-cancel" disabled={isPending} onClick={onCancel}>
                 Cancel
               </button>
               <button

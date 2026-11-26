@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type MouseEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { type MouseEvent, memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { age, plural, synced } from "../lib/format"
 import { itemUrl, readableUrl } from "../lib/hn"
 import type { Story } from "../lib/types"
@@ -9,7 +9,7 @@ import { refreshHN, upvoteHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
 import { ArrowUpRightIcon, CloseIcon, HackerNewsIcon, RefreshIcon, UpvoteIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
-import { PopIn, SwapText } from "./ui/motion"
+import { motionMs, PopIn, SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 import { Tooltip } from "./ui/Tooltip"
 
@@ -19,16 +19,17 @@ interface Props {
   stories: Array<Story> | undefined
   fetchedAt: number | undefined
   error: unknown
-  votingEnabled: boolean
-  commentingEnabled: boolean
+  hnSession: boolean
   hnUser: string | null
 }
 
-export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, commentingEnabled, hnUser }: Props) {
+export function HackerNewsPanel({ stories, fetchedAt, error, hnSession, hnUser }: Props) {
   const now = useNow()
+  // Story ages only change per minute; quantizing keeps the list from re-rendering every second.
+  const nowMin = Math.floor(now / 60_000) * 60_000
   const queryClient = useQueryClient()
   const [open, setOpen] = useState<Story | null>(null)
-  // The last opened story stays rendered while the thread page slides out.
+  // Kept mounted during the slide-out animation, then dropped so large threads don't linger in DOM.
   const [shown, setShown] = useState<Story | null>(null)
   const [readIds, setReadIds] = useState<Set<number>>(() => new Set())
   const [returnedId, setReturnedId] = useState<number | null>(null)
@@ -46,17 +47,26 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
     [],
   )
 
-  const closeThread = useCallback(() => {
-    setOpen((current) => {
-      if (!current) return null
-      if (returnTimer.current) clearTimeout(returnTimer.current)
-      setReturnedId(current.id)
-      returnTimer.current = setTimeout(() => setReturnedId(null), RETURN_FLASH_MS)
-      return null
-    })
-  }, [])
+  useEffect(() => {
+    if (open || !shown) return
+    const ms = motionMs("--page-slide-dur", 250)
+    if (ms === 0) {
+      setShown(null)
+      return
+    }
+    const timer = setTimeout(() => setShown(null), ms)
+    return () => clearTimeout(timer)
+  }, [open, shown])
 
-  const openThread = (story: Story) => (e: MouseEvent) => {
+  const closeThread = useCallback(() => {
+    if (!open) return
+    if (returnTimer.current) clearTimeout(returnTimer.current)
+    setReturnedId(open.id)
+    returnTimer.current = setTimeout(() => setReturnedId(null), RETURN_FLASH_MS)
+    setOpen(null)
+  }, [open])
+
+  const openThread = useCallback((story: Story, e: MouseEvent) => {
     // Let cmd/ctrl/shift/middle-click open the real HN page in a new tab.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
     e.preventDefault()
@@ -68,9 +78,10 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
     setReadIds((prev) => (prev.has(story.id) ? prev : new Set(prev).add(story.id)))
     setOpen(story)
     setShown(story)
-  }
+  }, [])
+
   // Algolia takes 1–3 s for big threads, so start loading on hover.
-  const prefetch = (story: Story) => () => void queryClient.prefetchQuery(threadQuery(story.id))
+  const prefetch = useCallback((story: Story) => void queryClient.prefetchQuery(threadQuery(story.id)), [queryClient])
 
   // Each page scrolls on its own, so the list keeps its place. A new thread opens at the top.
   // The page you leave turns inert and drops focus, so move it along: into the thread scroll
@@ -138,7 +149,7 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
         ) : (
           <span className="panel-sync">
             <time dateTime={fetchedAt == null ? undefined : new Date(fetchedAt).toISOString()}>
-              <SwapText text={synced(fetchedAt, now)} />
+              <SwapText text={synced(fetchedAt, nowMin)} />
             </time>
             <RefreshButton queryKey={["hn"]} refresh={refreshHN} what="stories" />
           </span>
@@ -150,10 +161,10 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
           {stories ? (
             <StoryList
               stories={stories}
-              now={now}
+              now={nowMin}
               onOpen={openThread}
               onPrefetch={prefetch}
-              votingEnabled={votingEnabled}
+              votingEnabled={hnSession}
               readIds={readIds}
               returnedId={returnedId}
             />
@@ -162,14 +173,14 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
           )}
         </section>
         <section className="t-page" data-page-id="2" ref={threadRef} inert={open == null}>
-          {shown && <HNThread key={shown.id} story={shown} commentingEnabled={commentingEnabled} hnUser={hnUser} />}
+          {shown && <HNThread key={shown.id} story={shown} commentingEnabled={hnSession} hnUser={hnUser} />}
         </section>
       </div>
     </Panel>
   )
 }
 
-function StoryList({
+const StoryList = memo(function StoryList({
   stories,
   now,
   onOpen,
@@ -180,8 +191,8 @@ function StoryList({
 }: {
   stories: Array<Story>
   now: number
-  onOpen: (story: Story) => (e: MouseEvent) => void
-  onPrefetch: (story: Story) => () => void
+  onOpen: (story: Story, e: MouseEvent) => void
+  onPrefetch: (story: Story) => void
   votingEnabled: boolean
   readIds: Set<number>
   returnedId: number | null
@@ -203,7 +214,7 @@ function StoryList({
       ))}
     </ol>
   )
-}
+})
 
 function StoryRow({
   story,
@@ -218,8 +229,8 @@ function StoryRow({
   story: Story
   rank: number
   now: number
-  onOpen: (story: Story) => (e: MouseEvent) => void
-  onPrefetch: (story: Story) => () => void
+  onOpen: (story: Story, e: MouseEvent) => void
+  onPrefetch: (story: Story) => void
   votingEnabled: boolean
   read: boolean
   returned: boolean
@@ -286,9 +297,9 @@ function StoryRow({
           </span>
           <a
             href={story.discussion}
-            onClick={onOpen(story)}
-            onMouseEnter={onPrefetch(story)}
-            onFocus={onPrefetch(story)}
+            onClick={(e) => onOpen(story, e)}
+            onMouseEnter={() => onPrefetch(story)}
+            onFocus={() => onPrefetch(story)}
             data-nav-alt
           >
             {plural(story.comments, "comment")}

@@ -51,14 +51,22 @@ const viewer = cached(DEMO ? async () => demoViewer : fetchViewer, TTL.viewer)
 // takes the cached value at once.
 const waitFlag = (wait: unknown) => wait === true
 
-// Demo mode shows Linear from fixtures. Chat always needs a real model.
+const positiveInt = (what: string) => (id: unknown) => {
+  if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) throw new Error(`Invalid ${what}`)
+  return id
+}
+
+function requireSameOrigin() {
+  if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+}
+
+// Demo mode shows Linear and HN session controls from fixtures. Chat always needs a real model.
 export const getFeatures = createServerFn({ method: "GET" }).handler(
   (): Features => ({
     chat: missingLlmKeys().length === 0,
     linear: DEMO || linearConfigured(),
     capture: Boolean(config().capture.dir),
-    hnVoting: DEMO || Boolean(config().hacker_news.session_cookie),
-    hnCommenting: DEMO || Boolean(config().hacker_news.session_cookie),
+    hnSession: DEMO || Boolean(config().hacker_news.session_cookie),
     hnUser: DEMO ? demoViewer.login : hnUsername(),
   }),
 )
@@ -100,22 +108,16 @@ export const getHN = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => hn({ wait: data }))
 export const upvoteHN = createServerFn({ method: "POST" })
-  .validator((id: unknown) => {
-    if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid story id")
-    return id
-  })
+  .validator(positiveInt("story id"))
   .handler(async ({ data }) => {
-    if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+    requireSameOrigin()
     if (DEMO) return { points: (demoHN().find((s) => s.id === data)?.points ?? 0) + 1 }
     return upvoteStory(data, config().hacker_news.session_cookie)
   })
 export const upvoteHNComment = createServerFn({ method: "POST" })
-  .validator((id: unknown) => {
-    if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid comment id")
-    return id
-  })
+  .validator(positiveInt("comment id"))
   .handler(async ({ data }) => {
-    if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+    requireSameOrigin()
     if (DEMO) {
       await new Promise((resolve) => setTimeout(resolve, 200))
       return { upvoted: true as const }
@@ -126,14 +128,13 @@ export const postHNComment = createServerFn({ method: "POST" })
   .validator((input: unknown) => {
     if (!input || typeof input !== "object") throw new Error("Invalid comment")
     const { parentId, text } = input as { parentId?: unknown; text?: unknown }
-    if (typeof parentId !== "number" || !Number.isSafeInteger(parentId) || parentId <= 0)
-      throw new Error("Invalid parent id")
+    const validParent = positiveInt("parent id")(parentId)
     if (typeof text !== "string" || !text.trim()) throw new Error("Write a comment before posting.")
     if (text.trim().length > MAX_HN_COMMENT) throw new Error(`Keep it under ${MAX_HN_COMMENT} characters.`)
-    return { parentId, text }
+    return { parentId: validParent, text }
   })
   .handler(async ({ data }) => {
-    if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+    requireSameOrigin()
     if (DEMO) {
       await new Promise((resolve) => setTimeout(resolve, 250))
       return {
@@ -164,10 +165,7 @@ export const getWeather = createServerFn({ method: "GET" })
   .validator(waitFlag)
   .handler(({ data }) => weather({ wait: data }))
 export const getHNThread = createServerFn({ method: "GET" })
-  .validator((id: unknown) => {
-    if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) throw new Error("Invalid story id")
-    return id
-  })
+  .validator(positiveInt("story id"))
   .handler(({ data }) => thread(data))
 
 /** Quick capture: appends a bullet to this week's Obsidian note. */

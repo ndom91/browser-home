@@ -169,8 +169,7 @@ function Home() {
             stories={hn.data?.data}
             fetchedAt={hn.data?.fetchedAt}
             error={hn.error}
-            votingEnabled={features.hnVoting}
-            commentingEnabled={features.hnCommenting}
+            hnSession={features.hnSession}
             hnUser={features.hnUser}
           />
         )
