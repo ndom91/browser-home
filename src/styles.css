@@ -1597,7 +1597,7 @@ a.hn-c-age:hover {
 
 .hn-c-actions {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
   margin-top: 4px;
   line-height: 1;
@@ -1605,9 +1605,6 @@ a.hn-c-age:hover {
 
 .hn-c-reply,
 .hn-c-upvote {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
   padding: 1px 0;
   border: 0;
   background: none;

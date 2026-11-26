@@ -7,7 +7,6 @@ import type { HNComment, HNThread as HNThreadData, Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { getHNThread, postHNComment, upvoteHNComment } from "../server/fns"
-import { UpvoteIcon } from "./icons"
 import { PanelError, PanelLoading } from "./Panel"
 
 const HN_LOGIN_URL = "https://news.ycombinator.com/login"
@@ -353,7 +352,6 @@ function Comment({
                       data-voted={vote?.status === "voted" || undefined}
                       onClick={() => onUpvote(comment.id)}
                     >
-                      <UpvoteIcon />
                       {vote?.status === "pending" ? "voting…" : vote?.status === "voted" ? "voted" : "upvote"}
                     </button>
                   )}
