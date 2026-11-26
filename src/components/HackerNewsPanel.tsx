@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type MouseEvent, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { type MouseEvent, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { age, plural, synced } from "../lib/format"
-import { readableUrl } from "../lib/hn"
+import { itemUrl, readableUrl } from "../lib/hn"
 import type { Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { refreshHN, upvoteHN } from "../server/fns"
 import { HNThread, threadQuery } from "./HNThread"
-import { HackerNewsIcon, RefreshIcon, UpvoteIcon } from "./icons"
+import { ArrowUpRightIcon, CloseIcon, HackerNewsIcon, RefreshIcon, UpvoteIcon } from "./icons"
 import { Panel, PanelFallback } from "./Panel"
 import { SwapText } from "./ui/motion"
 import { RefreshButton } from "./ui/RefreshButton"
 import { Tooltip } from "./ui/Tooltip"
+
+const RETURN_FLASH_MS = 1600
 
 interface Props {
   stories: Array<Story> | undefined
@@ -19,24 +21,51 @@ interface Props {
   error: unknown
   votingEnabled: boolean
   commentingEnabled: boolean
+  hnUser: string | null
 }
 
-export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, commentingEnabled }: Props) {
+export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, commentingEnabled, hnUser }: Props) {
   const now = useNow()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState<Story | null>(null)
   // The last opened story stays rendered while the thread page slides out.
   const [shown, setShown] = useState<Story | null>(null)
+  const [readIds, setReadIds] = useState<Set<number>>(() => new Set())
+  const [returnedId, setReturnedId] = useState<number | null>(null)
+  const listRef = useRef<HTMLElement>(null)
   const threadRef = useRef<HTMLDivElement>(null)
+  const listScrollTop = useRef(0)
+  const returnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // The story row that opened the thread, so closing it puts focus back there.
   const returnTo = useRef<HTMLElement | null>(null)
+
+  useEffect(
+    () => () => {
+      if (returnTimer.current) clearTimeout(returnTimer.current)
+    },
+    [],
+  )
+
+  const closeThread = useCallback(() => {
+    setOpen((current) => {
+      if (!current) return null
+      if (returnTimer.current) clearTimeout(returnTimer.current)
+      setReturnedId(current.id)
+      returnTimer.current = setTimeout(() => setReturnedId(null), RETURN_FLASH_MS)
+      return null
+    })
+  }, [])
 
   const openThread = (story: Story) => (e: MouseEvent) => {
     // Let cmd/ctrl/shift/middle-click open the real HN page in a new tab.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
     e.preventDefault()
+    listScrollTop.current = listRef.current?.scrollTop ?? 0
     returnTo.current =
       (e.currentTarget as HTMLElement).closest("[data-nav-item]")?.querySelector("[data-nav-row]") ?? null
+    if (returnTimer.current) clearTimeout(returnTimer.current)
+    setReturnedId(null)
+    setReadIds((prev) => (prev.has(story.id) ? prev : new Set(prev).add(story.id)))
     setOpen(story)
     setShown(story)
   }
@@ -44,15 +73,19 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
   const prefetch = (story: Story) => () => void queryClient.prefetchQuery(threadQuery(story.id))
 
   // Each page scrolls on its own, so the list keeps its place. A new thread opens at the top.
-  // The page you leave turns inert and drops focus, so move it along: into the thread
-  // on open, back to the story on close.
+  // The page you leave turns inert and drops focus, so move it along: into the thread scroll
+  // container on open, back to the story (and its scroll offset) on close.
   useLayoutEffect(() => {
     if (open) {
       const scroll = threadRef.current?.querySelector<HTMLElement>(".hn-thread-scroll")
-      if (scroll) scroll.scrollTop = 0
-      else if (threadRef.current) threadRef.current.scrollTop = 0
-      threadRef.current?.querySelector<HTMLElement>(".hn-back")?.focus({ preventScroll: true })
+      if (scroll) {
+        scroll.scrollTop = 0
+        scroll.focus({ preventScroll: true })
+      } else if (threadRef.current) {
+        threadRef.current.scrollTop = 0
+      }
     } else {
+      if (listRef.current) listRef.current.scrollTop = listScrollTop.current
       returnTo.current?.focus({ preventScroll: true })
     }
   }, [open])
@@ -62,14 +95,18 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.defaultPrevented) return
       if (
-        (e.target as HTMLElement | null)?.closest("input, textarea, [contenteditable], .hn-composer, .hn-login-inline")
+        (e.target as HTMLElement | null)?.closest(
+          "input, textarea, [contenteditable], [role=dialog], [role=menu], .hn-composer, .hn-login-inline",
+        )
       )
         return
-      setOpen(null)
+      e.preventDefault()
+      closeThread()
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [open])
+    // Capture phase so Esc closes the comments view before useKeyboardNav blurs the panel.
+    window.addEventListener("keydown", onKey, true)
+    return () => window.removeEventListener("keydown", onKey, true)
+  }, [open, closeThread])
 
   return (
     <Panel
@@ -79,7 +116,25 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
       title="Hacker News"
       meta={
         open ? (
-          "Comments"
+          <span className="hn-head-actions">
+            <a className="hn-head-open" href={itemUrl(open.id)} target="_blank" rel="noreferrer">
+              Open on HN <ArrowUpRightIcon />
+            </a>
+            <span className="hn-head-sep" aria-hidden="true" />
+            <Tooltip
+              align="end"
+              className="hn-close-tooltip"
+              content={
+                <span className="hn-close-tip">
+                  Close comments <kbd>Esc</kbd>
+                </span>
+              }
+            >
+              <button type="button" className="hn-head-close" aria-label="Close comments" onClick={closeThread}>
+                <CloseIcon width={14} height={14} />
+              </button>
+            </Tooltip>
+          </span>
         ) : (
           <span className="panel-sync">
             <time dateTime={fetchedAt == null ? undefined : new Date(fetchedAt).toISOString()}>
@@ -91,7 +146,7 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
       }
     >
       <div className="t-page-slide" data-page={open ? "2" : "1"}>
-        <section className="t-page" data-page-id="1" inert={open != null}>
+        <section className="t-page" data-page-id="1" ref={listRef} inert={open != null}>
           {stories ? (
             <StoryList
               stories={stories}
@@ -99,15 +154,15 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, comm
               onOpen={openThread}
               onPrefetch={prefetch}
               votingEnabled={votingEnabled}
+              readIds={readIds}
+              returnedId={returnedId}
             />
           ) : (
             <PanelFallback error={error} />
           )}
         </section>
         <section className="t-page" data-page-id="2" ref={threadRef} inert={open == null}>
-          {shown && (
-            <HNThread key={shown.id} story={shown} onBack={() => setOpen(null)} commentingEnabled={commentingEnabled} />
-          )}
+          {shown && <HNThread key={shown.id} story={shown} commentingEnabled={commentingEnabled} hnUser={hnUser} />}
         </section>
       </div>
     </Panel>
@@ -120,45 +175,55 @@ function StoryList({
   onOpen,
   onPrefetch,
   votingEnabled,
+  readIds,
+  returnedId,
 }: {
   stories: Array<Story>
   now: number
   onOpen: (story: Story) => (e: MouseEvent) => void
   onPrefetch: (story: Story) => () => void
   votingEnabled: boolean
+  readIds: Set<number>
+  returnedId: number | null
 }) {
   return (
     <ol className="hn-list">
       {stories.map((s, i) => (
-        <li key={s.id} className="hn-item" data-nav-item>
-          <span className="hn-rank mono">{i + 1}</span>
-          {votingEnabled && <StoryUpvote story={s} />}
-          <div className="hn-main">
-            <a className="hn-title" href={readableUrl(s.url)} target="_blank" rel="noreferrer" data-nav-row>
-              {s.title}
-            </a>
-            <p className="hn-meta">
-              <span>{s.domain}</span>
-              <span>{plural(s.points, "pt")}</span>
-              <a
-                href={s.discussion}
-                onClick={onOpen(s)}
-                onMouseEnter={onPrefetch(s)}
-                onFocus={onPrefetch(s)}
-                data-nav-alt
-              >
-                {plural(s.comments, "comment")}
-              </a>
-              <span>{age(s.time, now)}</span>
-            </p>
-          </div>
-        </li>
+        <StoryRow
+          key={s.id}
+          story={s}
+          rank={i + 1}
+          now={now}
+          onOpen={onOpen}
+          onPrefetch={onPrefetch}
+          votingEnabled={votingEnabled}
+          read={readIds.has(s.id)}
+          returned={returnedId === s.id}
+        />
       ))}
     </ol>
   )
 }
 
-function StoryUpvote({ story }: { story: Story }) {
+function StoryRow({
+  story,
+  rank,
+  now,
+  onOpen,
+  onPrefetch,
+  votingEnabled,
+  read,
+  returned,
+}: {
+  story: Story
+  rank: number
+  now: number
+  onOpen: (story: Story) => (e: MouseEvent) => void
+  onPrefetch: (story: Story) => () => void
+  votingEnabled: boolean
+  read: boolean
+  returned: boolean
+}) {
   const queryClient = useQueryClient()
   const vote = useMutation({
     mutationFn: () => upvoteHN({ data: story.id }),
@@ -173,37 +238,61 @@ function StoryUpvote({ story }: { story: Story }) {
   if (vote.isSuccess) hint = "Upvoted"
 
   return (
-    <>
-      <Tooltip content={hint}>
-        <button
-          type="button"
-          className="hn-upvote"
-          aria-label={`${hint}: ${story.title}`}
-          aria-disabled={vote.isPending || vote.isSuccess}
-          aria-busy={vote.isPending}
-          data-voted={vote.isSuccess || undefined}
-          onClick={() => {
-            if (!vote.isPending && !vote.isSuccess) vote.mutate()
-          }}
-        >
-          <span className="t-icon-swap" data-state={vote.isPending ? "b" : "a"} aria-hidden="true">
-            <span className="t-icon" data-icon="a">
-              <UpvoteIcon />
-            </span>
-            <span className="t-icon" data-icon="b">
-              <RefreshIcon className="hn-vote-spinner" />
-            </span>
-          </span>
-        </button>
-      </Tooltip>
-      {vote.isError && (
-        <p className="hn-vote-error" role="alert">
-          {vote.error.message}{" "}
-          <a href={story.discussion} target="_blank" rel="noreferrer">
-            Vote on HN ↗
+    <li className="hn-item" data-nav-item data-read={read || undefined} data-returned={returned || undefined}>
+      <div className="hn-rail">
+        <span className="hn-rank mono">{rank}</span>
+        {votingEnabled && (
+          <Tooltip content={hint}>
+            <button
+              type="button"
+              className="hn-upvote"
+              aria-label={`${hint}: ${story.title}`}
+              aria-disabled={vote.isPending || vote.isSuccess}
+              aria-busy={vote.isPending}
+              data-voted={vote.isSuccess || undefined}
+              onClick={() => {
+                if (!vote.isPending && !vote.isSuccess) vote.mutate()
+              }}
+            >
+              <span className="t-icon-swap" data-state={vote.isPending ? "b" : "a"} aria-hidden="true">
+                <span className="t-icon" data-icon="a">
+                  <UpvoteIcon />
+                </span>
+                <span className="t-icon" data-icon="b">
+                  <RefreshIcon width={10} height={10} className="hn-vote-spinner" />
+                </span>
+              </span>
+            </button>
+          </Tooltip>
+        )}
+      </div>
+      <div className="hn-main">
+        <a className="hn-title" href={readableUrl(story.url)} target="_blank" rel="noreferrer" data-nav-row>
+          {story.title}
+        </a>
+        <p className="hn-meta">
+          <span>{story.domain}</span>
+          <span>{plural(story.points, "pt")}</span>
+          <a
+            href={story.discussion}
+            onClick={onOpen(story)}
+            onMouseEnter={onPrefetch(story)}
+            onFocus={onPrefetch(story)}
+            data-nav-alt
+          >
+            {plural(story.comments, "comment")}
           </a>
+          <span>{age(story.time, now)}</span>
         </p>
-      )}
-    </>
+        {vote.isError && (
+          <p className="hn-vote-error" role="alert">
+            {vote.error.message}{" "}
+            <a href={story.discussion} target="_blank" rel="noreferrer">
+              Vote on HN ↗
+            </a>
+          </p>
+        )}
+      </div>
+    </li>
   )
 }

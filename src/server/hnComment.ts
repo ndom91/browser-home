@@ -178,6 +178,7 @@ export async function postComment(parentId: number, text: string, sessionCookie:
       time: Date.now(),
       html: created?.html || formatPlainComment(body),
       children: [],
+      points: 1,
       isYou: true,
     }
   }

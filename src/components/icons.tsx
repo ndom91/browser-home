@@ -51,8 +51,14 @@ export function HackerNewsIcon(props: IconProps) {
 
 export function UpvoteIcon(props: IconProps) {
   return (
-    <svg aria-hidden="true" {...base} {...props}>
-      <path d="m8 4 6 8H2z" fill="currentColor" />
+    <svg aria-hidden="true" {...base} width={10} height={10} {...props}>
+      <path
+        d="M8 13.25V2.75M3.5 7.25 8 2.75l4.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

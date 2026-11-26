@@ -7,7 +7,7 @@ import type { HNComment, HNThread as HNThreadData, Story } from "../lib/types"
 import { useNow } from "../lib/useNow"
 import type { Cached } from "../server/cache"
 import { getHNThread, postHNComment, upvoteHNComment } from "../server/fns"
-import { ArrowLeftIcon, ArrowUpRightIcon } from "./icons"
+import { UpvoteIcon } from "./icons"
 import { PanelError, PanelLoading } from "./Panel"
 
 const HN_LOGIN_URL = "https://news.ycombinator.com/login"
@@ -25,12 +25,12 @@ export const threadQuery = (id: number) => ({
 /** The comment view that replaces the story list inside the HN panel. */
 export function HNThread({
   story,
-  onBack,
   commentingEnabled,
+  hnUser,
 }: {
   story: Story
-  onBack: () => void
   commentingEnabled: boolean
+  hnUser: string | null
 }) {
   const now = useNow()
   const queryClient = useQueryClient()
@@ -169,16 +169,7 @@ export function HNThread({
 
   return (
     <div className="hn-thread-view">
-      <nav className="hn-crumbs" aria-label="Breadcrumb">
-        <button type="button" className="hn-back" onClick={onBack}>
-          <ArrowLeftIcon /> Back
-        </button>
-        <a className="hn-open" href={itemUrl(story.id)} target="_blank" rel="noreferrer">
-          Open on HN <ArrowUpRightIcon />
-        </a>
-      </nav>
-
-      <div className="hn-thread-scroll" ref={scrollRef}>
+      <div className="hn-thread-scroll" ref={scrollRef} tabIndex={-1}>
         <header className="hn-story">
           <a className="hn-story-title" href={readableUrl(story.url)} target="_blank" rel="noreferrer">
             {story.title}
@@ -198,6 +189,7 @@ export function HNThread({
           error={thread.error}
           now={now}
           commentingEnabled={commentingEnabled}
+          hnUser={hnUser}
           activeTarget={activeTarget}
           freshIds={freshIds}
           votes={votes}
@@ -248,6 +240,7 @@ export function HNThread({
 
 interface CommentCallbacks {
   commentingEnabled: boolean
+  hnUser: string | null
   activeTarget: ComposerTarget
   freshIds: Set<number>
   votes: Record<number, VoteState>
@@ -288,6 +281,7 @@ function Comment({
 }: { comment: HNComment; op: string; now: number } & CommentCallbacks) {
   const {
     commentingEnabled,
+    hnUser,
     activeTarget,
     freshIds,
     votes,
@@ -307,10 +301,11 @@ function Comment({
   const vote = votes[comment.id]
   const isReplying = activeTarget === comment.id
   const isFresh = freshIds.has(comment.id)
+  const isOwn = Boolean(comment.isYou || (hnUser && comment.author.toLowerCase() === hnUser.toLowerCase()))
   const rawAge = age(comment.time, now)
   const ageLabel = rawAge === "now" ? "just now" : rawAge
   const canReply = comment.author !== "[deleted]" && comment.id > 0
-  const canUpvote = commentingEnabled && canReply && !comment.isYou
+  const canUpvote = commentingEnabled && canReply && !isOwn
   const hasRepliesBranch = comment.children.length > 0 || isReplying
 
   // Body stays mounted so collapse can animate its height. inert keeps hidden links out of the tab order.
@@ -318,7 +313,7 @@ function Comment({
     <li className={`hn-c t-acc${collapsed ? " is-collapsed" : ""}`} data-open={!collapsed} data-hn-comment={comment.id}>
       <div className="hn-c-self t-acc" data-open={!collapsed} data-fresh={isFresh || undefined}>
         <p className="hn-c-meta">
-          <span className={`hn-c-author${comment.isYou ? " is-you" : comment.author === op ? " is-op" : ""}`}>
+          <span className={`hn-c-author${isOwn ? " is-you" : comment.author === op ? " is-op" : ""}`}>
             {comment.author}
           </span>
           {comment.isYou && <span className="hn-c-you">you</span>}
@@ -329,6 +324,7 @@ function Comment({
           ) : (
             <span className="hn-c-age">{ageLabel}</span>
           )}
+          {isOwn && comment.points != null && <span className="hn-c-pts">{plural(comment.points, "pt")}</span>}
           <button type="button" className="hn-c-toggle" onClick={toggle} aria-expanded={!collapsed} data-nav-row>
             {collapsed ? `[+${1 + countComments(comment.children)}]` : "[–]"}
           </button>
@@ -357,7 +353,8 @@ function Comment({
                       data-voted={vote?.status === "voted" || undefined}
                       onClick={() => onUpvote(comment.id)}
                     >
-                      {vote?.status === "pending" ? "upvoting…" : vote?.status === "voted" ? "upvoted" : "upvote"}
+                      <UpvoteIcon />
+                      {vote?.status === "pending" ? "voting…" : vote?.status === "voted" ? "voted" : "upvote"}
                     </button>
                   )}
                 </div>

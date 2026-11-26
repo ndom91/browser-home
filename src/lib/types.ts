@@ -104,6 +104,8 @@ export interface HNComment {
   /** Sanitized HTML: only p, a, i, b, em, strong, pre, code, br. */
   html: string
   children: Array<HNComment>
+  /** HN only exposes comment scores on your own comments. */
+  points?: number | null
   /** Set client-side on comments just posted from this view. */
   isYou?: boolean
 }
@@ -166,4 +168,5 @@ export interface Features {
   capture: boolean
   hnVoting: boolean
   hnCommenting: boolean
+  hnUser: string | null
 }

@@ -22,7 +22,7 @@ import {
   demoWeather,
 } from "./demo"
 import { fetchNotifications, fetchPRDetail, fetchPRs, fetchViewer, markNotificationRead } from "./github"
-import { fetchHN, fetchThread } from "./hn"
+import { fetchHN, fetchThread, hnUsername } from "./hn"
 import { formatPlainComment, MAX_HN_COMMENT, postComment } from "./hnComment"
 import { upvoteComment, upvoteStory } from "./hnVote"
 import { fetchLinear, linearConfigured } from "./linear"
@@ -57,8 +57,9 @@ export const getFeatures = createServerFn({ method: "GET" }).handler(
     chat: missingLlmKeys().length === 0,
     linear: DEMO || linearConfigured(),
     capture: Boolean(config().capture.dir),
-    hnVoting: Boolean(config().hacker_news.session_cookie),
+    hnVoting: DEMO || Boolean(config().hacker_news.session_cookie),
     hnCommenting: DEMO || Boolean(config().hacker_news.session_cookie),
+    hnUser: DEMO ? demoViewer.login : hnUsername(),
   }),
 )
 /** The settings cookie, read on the server so the first paint already uses it. */
@@ -141,6 +142,7 @@ export const postHNComment = createServerFn({ method: "POST" })
         time: Date.now(),
         html: formatPlainComment(data.text),
         children: [],
+        points: 1,
         isYou: true,
       }
     }

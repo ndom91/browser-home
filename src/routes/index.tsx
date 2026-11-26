@@ -171,6 +171,7 @@ function Home() {
             error={hn.error}
             votingEnabled={features.hnVoting}
             commentingEnabled={features.hnCommenting}
+            hnUser={features.hnUser}
           />
         )
     }

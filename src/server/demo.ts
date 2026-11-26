@@ -279,7 +279,7 @@ export function demoThread(id: number): HNThread {
     points: story.points,
     time: story.time,
     html: null,
-    total: 4,
+    total: 5,
     comments: [
       {
         id: 1,
@@ -294,6 +294,14 @@ export function demoThread(id: number): HNThread {
             html: "<p>Agreed. Here is the snippet:</p><pre><code>SELECT * FROM jobs WHERE run_at &lt; now();</code></pre>",
             children: [
               { id: 3, author: "tptacek", time: at(12), html: "<p>Watch out for lock contention.</p>", children: [] },
+              {
+                id: 5,
+                author: "alex",
+                time: at(8),
+                points: 4,
+                html: "<p>WAL mode + a single writer queue keeps it predictable.</p>",
+                children: [],
+              },
             ],
           },
         ],

@@ -1,9 +1,16 @@
 import { countComments, hostOf, itemUrl } from "../lib/hn"
 import type { HNComment, HNThread, Story } from "../lib/types"
+import { config } from "./config"
 import { sanitizeHtml } from "./sanitize"
 
 const API = "https://hacker-news.firebaseio.com/v0"
+const HN = "https://news.ycombinator.com"
 const HN_COUNT = 24
+
+export function hnUsername(sessionCookie = config().hacker_news.session_cookie): string | null {
+  if (!sessionCookie || /[;\r\n]/.test(sessionCookie)) return null
+  return sessionCookie.split("&")[0]?.trim() || null
+}
 
 interface RawItem {
   id: number
@@ -70,6 +77,46 @@ function toComments(items: Array<AlgoliaItem>): Array<HNComment> {
   )
 }
 
+function collectOwnIds(comments: Array<HNComment>, userLower: string, out: Array<number>) {
+  for (const c of comments) {
+    if (c.author.toLowerCase() === userLower) out.push(c.id)
+    if (c.children.length > 0) collectOwnIds(c.children, userLower, out)
+  }
+}
+
+function attachPoints(comments: Array<HNComment>, scores: Map<number, number>): Array<HNComment> {
+  return comments.map((c) => {
+    const points = scores.get(c.id)
+    const children = c.children.length > 0 ? attachPoints(c.children, scores) : c.children
+    if (points === undefined && children === c.children) return c
+    return { ...c, ...(points !== undefined ? { points } : {}), children }
+  })
+}
+
+async function fetchOwnCommentPoints(
+  storyId: number,
+  ownIds: Array<number>,
+  sessionCookie: string,
+): Promise<Map<number, number>> {
+  const scores = new Map<number, number>()
+  try {
+    const res = await fetch(`${HN}/item?id=${storyId}`, {
+      headers: { Cookie: `user=${sessionCookie}` },
+      redirect: "manual",
+      signal: AbortSignal.timeout(8_000),
+    })
+    if (!res.ok) return scores
+    const html = await res.text()
+    for (const id of ownIds) {
+      const m = html.match(new RegExp(`id=["']score_${id}["'][^>]*>\\s*(\\d+)`))
+      if (m) scores.set(id, Number(m[1]))
+    }
+  } catch {
+    // Best-effort: comment scores are optional and never block loading the thread.
+  }
+  return scores
+}
+
 export async function fetchThread(id: number): Promise<HNThread> {
   // Algolia returns the whole tree in one call, but oldest first. HN's own API
   // gives the ranked order of top-level comments, so sort by that.
@@ -82,9 +129,23 @@ export async function fetchThread(id: number): Promise<HNThread> {
   ])
 
   const rank = new Map((ranked?.kids ?? []).map((kid, i) => [kid, i]))
-  const comments = toComments(tree.children).sort(
+  let comments = toComments(tree.children).sort(
     (a, b) => (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
   )
+
+  // HN only exposes comment scores on your own comments (and only when authenticated).
+  // Skip the extra fetch unless this thread actually has a comment by you.
+  const sessionCookie = config().hacker_news.session_cookie
+  const user = hnUsername(sessionCookie)
+  if (user) {
+    const ownIds: Array<number> = []
+    collectOwnIds(comments, user.toLowerCase(), ownIds)
+    if (ownIds.length > 0) {
+      const scores = await fetchOwnCommentPoints(id, ownIds, sessionCookie)
+      if (scores.size > 0) comments = attachPoints(comments, scores)
+    }
+  }
+
   const url = tree.url ?? itemUrl(id)
   return {
     id,
