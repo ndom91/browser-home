@@ -170,6 +170,7 @@ function Home() {
             fetchedAt={hn.data?.fetchedAt}
             error={hn.error}
             votingEnabled={features.hnVoting}
+            commentingEnabled={features.hnCommenting}
           />
         )
     }

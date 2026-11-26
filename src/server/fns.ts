@@ -23,6 +23,7 @@ import {
 } from "./demo"
 import { fetchNotifications, fetchPRDetail, fetchPRs, fetchViewer, markNotificationRead } from "./github"
 import { fetchHN, fetchThread } from "./hn"
+import { formatPlainComment, MAX_HN_COMMENT, postComment } from "./hnComment"
 import { upvoteStory } from "./hnVote"
 import { fetchLinear, linearConfigured } from "./linear"
 import { missingLlmKeys } from "./llm"
@@ -57,6 +58,7 @@ export const getFeatures = createServerFn({ method: "GET" }).handler(
     linear: DEMO || linearConfigured(),
     capture: Boolean(config().capture.dir),
     hnVoting: Boolean(config().hacker_news.session_cookie),
+    hnCommenting: DEMO || Boolean(config().hacker_news.session_cookie),
   }),
 )
 /** The settings cookie, read on the server so the first paint already uses it. */
@@ -105,6 +107,31 @@ export const upvoteHN = createServerFn({ method: "POST" })
     if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
     if (DEMO) return { points: (demoHN().find((s) => s.id === data)?.points ?? 0) + 1 }
     return upvoteStory(data, config().hacker_news.session_cookie)
+  })
+export const postHNComment = createServerFn({ method: "POST" })
+  .validator((input: unknown) => {
+    if (!input || typeof input !== "object") throw new Error("Invalid comment")
+    const { parentId, text } = input as { parentId?: unknown; text?: unknown }
+    if (typeof parentId !== "number" || !Number.isSafeInteger(parentId) || parentId <= 0)
+      throw new Error("Invalid parent id")
+    if (typeof text !== "string" || !text.trim()) throw new Error("Write a comment before posting.")
+    if (text.trim().length > MAX_HN_COMMENT) throw new Error(`Keep it under ${MAX_HN_COMMENT} characters.`)
+    return { parentId, text }
+  })
+  .handler(async ({ data }) => {
+    if (getRequestHeader("sec-fetch-site") !== "same-origin") throw new Error("Forbidden")
+    if (DEMO) {
+      await new Promise((resolve) => setTimeout(resolve, 250))
+      return {
+        id: Date.now(),
+        author: demoViewer.login,
+        time: Date.now(),
+        html: formatPlainComment(data.text),
+        children: [],
+        isYou: true,
+      }
+    }
+    return postComment(data.parentId, data.text, config().hacker_news.session_cookie)
   })
 // Manual refreshes. POST, so they're never served from an HTTP cache; force skips the server cache.
 export const refreshHN = createServerFn({ method: "POST" }).handler(() => hn({ force: true }))

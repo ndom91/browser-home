@@ -104,6 +104,8 @@ export interface HNComment {
   /** Sanitized HTML: only p, a, i, b, em, strong, pre, code, br. */
   html: string
   children: Array<HNComment>
+  /** Set client-side on comments just posted from this view. */
+  isYou?: boolean
 }
 
 export interface HNThread {
@@ -163,4 +165,5 @@ export interface Features {
   linear: boolean
   capture: boolean
   hnVoting: boolean
+  hnCommenting: boolean
 }

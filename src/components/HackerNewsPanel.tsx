@@ -18,9 +18,10 @@ interface Props {
   fetchedAt: number | undefined
   error: unknown
   votingEnabled: boolean
+  commentingEnabled: boolean
 }
 
-export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled }: Props) {
+export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled, commentingEnabled }: Props) {
   const now = useNow()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState<Story | null>(null)
@@ -47,7 +48,9 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled }: Pr
   // on open, back to the story on close.
   useLayoutEffect(() => {
     if (open) {
-      if (threadRef.current) threadRef.current.scrollTop = 0
+      const scroll = threadRef.current?.querySelector<HTMLElement>(".hn-thread-scroll")
+      if (scroll) scroll.scrollTop = 0
+      else if (threadRef.current) threadRef.current.scrollTop = 0
       threadRef.current?.querySelector<HTMLElement>(".hn-back")?.focus({ preventScroll: true })
     } else {
       returnTo.current?.focus({ preventScroll: true })
@@ -57,7 +60,12 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled }: Pr
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !(e.target instanceof HTMLInputElement)) setOpen(null)
+      if (e.key !== "Escape" || e.defaultPrevented) return
+      if (
+        (e.target as HTMLElement | null)?.closest("input, textarea, [contenteditable], .hn-composer, .hn-login-inline")
+      )
+        return
+      setOpen(null)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
@@ -97,7 +105,9 @@ export function HackerNewsPanel({ stories, fetchedAt, error, votingEnabled }: Pr
           )}
         </section>
         <section className="t-page" data-page-id="2" ref={threadRef} inert={open == null}>
-          {shown && <HNThread story={shown} onBack={() => setOpen(null)} />}
+          {shown && (
+            <HNThread key={shown.id} story={shown} onBack={() => setOpen(null)} commentingEnabled={commentingEnabled} />
+          )}
         </section>
       </div>
     </Panel>

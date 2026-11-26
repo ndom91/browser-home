@@ -45,3 +45,28 @@ export function readableUrl(url: string) {
 /** Comments in a tree, nested replies included. */
 export const countComments = (comments: Array<HNComment>): number =>
   comments.reduce((n, c) => n + 1 + countComments(c.children), 0)
+
+/**
+ * Inserts a newly posted comment where its composer was: at the top of a parent
+ * comment's replies, or at the end of the thread for a top-level comment.
+ */
+export function insertComment(
+  comments: Array<HNComment>,
+  parentId: number | null,
+  comment: HNComment,
+): Array<HNComment> {
+  if (parentId === null) return [...comments, comment]
+  let inserted = false
+  const walk = (list: Array<HNComment>): Array<HNComment> =>
+    list.map((c) => {
+      if (c.id === parentId) {
+        inserted = true
+        return { ...c, children: [comment, ...c.children] }
+      }
+      if (c.children.length === 0) return c
+      const children = walk(c.children)
+      return children === c.children ? c : { ...c, children }
+    })
+  const next = walk(comments)
+  return inserted ? next : comments
+}
